@@ -5,10 +5,12 @@ import Seo from '@/shared/layout-components/seo/seo'
 import { AddToCart, ProductReduxData } from '@/shared/redux/action';
 import Link from 'next/link';
 import React, { Fragment, useState } from 'react'
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 import Swal from 'sweetalert2';
 
-const Wishlist = ({ AddToCart }:any) => {
+const Wishlist = () => {
+    const dispatchAddToCart = (data: any) => store.dispatch(AddToCart(data));
+    const dispatchProductReduxData = (data: any) => store.dispatch(ProductReduxData(data));
     function Confirmalert(id:string) {
         Swal.fire({
           title: 'Are you sure?',
@@ -92,7 +94,7 @@ const Wishlist = ({ AddToCart }:any) => {
                                 </p>
                             </div>
                             <div className="box-footer text-center ">
-                                <Link href="/pages/ecommerce/cart/" className="ti-btn ti-btn-primary !m-2 !font-medium" onClick={() => { AddToCart(idx.id); }}><i className="ri-shopping-cart-2-line me-1 align-middle inline-block "></i>Move To Cart</Link>
+                                <Link href="/pages/ecommerce/cart/" className="ti-btn ti-btn-primary !m-2 !font-medium" onClick={() => { dispatchAddToCart(idx.id); }}><i className="ri-shopping-cart-2-line me-1 align-middle inline-block "></i>Move To Cart</Link>
                                 <Link href={`/pages/ecommerce/product-details?id=${idx.id}`} className="ti-btn ti-btn-success !m-2 !font-medium"><i className="ri-eye-line me-1 align-middle inline-block "></i>View Product</Link>
                             </div>
                         </div>
@@ -121,7 +123,4 @@ const Wishlist = ({ AddToCart }:any) => {
     )
 }
 
-const mapStateToProps = (state:any) => ({
-    local_varaiable: state
-});
-export default connect(mapStateToProps, { AddToCart, ProductReduxData })(Wishlist);
+export default Wishlist;

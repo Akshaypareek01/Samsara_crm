@@ -2,15 +2,16 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import React, { Fragment, useEffect, useState } from 'react'
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 import { ItemData1 } from '@/shared/data/pages/ecommerces/ecommercedata';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
 import { AddToCart } from '@/shared/redux/action';
 
-const Cart = ({ local_varaiable }:any) => {
+const Cart = () => {
+    const local_varaiable = store.getState();
 
-    const [cart, setCart] = useState(ItemData1);
+    const [cart, setCart] = useState<any[]>(ItemData1);
 
     const [Price, setPrice] = useState(0);
 
@@ -28,7 +29,7 @@ const Cart = ({ local_varaiable }:any) => {
             });
         }
         else {
-            setCart(local_varaiable.ecommercedata);
+            setCart(local_varaiable.ecommercedata as any[]);
             local_varaiable.ecommercedata.filter((ele:any) => {
                 setPrice(Number(ele.newprice) + Price);
             });
@@ -272,7 +273,4 @@ const Cart = ({ local_varaiable }:any) => {
     )
 }
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-export default connect(mapStateToProps, { AddToCart })(Cart);
+export default Cart;

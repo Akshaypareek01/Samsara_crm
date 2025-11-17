@@ -5,10 +5,11 @@ import Seo from '@/shared/layout-components/seo/seo'
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import React, { Fragment } from 'react';
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 const Select = dynamic(() => import("react-select"), { ssr: false });
 
-const Searchcandidate = ({ local_varaiable }:any) => {
+const Searchcandidate = () => {
+    const local_varaiable = store.getState();
 
     const Data = [
         { value: 'All Categories', label: 'All Categories' },
@@ -986,7 +987,4 @@ const Searchcandidate = ({ local_varaiable }:any) => {
     )
 }
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-export default connect(mapStateToProps,)(Searchcandidate);
+export default Searchcandidate;

@@ -5,15 +5,16 @@ import { ThemeChanger } from "../../../../shared/redux/action";
 import { Autoplay, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import store from '@/shared/redux/store';
-import { connect } from 'react-redux';
 import Seo from '@/shared/layout-components/seo/seo';
 
-const Jobslanding = ({ local_varaiable, ThemeChanger }:any) => {
+const Jobslanding = () => {
+    const local_varaiable = store.getState();
+    const dispatchThemeChanger = (data: any) => store.dispatch(ThemeChanger(data));
 
     useEffect(() => {
    
         const theme = store.getState();
-        ThemeChanger({
+        dispatchThemeChanger({
           
           ...theme,
           "dataNavStyle": "menu-click",
@@ -24,7 +25,7 @@ const Jobslanding = ({ local_varaiable, ThemeChanger }:any) => {
         });
         
         return () => {
-          ThemeChanger({
+          dispatchThemeChanger({
             ...theme,
             "dataNavStyle": "",
             "dataVerticalStyle": "",
@@ -120,10 +121,10 @@ const Jobslanding = ({ local_varaiable, ThemeChanger }:any) => {
         function handleResize() {
             if (window.innerWidth <= 992) {
                 const theme = store.getState();
-                ThemeChanger({ ...theme, "dataToggled": "close", "dataNavLayout": "horizontal" });
+                dispatchThemeChanger({ ...theme, "dataToggled": "close", "dataNavLayout": "horizontal" });
             } else {
                 const theme = store.getState();
-                ThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
+                dispatchThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
             }
         }
 
@@ -136,13 +137,13 @@ const Jobslanding = ({ local_varaiable, ThemeChanger }:any) => {
     function toggleNavigation() {
         if (window.innerWidth <= 992) {
             const theme = store.getState();
-            ThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
+            dispatchThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
         }
     }
     function menuClose() {
         const theme = store.getState();
         if (window.innerWidth <= 992) {
-          ThemeChanger({ ...theme, dataToggled: 'close' });
+          dispatchThemeChanger({ ...theme, dataToggled: 'close' });
         }
         const overlayElement = document.querySelector("#responsive-overlay");
         if (overlayElement) {
@@ -1244,8 +1245,4 @@ const Jobslanding = ({ local_varaiable, ThemeChanger }:any) => {
 }
 
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-
-export default connect(mapStateToProps, { ThemeChanger })(Jobslanding);
+export default Jobslanding;

@@ -9,6 +9,7 @@ import { ThemeChanger } from "@/shared/redux/action"
 import store from "@/shared/redux/store"
 import { Fragment,  useState } from "react"
 import {  connect } from "react-redux"
+import AuthGuard from "@/shared/components/AuthGuard"
 
 const Layout = ({children,}:any) => {
 
@@ -28,25 +29,25 @@ const Layout = ({children,}:any) => {
 
   return (
     <>
-
-      
-    <Fragment>
+    <AuthGuard>
+      <Fragment>
         <Switcher/>
-      <div className='page'>
-        <Header/>
-        <Sidebar/>
-        <div className='content'>
-          <div className='main-content'  
-          onClick={Bodyclickk}
-          >
-            {children}
+        <div className='page'>
+          <Header/>
+          <Sidebar/>
+          <div className='content'>
+            <div className='main-content'  
+            onClick={Bodyclickk}
+            >
+              {children}
+            </div>
           </div>
+          <Footer/>
         </div>
-        <Footer/>
-      </div>
-      <Backtotop/>
-      <PrelineScript/>
-    </Fragment>
+        <Backtotop/>
+        <PrelineScript/>
+      </Fragment>
+    </AuthGuard>
     </>
   )
 }

@@ -3,40 +3,63 @@ import { auth } from "@/shared/firebase/firebaseapi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import AdminService from "@/services/adminService";
 
 export default function Home() {
   useEffect(() => {
-
+    // Check if already authenticated
+    checkAuth();
   }, []);
 
   const [passwordshow1, setpasswordshow1] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [err, setError] = useState("");
   const [data, setData] = useState({
-    "email": "adminnextjs@gmail.com",
-    "password": "1234567890",
+    "email": "admin@samsarawellness.in",
+    "password": "",
   });
   const { email, password } = data;
+  
   const changeHandler = (e: any) => {
     setData({ ...data, [e.target.name]: e.target.value });
     setError("");
   };
+
+  const checkAuth = async () => {
+    try {
+      const isAuth = await AdminService.isAuthenticated();
+      if (isAuth) {
+        RouteChange();
+      }
+    } catch (error) {
+      // Not authenticated, stay on login page
+    }
+  };
+
   const Login = (e: any) => {
     e.preventDefault();
     auth.signInWithEmailAndPassword(email, password).then(
       user => { console.log(user); RouteChange(); }).catch(err => { setError(err.message); });
   };
 
-  const Login1 = (_e: any) => {
-    if (data.email == "adminnextjs@gmail.com" && data.password == "1234567890") {
+  const Login1 = async (e: any) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      if (!email || !password) {
+        setError("Please enter both email and password");
+        setLoading(false);
+        return;
+      }
+
+      await AdminService.login(email, password);
       RouteChange();
-    }
-    else {
-      setError("The Auction details did not Match");
-      setData({
-        "email": "adminnextjs@gmail.com",
-        "password": "1234567890",
-      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(error.message || "Login failed. Please check your credentials.");
+      setLoading(false);
     }
   };
 
@@ -103,7 +126,13 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="xl:col-span-12 col-span-12 grid mt-0">
-                      <button onClick={Login1}  className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium">Sign In</button>
+                      <button 
+                        onClick={Login1} 
+                        disabled={loading}
+                        className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? "Signing In..." : "Sign In"}
+                      </button>
                     </div>
                   </div>
                   <div className="text-center">

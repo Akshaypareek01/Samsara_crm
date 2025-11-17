@@ -2,26 +2,27 @@
 import Link from 'next/link'
 import React, { Fragment, useEffect } from 'react';
 import { ThemeChanger } from "../../../../shared/redux/action";
-import { connect } from 'react-redux';
 import store from '@/shared/redux/store';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import Seo from '../../../../shared/layout-components/seo/seo';
 import { useRouter } from 'next/navigation';
 
-const Landing = ({ local_varaiable, ThemeChanger }: any) => {
+const Landing = () => {
+    const local_varaiable = store.getState();
+    const dispatchThemeChanger = (data: any) => store.dispatch(ThemeChanger(data));
 
     function toggleNavigation() {
         if (window.innerWidth <= 992) {
             const theme = store.getState();
-            ThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
+            dispatchThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
             
         }
     }
     useEffect(() => {
    
         const theme = store.getState();
-        ThemeChanger({
+        dispatchThemeChanger({
           
           ...theme,
           "dataNavStyle": "menu-click",
@@ -33,7 +34,7 @@ const Landing = ({ local_varaiable, ThemeChanger }: any) => {
         });
          
         return () => {
-          ThemeChanger({
+          dispatchThemeChanger({
             ...theme,
             "dataNavStyle": "",
             "dataVerticalStyle": "",
@@ -48,10 +49,10 @@ const Landing = ({ local_varaiable, ThemeChanger }: any) => {
             
             if (window.innerWidth <= 992) {
                 const theme = store.getState();
-                ThemeChanger({ ...theme, "dataToggled": "close", "dataNavLayout": "horizontal" });
+                dispatchThemeChanger({ ...theme, "dataToggled": "close", "dataNavLayout": "horizontal" });
             } else {
                 const theme = store.getState();
-                ThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
+                dispatchThemeChanger({ ...theme, "dataToggled": "open", "dataNavLayout": "horizontal" });
             }
         }
 
@@ -194,7 +195,7 @@ const Landing = ({ local_varaiable, ThemeChanger }: any) => {
     function menuClose() {
         const theme = store.getState();
 		if (window.innerWidth <= 992) {
-			ThemeChanger({ ...theme, dataToggled: "close" });
+			dispatchThemeChanger({ ...theme, dataToggled: "close" });
 		}
 		const overlayElement = document.querySelector("#responsive-overlay") as HTMLElement | null;
 		if (overlayElement) {
@@ -1967,8 +1968,4 @@ const Landing = ({ local_varaiable, ThemeChanger }: any) => {
 }
 
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-
-export default connect(mapStateToProps, { ThemeChanger })(Landing);
+export default Landing;

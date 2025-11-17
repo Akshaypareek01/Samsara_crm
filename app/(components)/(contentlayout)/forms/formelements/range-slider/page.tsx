@@ -5,12 +5,13 @@ import React, { Fragment } from 'react';
 import Slider, { SliderThumb } from '@mui/material/Slider';
 import Box from '@mui/material/Box';
 import LabeledTwoThumbs, { Marks } from '@/shared/data/forms/form-elements/rangesliderdata';
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 import Showcode from '@/shared/layout-components/showcode/showcode';
 import { range1, range2, range3, range4 } from '@/shared/data/prism/forms-prism';
 import { styled } from '@mui/material/styles';
 
-const Rangeslider = ({ local_varaiable }:any) => {
+const Rangeslider = () => {
+    const local_varaiable = store.getState();
 
   function valuetext(value: any) {
     return `${value}°C`;
@@ -313,8 +314,4 @@ const Rangeslider = ({ local_varaiable }:any) => {
   )
 }
 
-const mapStateToProps = (state: any) => ({
-  local_varaiable: state
-});
-
-export default connect(mapStateToProps, {})(Rangeslider);
+export default Rangeslider;

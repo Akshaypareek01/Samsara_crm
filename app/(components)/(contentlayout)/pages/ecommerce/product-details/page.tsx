@@ -5,11 +5,14 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Thumbs, FreeMode, Navigation } from 'swiper/modules';
 import Link from 'next/link';
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 import { AddToCart, ProductReduxData } from '@/shared/redux/action';
 import { useSearchParams } from 'next/navigation';
 
-const Productdetails = ({ local_varaiable, AddToCart,  }:any) => {
+const Productdetails = () => {
+    const local_varaiable = store.getState();
+    const dispatchAddToCart = (data: any) => store.dispatch(AddToCart(data));
+    const dispatchProductReduxData = (data: any) => store.dispatch(ProductReduxData(data));
 
     const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
 
@@ -680,9 +683,4 @@ const Productdetails = ({ local_varaiable, AddToCart,  }:any) => {
         </Fragment>
     )
 }
-const mapStateToProps = (state:any) => ({
-    local_varaiable: state,
-  });
-  
-  export default connect(mapStateToProps, { AddToCart, ProductReduxData })(Productdetails);
-// export default Productdetails
+export default Productdetails;

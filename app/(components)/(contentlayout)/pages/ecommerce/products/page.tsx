@@ -3,11 +3,13 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import React, { Fragment, useState } from 'react';
 import { AddToCart } from '@/shared/redux/action';
-import { connect } from 'react-redux';
+import store from '@/shared/redux/store';
 import { Itemsdata1 } from '@/shared/data/pages/ecommerces/ecommercedata';
 import Link from 'next/link';
 
-const Products = ({ local_varaiable , AddToCart}:any) => {
+const Products = () => {
+    const local_varaiable = store.getState();
+    const dispatchAddToCart = (data: any) => store.dispatch(AddToCart(data));
 
     const [allData, setAllData] = useState(Itemsdata1);
     const userdata:any = [];
@@ -494,7 +496,7 @@ const Products = ({ local_varaiable , AddToCart}:any) => {
                                                     className="ri-heart-line"></i></Link>
                                                 <Link aria-label="anchor" href="/pages/ecommerce/cart/" className="cart" 
                                                 onClick={() => {
-                                                    AddToCart(idx.id); 
+                                                    dispatchAddToCart(idx.id); 
                                                 }}
                                                 ><i
                                                     className="ri-shopping-cart-line"></i></Link>
@@ -541,7 +543,4 @@ const Products = ({ local_varaiable , AddToCart}:any) => {
     )
 }
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-export default connect(mapStateToProps, { AddToCart })(Products);
+export default Products;

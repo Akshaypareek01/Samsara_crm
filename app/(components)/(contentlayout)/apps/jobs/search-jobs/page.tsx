@@ -4,9 +4,10 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import Link from 'next/link'
 import React, { Fragment } from 'react'
-import { connect } from 'react-redux'
+import store from '@/shared/redux/store'
 
-const Searchjobs = ({ local_varaiable }:any) => {
+const Searchjobs = () => {
+    const local_varaiable = store.getState();
     return (
         <Fragment>
             <Seo title={"Search Jobs"} />
@@ -668,7 +669,4 @@ const Searchjobs = ({ local_varaiable }:any) => {
     )
 }
 
-const mapStateToProps = (state: any) => ({
-    local_varaiable: state
-});
-export default connect(mapStateToProps,)(Searchjobs);
+export default Searchjobs;
