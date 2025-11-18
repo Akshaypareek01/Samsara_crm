@@ -3,12 +3,80 @@ import { Visitorsbychannel } from '@/shared/data/dashboards/analyticsdata'
 import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import Link from 'next/link'
-import React, { Fragment } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import * as Analyticsdata from "@/shared/data/dashboards/analyticsdata";
 import dynamic from "next/dynamic";
+import userService from '@/services/userService';
+import classService from '@/services/classService';
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const Analytics = () => {
+    const [totalUsers, setTotalUsers] = useState<number>(0);
+    const [totalStudents, setTotalStudents] = useState<number>(0);
+    const [totalTeachers, setTotalTeachers] = useState<number>(0);
+    const [totalClasses, setTotalClasses] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+                
+                // Fetch students (role: user)
+                const studentsResponse = await userService.getAllUsers({ 
+                    page: 1, 
+                    limit: 10000 
+                });
+                const studentsTotal = studentsResponse.total || 0;
+                setTotalStudents(studentsTotal);
+
+                // Fetch teachers (role: teacher)
+                const teachersResponse = await userService.getAllTeachers({ 
+                    page: 1, 
+                    limit: 10000 
+                });
+                const teachersTotal = teachersResponse.total || 0;
+                setTotalTeachers(teachersTotal);
+
+                // Total Users = Students + Teachers
+                const total = studentsTotal + teachersTotal;
+                setTotalUsers(total);
+
+                // Fetch total classes
+                const classesResponse = await classService.getAllClasses({ 
+                    page: 1, 
+                    limit: 10000 
+                });
+                
+                // Handle different response formats
+                let classesTotal = 0;
+                if (Array.isArray(classesResponse)) {
+                    classesTotal = classesResponse.length;
+                } else if (classesResponse && typeof classesResponse === 'object') {
+                    classesTotal = (classesResponse.total !== undefined && classesResponse.total !== null)
+                        ? classesResponse.total
+                        : (Array.isArray(classesResponse.data) ? classesResponse.data.length : 
+                           Array.isArray(classesResponse.results) ? classesResponse.results.length :
+                           Array.isArray(classesResponse.classes) ? classesResponse.classes.length : 0);
+                }
+                setTotalClasses(classesTotal);
+                
+                console.log('📊 Stats:', {
+                    totalUsers: total,
+                    totalClasses: classesTotal,
+                    students: studentsTotal,
+                    teachers: teachersTotal
+                });
+            } catch (error) {
+                console.error('❌ Error fetching stats:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     return (
         <Fragment>
             <Seo title={"Analytics"} />
@@ -20,10 +88,19 @@ const Analytics = () => {
                             <div className="box">
                                 <div className="box-body">
                                     <div className="flex flex-wrap items-center justify-between">
-                                        <div>
+                                        <div className="flex-grow">
                                             <h6 className="font-semibold mb-3 text-[1rem]">Total Users</h6>
-                                            <span className="text-[1.5625rem] font-semibold">9,789</span>
-                                            <span className="block text-success text-[0.75rem]">+0.892 <i className="ti ti-trending-up ms-1"></i></span>
+                                            <span className="text-[1.5625rem] font-semibold block mb-2">
+                                                {loading ? '...' : totalUsers.toLocaleString()}
+                                            </span>
+                                            <div className="flex flex-wrap gap-3 text-[0.75rem]">
+                                                <span className="text-success">
+                                                    Students: {loading ? '...' : totalStudents.toLocaleString()}
+                                                </span>
+                                                <span className="text-info">
+                                                    Teachers: {loading ? '...' : totalTeachers.toLocaleString()}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div id="analytics-users">
                                             <ReactApexChart
@@ -41,13 +118,14 @@ const Analytics = () => {
                                 <div className="box-body">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h6 className="font-semibold mb-3 text-[1rem]">Live Visitors</h6>
-                                            <span className="text-[1.5625rem] font-semibold">12,240</span>
-                                            <span className="block text-danger text-[0.75rem]">+0.59<i className="ti ti-trending-down ms-1 inline-flex"></i></span>
+                                            <h6 className="font-semibold mb-3 text-[1rem]">Total Classes</h6>
+                                            <span className="text-[1.5625rem] font-semibold">
+                                                {loading ? '...' : totalClasses.toLocaleString()}
+                                            </span>
                                         </div>
                                         <div>
                                             <span className="avatar avatar-md bg-secondary text-white">
-                                                <i className="ri-user-3-line"></i>
+                                                <i className="ri-book-open-line"></i>
                                             </span>
                                         </div>
                                     </div>
