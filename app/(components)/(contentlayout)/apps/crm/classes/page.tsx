@@ -53,18 +53,18 @@ const Classes = () => {
         sortBy: 'createdAt:desc',
       });
       
-      // Handle different response structures - API returns { success: true, data: [...] }
+      // Handle different response structures
       let classesArray: Class[] = [];
       if (Array.isArray(response)) {
         classesArray = response;
-      } else if (response && response.success && Array.isArray(response.data)) {
-        classesArray = response.data;
-      } else if (response && Array.isArray(response.classes)) {
-        classesArray = response.classes;
-      } else if (response && Array.isArray(response.data)) {
-        classesArray = response.data;
-      } else if (response && response.results && Array.isArray(response.results)) {
-        classesArray = response.results;
+      } else if (response && typeof response === 'object' && !Array.isArray(response)) {
+        if (Array.isArray(response.classes)) {
+          classesArray = response.classes;
+        } else if (Array.isArray(response.data)) {
+          classesArray = response.data;
+        } else if (Array.isArray(response.results)) {
+          classesArray = response.results;
+        }
       }
       
       setClasses(classesArray);
@@ -93,17 +93,8 @@ const Classes = () => {
     try {
       const response = await ClassService.getAllTeachers();
       
-      // Handle different response structures
-      let teachersArray: any[] = [];
-      if (Array.isArray(response)) {
-        teachersArray = response;
-      } else if (response && Array.isArray(response.teachers)) {
-        teachersArray = response.teachers;
-      } else if (response && Array.isArray(response.data)) {
-        teachersArray = response.data;
-      } else if (response && response.results && Array.isArray(response.results)) {
-        teachersArray = response.results;
-      }
+      // getAllTeachers() already handles response conversion and returns an array
+      const teachersArray = Array.isArray(response) ? response : [];
       
       setTeachers(teachersArray);
     } catch (err: any) {
@@ -211,12 +202,17 @@ const Classes = () => {
 
   const handleEdit = (classItem: Class) => {
     setEditingClass(classItem);
+    // Handle teacher field - can be string (ID) or Teacher object
+    const teacherId = typeof classItem.teacher === 'string' 
+      ? classItem.teacher 
+      : (classItem.teacher as any)?._id || (classItem.teacher as any)?.id || '';
+    
     setFormData({
       title: classItem.title || '',
       description: classItem.description || '',
       password: classItem.password || '',
       meeting_number: classItem.meeting_number || '',
-      teacher: classItem.teacher || '',
+      teacher: teacherId,
       status: classItem.status ?? true,
       schedule: classItem.schedule || '',
       startTime: classItem.startTime || '',
