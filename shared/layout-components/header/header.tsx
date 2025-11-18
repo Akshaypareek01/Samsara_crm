@@ -4,77 +4,31 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { ThemeChanger } from "../../redux/action";
 import { connect } from 'react-redux';
 import store from '@/shared/redux/store';
-import Modalsearch from '../modal-search/modalsearch';
 import { basePath } from '@/next.config';
+import { useRouter } from 'next/navigation';
+import AdminService from '@/services/adminService';
 
 const Header = ({ local_varaiable, ThemeChanger }:any) => {
+  const router = useRouter();
 
-
-  const data=  <span className="font-[600] py-[0.25rem] px-[0.45rem] rounded-[0.25rem] bg-pinkmain/10 text-pinkmain text-[0.625rem]">Free shipping</span>
-
-  const cartProduct = [
-    {
-      id: 1,
-      src: "/assets/images/ecommerce/jpg/1.jpg",
-      name: 'SomeThing Phone',
-      price: '$1,299.00',
-      color: 'Metallic Blue',
-      text: '6gb Ram',
-      class: '',
-    },
-    {
-      id: 2,
-      src: "/assets/images/ecommerce/jpg/3.jpg",
-      name: 'Stop Watch',
-      price: '$179.29',
-      color: 'Analog',
-      text: data,
-      class: '',
-    },
-    {
-      id: 3,
-      src: "/assets/images/ecommerce/jpg/5.jpg",
-      name: 'Photo Frame',
-      price: '$29.00',
-      color: 'Decorative',
-      text: '',
-      class: '',
-    },
-    {
-      id: 4,
-      src: "/assets/images/ecommerce/jpg/4.jpg",
-      name: 'Kikon Camera',
-      price: '$4,999.00',
-      color: 'Black',
-      text: '50MM',
-      class: '',
-    },
-    {
-      id: 5,
-      src: "/assets/images/ecommerce/jpg/6.jpg",
-      name: 'Canvas Shoes',
-      price: '$129.00',
-      color: 'Gray',
-      text: 'Sports',
-      class: 'border-b-0',
-    },
-  ];
-
-  const [cartItems, setCartItems] = useState([...cartProduct]);
-  const [cartItemCount, setCartItemCount] = useState(cartProduct.length);
-  const handleRemove = (itemId: number,event: { stopPropagation: () => void; }) => {
-    event.stopPropagation();
-    const updatedCart = cartItems.filter((item) => item.id !== itemId);
-    setCartItems(updatedCart);
-    setCartItemCount(updatedCart.length);
+  const handleLogout = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    try {
+      await AdminService.logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails
+      router.push('/');
+    }
   };
+
+
 
   //Notifications
 
   const span1 = <span className="text-warning">ID: #1116773</span>
   const span2 = <span className="text-success">ID: 7731116</span>
-
- const span3 = <span className="font-[600] py-[0.25rem] px-[0.45rem] rounded-[0.25rem] bg-pinkmain/10 text-pinkmain text-[0.625rem]">Free shipping</span>
 
  const notifydata = [
   { id: 1, class: "Your Order Has Been Shipped", data: "Order No: 123456 Has Shipped To Your Delivery Address", icon: "gift", class2: "", color: "!bg-primary/10",color2: "primary"},
@@ -381,12 +335,6 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
             </div>
             <div className="header-content-right">
 
-              <div className="header-element py-[1rem] md:px-[0.65rem] px-2 header-search">
-                <button aria-label="button" type="button" data-hs-overlay="#search-modal"
-                  className="inline-flex flex-shrink-0 justify-center items-center gap-2  rounded-full font-medium focus:ring-offset-0 focus:ring-offset-white transition-all text-xs dark:bg-bgdark dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10">
-                  <i className="bx bx-search-alt-2 header-link-icon"></i>
-                </button>
-              </div>
               <div className="header-element py-[1rem] md:px-[0.65rem] px-2  header-country hs-dropdown ti-dropdown  hidden sm:block [--placement:bottom-left]">
                 <button id="dropdown-flag" type="button"
                   className="hs-dropdown-toggle ti-dropdown-toggle !p-0 flex-shrink-0  !border-0 !rounded-full !shadow-none">
@@ -489,79 +437,6 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
                   data-hs-theme-click-value="light">
                   <i className="bx bx-sun header-link-icon"></i>
                 </button>
-              </div>
-              <div className="header-element cart-dropdown hs-dropdown ti-dropdown md:!block !hidden py-[1rem] md:px-[0.65rem] px-2 [--placement:bottom-right] rtl:[--placement:bottom-left]">
-                <button id="dropdown-cart" type="button"
-                  className="hs-dropdown-toggle relative ti-dropdown-toggle !p-0 !border-0 flex-shrink-0  !rounded-full !shadow-none align-middle text-xs">
-                  <i className="bx bx-cart header-link-icon"></i>
-                  <span className="flex absolute h-5 w-5 -top-[0.25rem] end-0 -me-[0.6rem]">
-                    <span className="relative inline-flex rounded-full h-[14.7px] w-[14px] text-[0.625rem] bg-primary text-white justify-center items-center"
-                      id="cart-icon-badge">{cartItemCount}</span>
-                  </span>
-                </button>
-
-                <div className="main-header-dropdown bg-white !-mt-3 !p-0 hs-dropdown-menu ti-dropdown-menu w-[22rem] border-0 border-defaultborder hidden"
-                  aria-labelledby="dropdown-cart">
-
-                  <div className="ti-dropdown-header !bg-transparent flex justify-between items-center !m-0 !p-4">
-                    <p className="text-defaulttextcolor  !text-[1.0625rem] font-semibold">Cart Items</p>
-                    <Link href="#!" scroll={false}
-                      className="font-[600] py-[0.25/2rem] px-[0.45rem] rounded-[0.25rem] bg-success/10 text-success text-[0.75em] "
-                      id="cart-data">{cartItemCount} Item{cartItemCount !== 1 ? 's' : ''}</Link>
-                  </div>
-                  <div>
-                    <hr className="dropdown-divider dark:border-white/10" />
-                  </div>
-                  <ul className="list-none mb-0" id="header-cart-items-scroll">
-                  {cartItems.map((idx) => (
-                      <li className={`ti-dropdown-item border-b dark:border-defaultborder/10 border-defaultborder ${idx.class}`} key={Math.random()}>
-                        <div className="flex items-start cart-dropdown-item"> 
-
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}${idx.src}`} alt="img"
-                            className="!h-[1.75rem] !w-[1.75rem] leading-[1.75rem] text-[0.65rem] rounded-[50%] br-5 me-3" />
-
-                          <div className="grow">
-                            <div className="flex items-start justify-between mb-0">
-                              <div className="mb-0 !text-[0.8125rem] text-defaulttextcolor dark:text-white font-semibold ">
-                                <Link href="/pages/ecommerce/cart/">{idx.name}</Link>
-                              </div>
-
-                              <div className="inline-flex">
-                                <span className="text-black mb-1 dark:text-white !font-medium">{idx.price}</span>
-                                <Link aria-label="anchor" href="#!" scroll={false} className="header-cart-remove ltr:float-right rtl:float-left dropdown-item-close"  onClick={(event) => handleRemove(idx.id, event)}><i
-                                  className="ti ti-trash"></i></Link>
-                              </div>
-                            </div>
-                            <div className="min-w-fit flex  items-start justify-between">
-                              <ul className="header-product-item dark:text-white/50 flex">
-                                <li>{idx.color}</li>
-                                <li>{idx.text}</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-
-                    ))}
-                  </ul>
-                  <div className={`p-3 empty-header-item border-t ${cartItemCount === 0 ? 'hidden' : 'block'}`}>
-                    <div className="grid">
-                      <Link href="/pages/ecommerce/checkout/" className="w-full ti-btn ti-btn-primary-full p-2">Proceed to checkout</Link>
-                    </div>
-                  </div>
-                  <div className={`p-[3rem] empty-item ${cartItemCount === 0 ? 'block' : 'hidden'}`}>
-                    <div className="text-center">
-                      <span className="!w-[4rem] !h-[4rem] !leading-[4rem] rounded-[50%] avatar bg-warning/10 !text-warning">
-                        <i className="ri-shopping-cart-2-line text-[2rem]"></i>
-                      </span>
-                      <h6 className="font-bold mb-1 mt-3 text-[1rem] text-defaulttextcolor dark:text-[#8c9097] dark:text-white/50">Your Cart is Empty</h6>
-                      <span className="mb-3 !font-normal text-[0.8125rem] block text-defaulttextcolor dark:text-[#8c9097] dark:text-white/50">Add some items to make me happy :)</span>
-                      <Link href="/pages/ecommerce/products/" className="ti-btn ti-btn-primary btn-wave ti-btn-wave btn-sm m-1 !text-[0.75rem] !py-[0.25rem] !px-[0.5rem]"
-                        data-abc="true">continue shopping <i className="bi bi-arrow-right ms-1"></i></Link>
-                    </div>
-                  </div>
-
-                </div>
               </div>
               <div className="header-element py-[1rem] md:px-[0.65rem] px-2 notifications-dropdown header-notification hs-dropdown ti-dropdown !hidden md:!block [--placement:bottom-right]">
                 <button id="dropdown-notification" type="button"
@@ -739,8 +614,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
                   <img className="inline-block rounded-full " src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/faces/9.jpg`} width="32" height="32" alt="Image Description" />
                 </button>
                 <div className="md:block hidden dropdown-profile">
-                  <p className="font-semibold mb-0 leading-none text-[#536485] text-[0.813rem] ">Json Taylor</p>
-                  <span className="opacity-[0.7] font-normal text-[#536485] block text-[0.6875rem] ">Web Designer</span>
+                  <p className="font-semibold mb-0 leading-none text-[#536485] text-[0.813rem] ">ADMIN</p>
                 </div>
                 <div
                   className="hs-dropdown-menu ti-dropdown-menu !-mt-3 border-0 w-[11rem] !p-0 border-defaultborder hidden main-header-dropdown  pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
@@ -760,29 +634,19 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
                     </li>
                     <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0 !p-[0.65rem]" href="/pages/todo-list/"><i
                       className="ti ti-clipboard-check text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Task Manager</Link></li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0 !p-[0.65rem]" href="/pages/email/mail-settings/"><i
-                      className="ti ti-adjustments-horizontal text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Settings</Link></li>
                     <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0 !p-[0.65rem] " href="#!" scroll={false}><i
                       className="ti ti-wallet text-[1.125rem] me-2 opacity-[0.7 !inline-flex"></i>Bal: $7,12,950</Link></li>
                     <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !p-[0.65rem] !gap-x-0 !inline-flex" href="/pages/chat/"><i
                       className="ti ti-headset text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Support</Link></li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !p-[0.65rem] !gap-x-0 !inline-flex" href="/authentication/sign-in/signin-cover/"><i
+                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !p-[0.65rem] !gap-x-0 !inline-flex" href="/" onClick={handleLogout}><i
                       className="ti ti-logout text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Log Out</Link></li>
                   </ul>
                 </div>
-              </div>
-              <div className="header-element md:px-[0.48rem]">
-                <button aria-label="button" type="button"
-                  className="hs-dropdown-toggle switcher-icon inline-flex flex-shrink-0 justify-center items-center gap-2  rounded-full font-medium  align-middle transition-all text-xs dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
-                  data-hs-overlay="#hs-overlay-switcher">
-                  <i className="bx bx-cog header-link-icon animate-spin-slow"></i>
-                </button>
               </div>
             </div>
           </div>
         </nav>
       </div>
-      <Modalsearch />
     </Fragment>
   )
 }

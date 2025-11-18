@@ -341,7 +341,7 @@ const Classes = () => {
             </div>
           ) : (
             <div className="table-responsive">
-              <table className="table table-hover whitespace-nowrap">
+              <table className="table table-hover table-bordered whitespace-nowrap">
                 <thead>
                   <tr>
                     <th>Title</th>
