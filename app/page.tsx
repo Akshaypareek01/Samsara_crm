@@ -68,6 +68,9 @@ export default function Home() {
           <div className="grid grid-cols-12">
             <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
             <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-8 col-span-12">
+              <div className="my-[2.5rem] flex justify-center mb-6">
+                <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
+              </div>
               <div className="box !p-[3rem]">
                 <div className="box-body">
                   <p className="h5 font-semibold mb-4 text-center">Sign In</p>
