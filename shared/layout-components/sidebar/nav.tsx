@@ -6,6 +6,8 @@ const UserManagementIcon = <i className="bx bx-user side-menu__icon"></i>;
 
 const ClassManagementIcon = <i className="bx bx-book side-menu__icon"></i>;
 
+const MembershipIcon = <i className="bx bx-crown side-menu__icon"></i>;
+
 export const MenuItems: any = [
   {
     menutitle: "MAIN",
@@ -54,6 +56,41 @@ export const MenuItems: any = [
       },
     ],
   },
+
+
+ {
+    icon: MembershipIcon,
+    title: "Membership Management",
+    type: "sub",
+    active: false,
+    selected: false,
+    children: [
+      {
+        path: "/apps/crm/membership-plans",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false, 
+        title: "Membership Plans",
+      },
+      {
+        path: "/apps/crm/coupons",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false, 
+        title: "Coupons",
+      },
+      {
+        path: "/apps/crm/transactions",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false, 
+        title: "Transactions",
+      },
+    ],
+  }, 
 
   {
     icon: ClassManagementIcon,
