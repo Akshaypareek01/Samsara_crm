@@ -4,8 +4,10 @@ import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import UserService, { User, CreateUserRequest } from '@/services/userService';
 import membershipService, { UserMembership } from '@/services/membershipService';
+import { useRouter } from 'next/navigation';
 
 const Users = () => {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -157,8 +159,7 @@ const fetchMembershipsForUsers = async (users: User[]) => {
   };
 
   const handleView = (user: User) => {
-    setViewingUser(user);
-    setShowViewModal(true);
+    router.push(`/apps/crm/user-profile/${user._id || user.id}`);
   };
 
   const handleEdit = (user: User) => {
