@@ -34,7 +34,8 @@ class ApiService {
       },
       (error) => {
         return Promise.reject(error);
-      }
+      },
+      
     );
 
     // Response interceptor to handle common errors
