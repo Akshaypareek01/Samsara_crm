@@ -72,26 +72,6 @@ export interface WeeklySummary {
   };
 }
 
-export interface PeriodCycle {
-  _id?: string;
-  startDate: string;
-  endDate?: string;
-  cycleLength?: number;
-  periodLength?: number;
-  symptoms?: string[];
-  flow?: 'light' | 'medium' | 'heavy';
-  isPredicted?: boolean;
-}
-
-export interface BloodReport {
-  _id?: string;
-  testName: string;
-  value: number;
-  unit: string;
-  referenceRange: string;
-  date: string;
-  notes?: string;
-}
 
 export interface TrackerDashboard {
   weight?: any;
@@ -224,21 +204,6 @@ class TrackerService {
     return [];
   }
 
-  /**
-   * PERIOD TRACKING METHODS
-   * Note: These still need backend admin endpoints to be created
-   */
-  async getPeriodCalendar(userId: string, month?: string): Promise<any> {
-    console.warn('⚠️ Period tracking admin endpoints not yet implemented in backend');
-    console.warn('TODO: Create admin-period.controller.js and add routes');
-    return null;
-  }
-
-  async getPeriodHistory(userId: string, limit: number = 6): Promise<PeriodCycle[]> {
-    console.warn('⚠️ Period tracking admin endpoints not yet implemented in backend');
-    console.warn('TODO: Create admin-period.controller.js and add routes');
-    return [];
-  }
 
   /**
    * HELPER METHODS (for creating mood entries as current user, not admin function)
@@ -353,13 +318,5 @@ export default new TrackerService();
  * - Requires admin JWT token in Authorization header
  * - Admin middleware verifies role === 'admin'
  * - Can view any user's water tracking data
- *
- * ⏳ TODO (Next Steps):
- * - Mood tracking admin endpoints
- * - Period tracking admin endpoints
- * - Weight tracking admin endpoints
- * - Sleep tracking admin endpoints
- * - Other trackers...
- *
  * ============================================================================
  */

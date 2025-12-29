@@ -24,19 +24,16 @@ class MembershipService {
   /**
    * Get user's active membership
    */
-  async getUserActiveMembership(userId: string): Promise<UserMembership | null> {
-    try {
-      const response = await ApiService.get(`/memberships/active`);
-      return response || null;
-    } catch (error: any) {
-      // If 404, user has no active membership
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
-        return null;
-      }
-      console.error('❌ Get user membership error:', error);
-      throw error;
-    }
-  }
+async getUserActiveMembership(userId: string): Promise<UserMembership | null> {
+  const response = await ApiService.get(
+    `/admin/membership/users/${userId}/overview`,
+    {},
+    true
+  );
+
+  return response.data?.activeMembership ?? null;
+}
+
 
   /**
    * Format currency
