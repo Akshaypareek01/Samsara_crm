@@ -8,6 +8,8 @@ const ClassManagementIcon = <i className="bx bx-book side-menu__icon"></i>;
 
 const MembershipIcon = <i className="bx bx-crown side-menu__icon"></i>;
 
+const CompanyIcon = <i className="bx bx-building side-menu__icon"></i>;
+
 export const MenuItems: any = [
   {
     menutitle: "MAIN",
@@ -54,9 +56,26 @@ export const MenuItems: any = [
         dirchange: false, 
         title: "Teachers",
       },
+      {
+        path: "/apps/crm/trainers",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false, 
+        title: "Trainers",
+      },
     ],
   },
 
+  {
+    icon: CompanyIcon,
+    title: "Company Management",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/companies",
+  },
 
  {
     icon: MembershipIcon,
