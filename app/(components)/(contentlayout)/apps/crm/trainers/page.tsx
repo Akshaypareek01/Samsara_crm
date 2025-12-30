@@ -31,7 +31,7 @@ const Trainers = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSpecialist, setFilterSpecialist] = useState('');
-  const [filterStatus, setFilterStatus] = useState<boolean | ''>('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +60,7 @@ const Trainers = () => {
       }
       
       if (filterStatus !== '') {
-        params.status = filterStatus;
+        params.status = filterStatus === 'true';
       }
 
       const response = await TrainerService.getTrainers(params);
@@ -86,39 +86,61 @@ const Trainers = () => {
         return;
       }
 
-      // Prepare submission data - ensure all fields are included
-      const submitData: CreateTrainerRequest | UpdateTrainerRequest = {
-        name: formData.name.trim(),
-        title: formData.title.trim(),
-        bio: formData.bio.trim(),
-        specialistIn: formData.specialistIn,
-        typeOfTraining: formData.typeOfTraining.trim(),
-        duration: formData.duration.trim(),
-        status: formData.status,
-      };
-
-      // Only include images if they exist
-      if (formData.images && formData.images.length > 0) {
-        submitData.images = formData.images;
-      }
-
-      // Only include profilePhoto if it exists
-      if (formData.profilePhoto) {
-        submitData.profilePhoto = formData.profilePhoto;
-      }
-
-      console.log('Submitting data:', submitData);
-
       if (editingTrainer) {
         const trainerId = editingTrainer._id || editingTrainer.id;
         if (!trainerId) {
           setError('Trainer ID not found');
           return;
         }
-        await TrainerService.updateTrainer(trainerId, submitData);
+        
+        // Prepare update data
+        const updateData: UpdateTrainerRequest = {
+          name: formData.name.trim(),
+          title: formData.title.trim(),
+          bio: formData.bio.trim(),
+          specialistIn: formData.specialistIn,
+          typeOfTraining: formData.typeOfTraining.trim(),
+          duration: formData.duration.trim(),
+          status: formData.status,
+        };
+
+        // Only include images if they exist
+        if (formData.images && formData.images.length > 0) {
+          updateData.images = formData.images;
+        }
+
+        // Only include profilePhoto if it exists
+        if (formData.profilePhoto) {
+          updateData.profilePhoto = formData.profilePhoto;
+        }
+
+        console.log('Submitting update data:', updateData);
+        await TrainerService.updateTrainer(trainerId, updateData);
         Swal.fire('Success!', 'Trainer updated successfully', 'success');
       } else {
-        await TrainerService.createTrainer(submitData);
+        // Prepare create data - all required fields are guaranteed to be present
+        const createData: CreateTrainerRequest = {
+          name: formData.name.trim(),
+          title: formData.title.trim(),
+          bio: formData.bio.trim(),
+          specialistIn: formData.specialistIn,
+          typeOfTraining: formData.typeOfTraining.trim(),
+          duration: formData.duration.trim(),
+          status: formData.status,
+        };
+
+        // Only include images if they exist
+        if (formData.images && formData.images.length > 0) {
+          createData.images = formData.images;
+        }
+
+        // Only include profilePhoto if it exists
+        if (formData.profilePhoto) {
+          createData.profilePhoto = formData.profilePhoto;
+        }
+
+        console.log('Submitting create data:', createData);
+        await TrainerService.createTrainer(createData);
         Swal.fire('Success!', 'Trainer created successfully', 'success');
       }
       setShowModal(false);
@@ -389,7 +411,7 @@ const Trainers = () => {
                 className="form-control"
                 value={filterStatus}
                 onChange={(e) => {
-                  setFilterStatus(e.target.value === '' ? '' : e.target.value === 'true');
+                  setFilterStatus(e.target.value);
                   setPage(1);
                 }}
               >

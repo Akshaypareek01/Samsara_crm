@@ -1,11 +1,15 @@
 "use client"
-import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { connect } from 'react-redux';
+import React, { useContext, useEffect } from 'react'
+import { useSelector, useDispatch } from 'react-redux';
 import  * as switcherdata from '../../shared/data/switcherdata/switcherdata';
 import { ThemeChanger } from '@/shared/redux/action';
 import { Initialload } from '@/shared/contextapi';
 
-function Layout({children, local_varaiable, ThemeChanger}:any) {
+function Layout({children}: {children: React.ReactNode}) {
+  const local_varaiable = useSelector((state: any) => state);
+  const dispatch = useDispatch();
+  const theme :any= useContext(Initialload);
+
   const customstyles :any= {
     ...(local_varaiable.colorPrimaryRgb !== '' && { '--primary-rgb': local_varaiable.colorPrimaryRgb }),
     ...(local_varaiable.colorPrimary !== '' && { '--primary': local_varaiable.colorPrimary }),
@@ -15,13 +19,11 @@ function Layout({children, local_varaiable, ThemeChanger}:any) {
     ...(local_varaiable.Light !== '' && { '--light': local_varaiable.Light }),
   };
 
-  const theme :any= useContext(Initialload);
-
   useEffect(() => {
     if (typeof window !== 'undefined' && !theme.pageloading) {
-      switcherdata.LocalStorageBackup(ThemeChanger, theme.setpageloading);
+      switcherdata.LocalStorageBackup((value: any) => dispatch(ThemeChanger(value) as any), theme.setpageloading);
     }
-  }, []);
+  }, [dispatch, theme]);
 
 
   return (
@@ -60,8 +62,4 @@ function Layout({children, local_varaiable, ThemeChanger}:any) {
   )
 }
 
-const mapStateToProps = (state: any) => ({
-  local_varaiable: state
-});
-
-export default connect(mapStateToProps, {ThemeChanger})(Layout);
+export default Layout;
