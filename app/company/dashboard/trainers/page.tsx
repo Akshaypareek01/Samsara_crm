@@ -148,9 +148,19 @@ const TrainersPage = () => {
                                         )}
                                         <h4 className="font-semibold text-lg mb-1">{trainer.name}</h4>
                                         <p className="text-muted text-sm mb-2">{trainer.title}</p>
-                                        <span className="badge bg-info/10 text-info mb-3">
-                                            {trainer.specialistIn}
-                                        </span>
+                                        <div className="flex flex-wrap gap-1 justify-center mb-3">
+                                            {Array.isArray(trainer.specialistIn) ? (
+                                                trainer.specialistIn.map((spec, idx) => (
+                                                    <span key={idx} className="badge bg-info/10 text-info">
+                                                        {spec}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="badge bg-info/10 text-info">
+                                                    {trainer.specialistIn}
+                                                </span>
+                                            )}
+                                        </div>
                                         <p className="text-sm text-muted mb-3 line-clamp-2">
                                             {trainer.bio?.substring(0, 100)}...
                                         </p>
@@ -210,9 +220,19 @@ const TrainersPage = () => {
                                     )}
                                     <h4 className="font-semibold text-xl mb-1">{selectedTrainer.name}</h4>
                                     <p className="text-muted mb-2">{selectedTrainer.title}</p>
-                                    <span className="badge bg-info/10 text-info mb-4">
-                                        {selectedTrainer.specialistIn}
-                                    </span>
+                                    <div className="flex flex-wrap gap-1 justify-center mb-4">
+                                        {Array.isArray(selectedTrainer.specialistIn) ? (
+                                            selectedTrainer.specialistIn.map((spec, idx) => (
+                                                <span key={idx} className="badge bg-info/10 text-info">
+                                                    {spec}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="badge bg-info/10 text-info">
+                                                {selectedTrainer.specialistIn}
+                                            </span>
+                                        )}
+                                    </div>
                                     <button
                                         onClick={() => handleBookTrainer(selectedTrainer)}
                                         className="ti-btn ti-btn-primary w-full"
@@ -230,7 +250,19 @@ const TrainersPage = () => {
                                     </div>
                                     <div>
                                         <label className="text-muted text-sm font-semibold">Type of Training</label>
-                                        <p className="font-medium mt-1">{selectedTrainer.typeOfTraining}</p>
+                                        <p className="font-medium mt-1">
+                                            {Array.isArray(selectedTrainer.typeOfTraining) ? (
+                                                <div className="flex flex-col gap-1">
+                                                    {selectedTrainer.typeOfTraining.map((training, idx) => (
+                                                        <span key={idx} className="badge bg-primary/10 text-primary">
+                                                            {training}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span>{selectedTrainer.typeOfTraining}</span>
+                                            )}
+                                        </p>
                                     </div>
                                     <div>
                                         <label className="text-muted text-sm font-semibold">Duration</label>

@@ -1,0 +1,54 @@
+/* Mobile Sidebar Fix for Trainer Dashboard */
+@media (max-width: 991.98px) {
+  /* Show sidebar header on mobile */
+  .app-sidebar .main-sidebar-header {
+    display: flex !important;
+    padding: 1rem !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1000;
+  }
+
+  /* Ensure close button is visible and clickable */
+  .app-sidebar .main-sidebar-header button {
+    z-index: 1001 !important;
+    position: relative;
+  }
+
+  /* Ensure sidebar overlays content on mobile and doesn't push it */
+  .page .app-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    z-index: 999 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+  }
+
+  /* Ensure content doesn't get pushed by sidebar */
+  .page .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  /* Ensure main content is full width */
+  .page .main-content {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  /* Ensure container is full width on mobile */
+  .page .container-fluid {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Make sure overlay covers everything */
+  #responsive-overlay.active {
+    z-index: 998 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+}

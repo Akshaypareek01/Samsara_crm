@@ -11,8 +11,8 @@ export interface Trainer {
   name: string;
   title: string;
   bio: string;
-  specialistIn: string;
-  typeOfTraining: string;
+  specialistIn: string | string[];
+  typeOfTraining: string | string[];
   duration: string;
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
@@ -25,9 +25,11 @@ export interface CreateTrainerRequest {
   name: string;
   title: string;
   bio: string;
-  specialistIn: string;
-  typeOfTraining: string;
-  duration: string;
+  email: string;
+  mobile: string;
+  specialistIn: string | string[];
+  typeOfTraining: string | string[];
+  duration?: string;
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
   status?: boolean;
@@ -37,8 +39,8 @@ export interface UpdateTrainerRequest {
   name?: string;
   title?: string;
   bio?: string;
-  specialistIn?: string;
-  typeOfTraining?: string;
+  specialistIn?: string | string[];
+  typeOfTraining?: string | string[];
   duration?: string;
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
@@ -64,25 +66,63 @@ export interface TrainersResponse {
 }
 
 export const SPECIALIST_OPTIONS = [
-  'Mental Health',
-  'Fitness',
-  'Yoga',
-  'Pilates',
-  'Strength Training',
-  'Cardio',
-  'Weight Loss',
-  'Weight Gain',
-  'Nutrition',
-  'Ayurveda',
-  'Meditation',
-  'Wellness',
-  'Rehabilitation',
-  'Sports Training',
-  'Dance Fitness',
-  'HIIT',
-  'CrossFit',
-  'Bodybuilding',
-  'General Training',
+  'Employees',
+  'Mid Level Managers',
+  'Leadership',
+  'GenZ',
+];
+
+export const TYPE_OF_TRAINING_OPTIONS = [
+  // Employees
+  'Masterclass for Employee Wellbeing',
+  'Emotional Intelligence Skill Workshop',
+  'Mindfulness at Work',
+  'Resilience during Change & Uncertainty',
+  'The Mental Health Toolkit: Daily Self-Care for Working Professionals',
+  'Managing Anxiety at Work: Coping with High-Pressure Moments',
+  'Work-Life Balance and Digital Wellbeing',
+  'Stress Management and Emotional Resilience',
+  'Peer Support & Mental Health Champions Program',
+  'Building Psychological Safety at Work',
+  'Enhancing Collaboration through Emotional Intelligence',
+  // Mid-Level Managers
+  "Myndwell's Emerging Leader Series",
+  'Emerging Leader Skill Assessment',
+  'Weekly Sessions',
+  'Continuous Learning Support',
+  'Personalized One-on-One Sessions',
+  'Post-Intervention Assessment',
+  'Mastering Managerial Effectiveness',
+  'Understanding Stress and Burnout',
+  'Impactful Communication: Fostering Genuine Connections',
+  'Boosting Team Performance & Upholding Organizational Culture',
+  'Cultivating Leadership Excellence in Managers',
+  "Navigating Performance Appraisal Dynamics: A Manager's Guide",
+  'Manager Sensitization Program',
+  'How to Have Difficult Conversations: A Guide for Leaders',
+  'Feedback Mastery: Enhancing Communication and Performance',
+  'Leading with Empathy: Mental Health Leadership Training',
+  'Creating a Mentally Healthy Environment: A Culture of Psychological Safety',
+  'Preventing Burnout: A Leadership Lens',
+  'Emotional Intelligence for Managers',
+  // Leadership
+  'Strategic Leadership in Evolving Workplaces',
+  'Building Inclusive Leadership Practices',
+  'Leading Change with Emotional Intelligence',
+  'Resilient Leadership: Thriving Through Disruption',
+  'Fostering a Culture of Innovation and Growth',
+  'Mentoring and Coaching for High-Performance Teams',
+  'Leadership Agility: Adapting to Uncertainty',
+  'Mental Health Leadership: Supporting Workforce Wellbeing',
+  // GenZ
+  'From Campus to Corporate: The Real-World Starter Pack',
+  'Emotional Intelligence 2.0: Thriving Beyond IQ',
+  'The Resilience Playbook: Fail Fast, Rise Faster',
+  'Unstoppable Confidence: Owning Your Story at Work',
+  'Digital Detox for Digital Natives: Reclaiming Focus & Energy',
+  'Collaborate & Conquer: Cracking Multigenerational Workplaces',
+  'EQ in Action: Empathy as Your Superpower',
+  'Thriving as a Fresher: Adapting to the Corporate World',
 ];
 
 class TrainerService {
@@ -232,7 +272,84 @@ class TrainerService {
       throw error;
     }
   }
+
+  /**
+   * Send login OTP
+   * Endpoint: POST /v1/trainer-auth/send-login-otp
+   */
+  async sendLoginOtp(email: string): Promise<any> {
+    try {
+      const response = await ApiService.post('/trainer-auth/send-login-otp', { email });
+      return response;
+    } catch (error) {
+      console.error('❌ Send OTP error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Login with OTP
+   * Endpoint: POST /v1/trainer-auth/login
+   * Response: { trainer: {...}, tokens: { access: {...}, refresh: {...} } }
+   */
+  async login(email: string, otp: string): Promise<any> {
+    try {
+      const response = await ApiService.post('/trainer-auth/login', { email, otp });
+      // If response contains token, save it
+      if (response.tokens?.access?.token) {
+        await ApiService.setAuthToken(response.tokens.access.token);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('Auth', 'true');
+          localStorage.setItem('userType', 'trainer');
+          if (response.tokens.refresh?.token) {
+            localStorage.setItem('refreshToken', response.tokens.refresh.token);
+          }
+        }
+        // Save trainer data
+        if (response.trainer) {
+          await ApiService.setUser(response.trainer);
+        }
+      }
+      return response;
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current trainer profile (for authenticated trainer)
+   */
+  async getMyProfile(): Promise<Trainer> {
+    try {
+      const response = await ApiService.get('/trainers/me');
+      if (response.id && !response._id) {
+        return { ...response, _id: response.id };
+      }
+      return response;
+    } catch (error) {
+      console.error('❌ Get my profile error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update current trainer profile
+   */
+  async updateMyProfile(trainerData: UpdateTrainerRequest): Promise<Trainer> {
+    try {
+      const response = await ApiService.patch('/trainers/me', trainerData);
+      if (response.id && !response._id) {
+        return { ...response, _id: response.id };
+      }
+      return response;
+    } catch (error) {
+      console.error('❌ Update my profile error:', error);
+      throw error;
+    }
+  }
 }
 
 export default new TrainerService();
+
 

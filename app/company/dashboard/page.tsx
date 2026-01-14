@@ -137,16 +137,14 @@ const CompanyDashboard = () => {
                                                     <h5 className="font-bold text-base mb-1 text-defaulttextcolor capitalize">{trainer.name}</h5>
                                                     <p className="text-muted text-sm mb-4 min-h-[2rem] line-clamp-2">{trainer.title}</p>
                                                     <div className="flex flex-col gap-2 mt-4">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                            }}
-                                                            className="w-full !bg-info/10 !text-info hover:!bg-info/20 rounded-lg !py-2.5 !px-3 flex items-center justify-center gap-2 border border-info/20 !font-medium !text-sm"
-                                                            title={trainer.specialistIn}
-                                                        >
+                                                        <div className="w-full !bg-info/10 !text-info hover:!bg-info/20 rounded-lg !py-2.5 !px-3 flex items-center justify-center gap-2 border border-info/20 !font-medium !text-sm">
                                                             <i className="ri-calendar-line text-base"></i>
-                                                            <span className="truncate">{trainer.specialistIn}</span>
-                                                        </button>
+                                                            <span className="truncate">
+                                                                {Array.isArray(trainer.specialistIn) 
+                                                                    ? trainer.specialistIn.join(', ')
+                                                                    : trainer.specialistIn}
+                                                            </span>
+                                                        </div>
                                                         <button
                                                             onClick={(e) => handleBookTrainer(trainer, e)}
                                                             className="ti-btn !bg-primary !text-white hover:!bg-primary/90 w-full !font-medium !py-2.5 rounded-lg"

@@ -2,10 +2,11 @@
 
 import React, { Fragment, useEffect, useState, useRef } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
-import TrainerService, { Trainer, CreateTrainerRequest, UpdateTrainerRequest, SPECIALIST_OPTIONS, TrainerImage } from '@/services/trainerService';
+import TrainerService, { Trainer, CreateTrainerRequest, UpdateTrainerRequest, SPECIALIST_OPTIONS, TYPE_OF_TRAINING_OPTIONS, TrainerImage } from '@/services/trainerService';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
+import MultiSelect from '@/shared/components/MultiSelect';
 
 const Trainers = () => {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -19,8 +20,8 @@ const Trainers = () => {
     name: '',
     title: '',
     bio: '',
-    specialistIn: '',
-    typeOfTraining: '',
+    specialistIn: [],
+    typeOfTraining: [],
     duration: '',
     images: [],
     profilePhoto: null,
@@ -81,7 +82,10 @@ const Trainers = () => {
       setError('');
       
       // Validate required fields
-      if (!formData.name || !formData.title || !formData.bio || !formData.specialistIn || !formData.typeOfTraining || !formData.duration) {
+      const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
+      const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
+      
+      if (!formData.name || !formData.title || !formData.bio || specialistInArray.length === 0 || typeOfTrainingArray.length === 0 || !formData.duration) {
         Swal.fire('Error!', 'Please fill in all required fields', 'error');
         return;
       }
@@ -98,8 +102,8 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
-          specialistIn: formData.specialistIn,
-          typeOfTraining: formData.typeOfTraining.trim(),
+          specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
+          typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
           duration: formData.duration.trim(),
           status: formData.status,
         };
@@ -123,8 +127,8 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
-          specialistIn: formData.specialistIn,
-          typeOfTraining: formData.typeOfTraining.trim(),
+          specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
+          typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
           duration: formData.duration.trim(),
           status: formData.status,
         };
@@ -160,8 +164,8 @@ const Trainers = () => {
       name: '',
       title: '',
       bio: '',
-      specialistIn: '',
-      typeOfTraining: '',
+      specialistIn: [],
+      typeOfTraining: [],
       duration: '',
       images: [],
       profilePhoto: null,
@@ -180,8 +184,8 @@ const Trainers = () => {
       name: trainer.name || '',
       title: trainer.title || '',
       bio: trainer.bio || '',
-      specialistIn: trainer.specialistIn || '',
-      typeOfTraining: trainer.typeOfTraining || '',
+      specialistIn: Array.isArray(trainer.specialistIn) ? trainer.specialistIn : (trainer.specialistIn ? [trainer.specialistIn] : []),
+      typeOfTraining: Array.isArray(trainer.typeOfTraining) ? trainer.typeOfTraining : (trainer.typeOfTraining ? [trainer.typeOfTraining] : []),
       duration: trainer.duration || '',
       images: trainer.images || [],
       profilePhoto: trainer.profilePhoto || null,
@@ -481,11 +485,38 @@ const Trainers = () => {
                           </td>
                           <td>{trainer.title}</td>
                           <td>
-                            <span className="badge bg-info/10 text-info">
-                              {trainer.specialistIn}
-                            </span>
+                            {Array.isArray(trainer.specialistIn) ? (
+                              <div className="flex flex-wrap gap-1">
+                                {trainer.specialistIn.map((spec, idx) => (
+                                  <span key={idx} className="badge bg-info/10 text-info">
+                                    {spec}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="badge bg-info/10 text-info">
+                                {trainer.specialistIn}
+                              </span>
+                            )}
                           </td>
-                          <td className="max-w-xs truncate">{trainer.typeOfTraining}</td>
+                          <td className="max-w-xs">
+                            {Array.isArray(trainer.typeOfTraining) ? (
+                              <div className="flex flex-wrap gap-1">
+                                {trainer.typeOfTraining.slice(0, 2).map((training, idx) => (
+                                  <span key={idx} className="badge bg-primary/10 text-primary text-xs">
+                                    {training}
+                                  </span>
+                                ))}
+                                {trainer.typeOfTraining.length > 2 && (
+                                  <span className="badge bg-secondary/10 text-secondary text-xs">
+                                    +{trainer.typeOfTraining.length - 2} more
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="truncate">{trainer.typeOfTraining}</span>
+                            )}
+                          </td>
                           <td>{trainer.duration}</td>
                           <td>
                             <span
@@ -619,34 +650,25 @@ const Trainers = () => {
                   </small>
                 </div>
                 <div>
-                  <label className="form-label">Specialist In *</label>
-                  <select
-                    className="form-control"
-                    value={formData.specialistIn || ''}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, specialistIn: e.target.value }))
-                    }
+                  <MultiSelect
+                    label="Specialist In"
+                    options={SPECIALIST_OPTIONS}
+                    value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
+                    onChange={(selected) => setFormData((prev) => ({ ...prev, specialistIn: selected }))}
+                    placeholder="Select specialties..."
                     required
-                  >
-                    <option value="">Select Specialist</option>
-                    {SPECIALIST_OPTIONS.map((spec) => (
-                      <option key={spec} value={spec}>
-                        {spec}
-                      </option>
-                    ))}
-                  </select>
+                    maxHeight="200px"
+                  />
                 </div>
                 <div>
-                  <label className="form-label">Type of Training *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.typeOfTraining || ''}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, typeOfTraining: e.target.value }))
-                    }
-                    placeholder="e.g., Group Classes, One-on-One Sessions"
+                  <MultiSelect
+                    label="Type of Training"
+                    options={TYPE_OF_TRAINING_OPTIONS}
+                    value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
+                    onChange={(selected) => setFormData((prev) => ({ ...prev, typeOfTraining: selected }))}
+                    placeholder="Select training types..."
                     required
+                    maxHeight="300px"
                   />
                 </div>
                 <div>
@@ -890,14 +912,36 @@ const Trainers = () => {
                   <div>
                     <label className="text-muted text-sm">Specialist In</label>
                     <p className="font-medium">
-                      <span className="badge bg-info/10 text-info">
-                        {viewingTrainer.specialistIn}
-                      </span>
+                      {Array.isArray(viewingTrainer.specialistIn) ? (
+                        <div className="flex flex-wrap gap-1">
+                          {viewingTrainer.specialistIn.map((spec, idx) => (
+                            <span key={idx} className="badge bg-info/10 text-info">
+                              {spec}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="badge bg-info/10 text-info">
+                          {viewingTrainer.specialistIn}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div>
                     <label className="text-muted text-sm">Type of Training</label>
-                    <p className="font-medium">{viewingTrainer.typeOfTraining}</p>
+                    <p className="font-medium">
+                      {Array.isArray(viewingTrainer.typeOfTraining) ? (
+                        <div className="flex flex-col gap-1">
+                          {viewingTrainer.typeOfTraining.map((training, idx) => (
+                            <span key={idx} className="badge bg-primary/10 text-primary">
+                              {training}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span>{viewingTrainer.typeOfTraining}</span>
+                      )}
+                    </p>
                   </div>
                   <div>
                     <label className="text-muted text-sm">Duration</label>

@@ -1,10 +1,11 @@
 "use client";
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useState, useRef } from 'react';
-import TrainerService, { CreateTrainerRequest, SPECIALIST_OPTIONS, TrainerImage } from '@/services/trainerService';
+import TrainerService, { CreateTrainerRequest, SPECIALIST_OPTIONS, TYPE_OF_TRAINING_OPTIONS, TrainerImage } from '@/services/trainerService';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import Swal from 'sweetalert2';
+import MultiSelect from '@/shared/components/MultiSelect';
 
 const TrainerRegister = () => {
     const [loading, setLoading] = useState(false);
@@ -19,9 +20,10 @@ const TrainerRegister = () => {
         name: '',
         title: '',
         bio: '',
-        specialistIn: '',
-        typeOfTraining: '',
-        duration: '',
+        email: '',
+        mobile: '',
+        specialistIn: [],
+        typeOfTraining: [],
         images: [],
         profilePhoto: null,
         status: true,
@@ -143,8 +145,27 @@ const TrainerRegister = () => {
         setSuccess(false);
 
         // Validate required fields
-        if (!formData.name || !formData.title || !formData.bio || !formData.specialistIn || !formData.typeOfTraining || !formData.duration) {
+        const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
+        const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
+        
+        if (!formData.name || !formData.title || !formData.bio || !formData.email || !formData.mobile || specialistInArray.length === 0 || typeOfTrainingArray.length === 0) {
             setError('Please fill in all required fields');
+            setLoading(false);
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            setError('Please enter a valid email address');
+            setLoading(false);
+            return;
+        }
+
+        // Validate mobile format (basic validation - 10 digits)
+        const mobileRegex = /^[0-9]{10}$/;
+        if (!mobileRegex.test(formData.mobile.replace(/\D/g, ''))) {
+            setError('Please enter a valid 10-digit mobile number');
             setLoading(false);
             return;
         }
@@ -161,9 +182,10 @@ const TrainerRegister = () => {
                 name: formData.name.trim(),
                 title: formData.title.trim(),
                 bio: formData.bio.trim(),
-                specialistIn: formData.specialistIn,
-                typeOfTraining: formData.typeOfTraining.trim(),
-                duration: formData.duration.trim(),
+                email: formData.email.trim(),
+                mobile: formData.mobile.replace(/\D/g, ''), // Remove non-digits
+                specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
+                typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
                 status: formData.status,
             };
 
@@ -196,29 +218,29 @@ const TrainerRegister = () => {
         return (
             <Fragment>
                 <Seo title={"Trainer Registration"} />
-                <div className="container">
-                    <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor">
-                        <div className="grid grid-cols-12">
-                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
+                <div className="container px-4 sm:px-6">
+                    <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor py-4 sm:py-8">
+                        <div className="grid grid-cols-12 w-full">
+                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2 col-span-0"></div>
                             <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-8 col-span-12">
-                                <div className="my-[2.5rem] flex justify-center mb-6">
-                                    <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
+                                <div className="my-4 sm:my-[2.5rem] flex justify-center mb-4 sm:mb-6">
+                                    <img src="/assets/images/logosm.png" alt="logo" className="h-24 sm:h-32 w-auto" />
                                 </div>
                                 <div className="box">
-                                    <div className="box-body !p-[3rem]">
+                                    <div className="box-body !p-4 sm:!p-6 md:!p-[3rem]">
                                         <div className="text-center">
                                             <div className="mb-4">
-                                                <i className="ri-checkbox-circle-line text-success text-6xl"></i>
+                                                <i className="ri-checkbox-circle-line text-success text-4xl sm:text-6xl"></i>
                                             </div>
-                                            <h3 className="h5 font-semibold mb-2">Registration Successful!</h3>
-                                            <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal">
+                                            <h3 className="h5 font-semibold mb-2 text-lg sm:text-xl">Registration Successful!</h3>
+                                            <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal text-sm sm:text-base">
                                                 You are successfully registered. Thanks for registering.
                                             </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
+                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2 col-span-0"></div>
                         </div>
                     </div>
                 </div>
@@ -229,18 +251,18 @@ const TrainerRegister = () => {
     return (
         <Fragment>
             <Seo title={"Trainer Registration"} />
-            <div className="container">
-                <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor">
-                    <div className="grid grid-cols-12">
-                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1"></div>
+            <div className="container px-4 sm:px-6">
+                <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor py-4 sm:py-8">
+                    <div className="grid grid-cols-12 w-full">
+                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1 col-span-0"></div>
                         <div className="xxl:col-span-8 xl:col-span-8 lg:col-span-8 md:col-span-10 sm:col-span-10 col-span-12">
-                            <div className="my-[2.5rem] flex justify-center mb-6">
-                                <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
+                            <div className="my-4 sm:my-[2.5rem] flex justify-center mb-4 sm:mb-6">
+                                <img src="/assets/images/logosm.png" alt="logo" className="h-24 sm:h-32 w-auto" />
                             </div>
                             <div className="box">
-                                <div className="box-body !p-[3rem]">
-                                    <p className="h5 font-semibold mb-2 text-center">Trainer Registration</p>
-                                    <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal text-center">
+                                <div className="box-body !p-4 sm:!p-6 md:!p-[3rem]">
+                                    <p className="h5 font-semibold mb-2 text-center text-lg sm:text-xl">Trainer Registration</p>
+                                    <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal text-center text-sm sm:text-base">
                                         Fill in your trainer details to create a profile
                                     </p>
 
@@ -258,13 +280,13 @@ const TrainerRegister = () => {
                                         <div className="space-y-4">
                                             {/* Basic Information */}
                                             <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Basic Information</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <h4 className="font-semibold mb-4 text-base sm:text-lg">Basic Information</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                                     <div>
                                                         <label className="form-label">Full Name *</label>
                                                         <input
                                                             type="text"
-                                                            className="form-control"
+                                                            className="form-control border-2 focus:border-primary"
                                                             value={formData.name}
                                                             onChange={(e) =>
                                                                 setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -276,7 +298,7 @@ const TrainerRegister = () => {
                                                         <label className="form-label">Professional Title *</label>
                                                         <input
                                                             type="text"
-                                                            className="form-control"
+                                                            className="form-control border-2 focus:border-primary"
                                                             value={formData.title}
                                                             onChange={(e) =>
                                                                 setFormData((prev) => ({ ...prev, title: e.target.value }))
@@ -285,10 +307,42 @@ const TrainerRegister = () => {
                                                             required
                                                         />
                                                     </div>
+                                                    <div>
+                                                        <label className="form-label">Email *</label>
+                                                        <input
+                                                            type="email"
+                                                            className="form-control border-2 focus:border-primary"
+                                                            value={formData.email}
+                                                            onChange={(e) =>
+                                                                setFormData((prev) => ({ ...prev, email: e.target.value }))
+                                                            }
+                                                            placeholder="your.email@example.com"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="form-label">Mobile Number *</label>
+                                                        <input
+                                                            type="tel"
+                                                            className="form-control border-2 focus:border-primary"
+                                                            value={formData.mobile}
+                                                            onChange={(e) => {
+                                                                // Allow only digits
+                                                                const value = e.target.value.replace(/\D/g, '');
+                                                                if (value.length <= 10) {
+                                                                    setFormData((prev) => ({ ...prev, mobile: value }));
+                                                                }
+                                                            }}
+                                                            placeholder="1234567890"
+                                                            maxLength={10}
+                                                            required
+                                                        />
+                                                        <small className="text-muted">10 digits only</small>
+                                                    </div>
                                                     <div className="md:col-span-2">
                                                         <label className="form-label">Bio * (Max 2000 characters)</label>
                                                         <textarea
-                                                            className="form-control"
+                                                            className="form-control border-2 focus:border-primary"
                                                             rows={4}
                                                             value={formData.bio}
                                                             onChange={(e) =>
@@ -306,50 +360,30 @@ const TrainerRegister = () => {
 
                                             {/* Training Information */}
                                             <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Training Information</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <h4 className="font-semibold mb-4 text-base sm:text-lg">Training Information</h4>
+                                                <div className="space-y-3 sm:space-y-4">
                                                     <div>
-                                                        <label className="form-label">Specialist In *</label>
-                                                        <select
-                                                            className="form-control"
-                                                            value={formData.specialistIn}
-                                                            onChange={(e) =>
-                                                                setFormData((prev) => ({ ...prev, specialistIn: e.target.value }))
-                                                            }
+                                                        <MultiSelect
+                                                            label="Specialist In"
+                                                            options={SPECIALIST_OPTIONS}
+                                                            value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
+                                                            onChange={(selected) => setFormData((prev) => ({ ...prev, specialistIn: selected }))}
+                                                            placeholder="Select specialties..."
                                                             required
-                                                        >
-                                                            <option value="">Select Specialist</option>
-                                                            {SPECIALIST_OPTIONS.map((spec) => (
-                                                                <option key={spec} value={spec}>
-                                                                    {spec}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Type of Training *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.typeOfTraining}
-                                                            onChange={(e) =>
-                                                                setFormData((prev) => ({ ...prev, typeOfTraining: e.target.value }))
-                                                            }
-                                                            placeholder="e.g., Group Classes, One-on-One Sessions"
-                                                            required
+                                                            maxHeight="200px"
+                                                            showTags={true}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="form-label">Duration *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.duration}
-                                                            onChange={(e) =>
-                                                                setFormData((prev) => ({ ...prev, duration: e.target.value }))
-                                                            }
-                                                            placeholder="e.g., 60 minutes per session"
+                                                        <MultiSelect
+                                                            label="Type of Training"
+                                                            options={TYPE_OF_TRAINING_OPTIONS}
+                                                            value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
+                                                            onChange={(selected) => setFormData((prev) => ({ ...prev, typeOfTraining: selected }))}
+                                                            placeholder="Select training types..."
                                                             required
+                                                            maxHeight="300px"
+                                                            showTags={false}
                                                         />
                                                     </div>
                                                 </div>
@@ -357,7 +391,7 @@ const TrainerRegister = () => {
 
                                             {/* Profile Photo */}
                                             <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Profile Photo</h4>
+                                                <h4 className="font-semibold mb-4 text-base sm:text-lg">Profile Photo</h4>
                                                 <input
                                                     type="file"
                                                     ref={profilePhotoInputRef}
@@ -417,7 +451,7 @@ const TrainerRegister = () => {
 
                                             {/* Additional Images */}
                                             <div className="pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Additional Images</h4>
+                                                <h4 className="font-semibold mb-4 text-base sm:text-lg">Additional Images</h4>
                                                 <input
                                                     type="file"
                                                     ref={imageInputRef}
@@ -450,7 +484,7 @@ const TrainerRegister = () => {
                                                     </div>
                                                     {formData.images && formData.images.length > 0 && (
                                                         <div className="mt-2">
-                                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                                                                 {formData.images.map((img, idx) => (
                                                                     <div key={idx} className="relative group">
                                                                         <img
@@ -481,11 +515,11 @@ const TrainerRegister = () => {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-12 gap-y-4 mt-6">
+                                        <div className="grid grid-cols-12 gap-y-4 mt-4 sm:mt-6">
                                             <div className="xl:col-span-12 col-span-12">
                                                 <button
                                                     type="submit"
-                                                    className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-medium"
+                                                    className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-medium text-sm sm:text-base py-2.5 sm:py-3"
                                                     disabled={loading}
                                                 >
                                                     {loading ? 'Registering...' : 'Register as Trainer'}
@@ -496,7 +530,7 @@ const TrainerRegister = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1"></div>
+                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1 col-span-0"></div>
                     </div>
                 </div>
             </div>
