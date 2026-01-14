@@ -176,8 +176,12 @@ const TrainerProfile = () => {
             setError('');
 
             // Validate required fields
-            const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
-            const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
+            const specialistInArray: string[] = Array.isArray(formData.specialistIn) 
+                ? formData.specialistIn.filter((item): item is string => Boolean(item))
+                : formData.specialistIn ? [formData.specialistIn] : [];
+            const typeOfTrainingArray: string[] = Array.isArray(formData.typeOfTraining)
+                ? formData.typeOfTraining.filter((item): item is string => Boolean(item))
+                : formData.typeOfTraining ? [formData.typeOfTraining] : [];
             
             if (!formData.name || !formData.title || !formData.bio || specialistInArray.length === 0 || typeOfTrainingArray.length === 0) {
                 Swal.fire('Error!', 'Please fill in all required fields', 'error');

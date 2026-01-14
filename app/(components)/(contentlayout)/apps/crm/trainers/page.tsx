@@ -20,9 +20,10 @@ const Trainers = () => {
     name: '',
     title: '',
     bio: '',
+    email: '',
+    mobile: '',
     specialistIn: [],
     typeOfTraining: [],
-    duration: '',
     images: [],
     profilePhoto: null,
     status: true,
@@ -85,8 +86,22 @@ const Trainers = () => {
       const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
       const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
       
-      if (!formData.name || !formData.title || !formData.bio || specialistInArray.length === 0 || typeOfTrainingArray.length === 0 || !formData.duration) {
+      if (!formData.name || !formData.title || !formData.bio || !formData.email || !formData.mobile || specialistInArray.length === 0 || typeOfTrainingArray.length === 0) {
         Swal.fire('Error!', 'Please fill in all required fields', 'error');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        Swal.fire('Error!', 'Please enter a valid email address', 'error');
+        return;
+      }
+
+      // Validate mobile format (10 digits)
+      const mobileRegex = /^[0-9]{10}$/;
+      if (!mobileRegex.test(formData.mobile.replace(/\D/g, ''))) {
+        Swal.fire('Error!', 'Please enter a valid 10-digit mobile number', 'error');
         return;
       }
 
@@ -102,9 +117,10 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          email: formData.email.trim(),
+          mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
           typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
-          duration: formData.duration.trim(),
           status: formData.status,
         };
 
@@ -127,9 +143,10 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          email: formData.email.trim(),
+          mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
           typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
-          duration: formData.duration.trim(),
           status: formData.status,
         };
 
@@ -164,9 +181,10 @@ const Trainers = () => {
       name: '',
       title: '',
       bio: '',
+      email: '',
+      mobile: '',
       specialistIn: [],
       typeOfTraining: [],
-      duration: '',
       images: [],
       profilePhoto: null,
       status: true,
@@ -184,9 +202,10 @@ const Trainers = () => {
       name: trainer.name || '',
       title: trainer.title || '',
       bio: trainer.bio || '',
+      email: (trainer as any).email || '',
+      mobile: (trainer as any).mobile || '',
       specialistIn: Array.isArray(trainer.specialistIn) ? trainer.specialistIn : (trainer.specialistIn ? [trainer.specialistIn] : []),
       typeOfTraining: Array.isArray(trainer.typeOfTraining) ? trainer.typeOfTraining : (trainer.typeOfTraining ? [trainer.typeOfTraining] : []),
-      duration: trainer.duration || '',
       images: trainer.images || [],
       profilePhoto: trainer.profilePhoto || null,
       status: trainer.status !== false,
@@ -445,9 +464,10 @@ const Trainers = () => {
                     <tr>
                       <th>Name</th>
                       <th>Title</th>
+                      <th>Email</th>
+                      <th>Mobile</th>
                       <th>Specialist In</th>
                       <th>Type of Training</th>
-                      <th>Duration</th>
                       <th>Status</th>
                       <th>Actions</th>
                     </tr>
@@ -455,7 +475,7 @@ const Trainers = () => {
                   <tbody>
                     {trainers.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="text-center py-4">
+                        <td colSpan={8} className="text-center py-4">
                           No trainers found
                         </td>
                       </tr>
@@ -484,6 +504,8 @@ const Trainers = () => {
                             </div>
                           </td>
                           <td>{trainer.title}</td>
+                          <td className="max-w-xs truncate">{(trainer as any).email || '-'}</td>
+                          <td>{(trainer as any).mobile || '-'}</td>
                           <td>
                             {Array.isArray(trainer.specialistIn) ? (
                               <div className="flex flex-wrap gap-1">
@@ -517,7 +539,6 @@ const Trainers = () => {
                               <span className="truncate">{trainer.typeOfTraining}</span>
                             )}
                           </td>
-                          <td>{trainer.duration}</td>
                           <td>
                             <span
                               className={`badge ${
@@ -672,17 +693,35 @@ const Trainers = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Duration *</label>
+                  <label className="form-label">Email *</label>
                   <input
-                    type="text"
+                    type="email"
                     className="form-control"
-                    value={formData.duration || ''}
+                    value={formData.email || ''}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, duration: e.target.value }))
+                      setFormData((prev) => ({ ...prev, email: e.target.value }))
                     }
-                    placeholder="e.g., 60 minutes per session"
+                    placeholder="trainer@example.com"
                     required
                   />
+                </div>
+                <div>
+                  <label className="form-label">Mobile Number *</label>
+                  <input
+                    type="tel"
+                    className="form-control"
+                    value={formData.mobile || ''}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 10) {
+                        setFormData((prev) => ({ ...prev, mobile: value }));
+                      }
+                    }}
+                    placeholder="1234567890"
+                    maxLength={10}
+                    required
+                  />
+                  <small className="text-muted">10 digits only</small>
                 </div>
                 <div>
                   <label className="form-label">Status</label>
@@ -944,8 +983,12 @@ const Trainers = () => {
                     </p>
                   </div>
                   <div>
-                    <label className="text-muted text-sm">Duration</label>
-                    <p className="font-medium">{viewingTrainer.duration}</p>
+                    <label className="text-muted text-sm">Email</label>
+                    <p className="font-medium">{(viewingTrainer as any).email || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="text-muted text-sm">Mobile</label>
+                    <p className="font-medium">{(viewingTrainer as any).mobile || '-'}</p>
                   </div>
                   <div>
                     <label className="text-muted text-sm">Bio</label>

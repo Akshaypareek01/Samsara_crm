@@ -11,9 +11,11 @@ export interface Trainer {
   name: string;
   title: string;
   bio: string;
+  email?: string;
+  mobile?: string;
   specialistIn: string | string[];
   typeOfTraining: string | string[];
-  duration: string;
+  duration?: string;
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
   status?: boolean;
@@ -39,6 +41,8 @@ export interface UpdateTrainerRequest {
   name?: string;
   title?: string;
   bio?: string;
+  email?: string;
+  mobile?: string;
   specialistIn?: string | string[];
   typeOfTraining?: string | string[];
   duration?: string;
