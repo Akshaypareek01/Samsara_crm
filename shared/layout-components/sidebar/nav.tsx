@@ -27,7 +27,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Analytics",
       },
     ],
@@ -45,7 +45,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Users",
       },
       {
@@ -53,7 +53,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Teachers",
       },
       {
@@ -61,7 +61,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Trainers",
       },
     ],
@@ -77,7 +77,17 @@ export const MenuItems: any = [
     path: "/apps/crm/companies",
   },
 
- {
+  {
+    icon: <i className="bx bx-calendar-check side-menu__icon"></i>,
+    title: "Bookings Management",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/bookings",
+  },
+
+  {
     icon: MembershipIcon,
     title: "Membership Management",
     type: "sub",
@@ -89,7 +99,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Membership Plans",
       },
       {
@@ -97,7 +107,7 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Coupons",
       },
       {
@@ -105,11 +115,11 @@ export const MenuItems: any = [
         type: "link",
         active: false,
         selected: false,
-        dirchange: false, 
+        dirchange: false,
         title: "Transactions",
       },
     ],
-  }, 
+  },
 
   {
     icon: ClassManagementIcon,

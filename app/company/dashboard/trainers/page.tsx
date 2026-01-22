@@ -3,7 +3,7 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
 import TrainerService, { Trainer, SPECIALIST_OPTIONS } from '@/services/trainerService';
-import Swal from 'sweetalert2';
+import BookingModal from '../components/BookingModal';
 
 const TrainersPage = () => {
     const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -11,6 +11,8 @@ const TrainersPage = () => {
     const [error, setError] = useState('');
     const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
     const [showProfileModal, setShowProfileModal] = useState(false);
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialist, setFilterSpecialist] = useState('');
 
@@ -28,11 +30,11 @@ const TrainersPage = () => {
                 limit: 50,
                 sortBy: 'createdAt:desc',
             };
-            
+
             if (searchTerm) {
                 params.name = searchTerm;
             }
-            
+
             if (filterSpecialist) {
                 params.specialistIn = filterSpecialist;
             }
@@ -54,13 +56,14 @@ const TrainersPage = () => {
     };
 
     const handleBookTrainer = (trainer: Trainer) => {
-        Swal.fire({
-            title: 'Book Trainer',
-            html: `Would you like to book <strong>${trainer.name}</strong>?<br/><br/>This feature will be available soon!`,
-            icon: 'info',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#3085d6',
-        });
+        setTrainerToBook(trainer);
+        setShowBookingModal(true);
+    };
+
+    const handleBookingSuccess = () => {
+        setShowBookingModal(false);
+        setTrainerToBook(null);
+        // Optionally refresh trainers list or show success message
     };
 
     const handleCloseModal = () => {
@@ -72,7 +75,7 @@ const TrainersPage = () => {
         <Fragment>
             <Seo title={"Trainers"} />
             <Pageheader currentpage="Trainers" activepage="Company" mainpage="Trainers" />
-            
+
             {error && (
                 <div className="alert alert-danger mb-4" role="alert">
                     {error}
@@ -134,39 +137,37 @@ const TrainersPage = () => {
                                             <img
                                                 src={trainer.profilePhoto.path}
                                                 alt={trainer.name}
-                                                className="w-24 h-24 rounded-full mx-auto mb-3 object-cover"
+                                                className="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-2 border-primary/20"
                                                 onError={(e) => {
                                                     (e.target as HTMLImageElement).style.display = 'none';
                                                 }}
                                             />
                                         ) : (
-                                            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                                                <span className="text-primary font-semibold text-3xl">
+                                            <div className="w-20 h-20 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-3 border-2 border-primary/20">
+                                                <span className="text-primary font-semibold text-2xl">
                                                     {trainer.name.charAt(0).toUpperCase()}
                                                 </span>
                                             </div>
                                         )}
-                                        <h4 className="font-semibold text-lg mb-1">{trainer.name}</h4>
-                                        <p className="text-muted text-sm mb-2">{trainer.title}</p>
+                                        <h4 className="font-semibold text-base mb-1">{trainer.name}</h4>
+                                        <p className="text-muted text-sm mb-3">{trainer.title}</p>
                                         <div className="flex flex-wrap gap-1 justify-center mb-3">
                                             {Array.isArray(trainer.specialistIn) ? (
-                                                trainer.specialistIn.map((spec, idx) => (
-                                                    <span key={idx} className="badge bg-info/10 text-info">
+                                                trainer.specialistIn.slice(0, 2).map((spec, idx) => (
+                                                    <span key={idx} className="badge bg-info/10 text-info text-xs">
                                                         {spec}
                                                     </span>
                                                 ))
                                             ) : (
-                                                <span className="badge bg-info/10 text-info">
+                                                <span className="badge bg-info/10 text-info text-xs">
                                                     {trainer.specialistIn}
                                                 </span>
                                             )}
-                                        </div>
-                                        <p className="text-sm text-muted mb-3 line-clamp-2">
-                                            {trainer.bio?.substring(0, 100)}...
-                                        </p>
-                                        <div className="flex items-center justify-center gap-2 text-sm text-muted mb-3">
-                                            <i className="ri-time-line"></i>
-                                            <span>{trainer.duration}</span>
+                                            {Array.isArray(trainer.specialistIn) && trainer.specialistIn.length > 2 && (
+                                                <span className="badge bg-secondary/10 text-secondary text-xs">
+                                                    +{trainer.specialistIn.length - 2}
+                                                </span>
+                                            )}
                                         </div>
                                         <button
                                             onClick={(e) => {
@@ -206,33 +207,21 @@ const TrainersPage = () => {
                                         <img
                                             src={selectedTrainer.profilePhoto.path}
                                             alt={selectedTrainer.name}
-                                            className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                                            className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary/20"
                                             onError={(e) => {
                                                 (e.target as HTMLImageElement).style.display = 'none';
                                             }}
                                         />
                                     ) : (
-                                        <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-32 h-32 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-4 border-4 border-primary/20">
                                             <span className="text-primary font-semibold text-5xl">
                                                 {selectedTrainer.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
                                     )}
                                     <h4 className="font-semibold text-xl mb-1">{selectedTrainer.name}</h4>
-                                    <p className="text-muted mb-2">{selectedTrainer.title}</p>
-                                    <div className="flex flex-wrap gap-1 justify-center mb-4">
-                                        {Array.isArray(selectedTrainer.specialistIn) ? (
-                                            selectedTrainer.specialistIn.map((spec, idx) => (
-                                                <span key={idx} className="badge bg-info/10 text-info">
-                                                    {spec}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <span className="badge bg-info/10 text-info">
-                                                {selectedTrainer.specialistIn}
-                                            </span>
-                                        )}
-                                    </div>
+                                    <p className="text-muted mb-4">{selectedTrainer.title}</p>
+
                                     <button
                                         onClick={() => handleBookTrainer(selectedTrainer)}
                                         className="ti-btn ti-btn-primary w-full"
@@ -244,30 +233,61 @@ const TrainersPage = () => {
 
                             <div className="col-span-12 md:col-span-8">
                                 <div className="space-y-4">
+                                    {/* Specialist In */}
                                     <div>
-                                        <label className="text-muted text-sm font-semibold">About</label>
-                                        <p className="font-medium mt-1">{selectedTrainer.bio}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Type of Training</label>
-                                        <p className="font-medium mt-1">
-                                            {Array.isArray(selectedTrainer.typeOfTraining) ? (
-                                                <div className="flex flex-col gap-1">
-                                                    {selectedTrainer.typeOfTraining.map((training, idx) => (
-                                                        <span key={idx} className="badge bg-primary/10 text-primary">
-                                                            {training}
-                                                        </span>
-                                                    ))}
-                                                </div>
+                                        <label className="text-muted text-sm font-semibold">Specialist In</label>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {Array.isArray(selectedTrainer.specialistIn) ? (
+                                                selectedTrainer.specialistIn.map((spec, idx) => (
+                                                    <span key={idx} className="badge bg-info/10 text-info">
+                                                        {spec}
+                                                    </span>
+                                                ))
                                             ) : (
-                                                <span>{selectedTrainer.typeOfTraining}</span>
+                                                <span className="badge bg-info/10 text-info">
+                                                    {selectedTrainer.specialistIn}
+                                                </span>
                                             )}
-                                        </p>
+                                        </div>
                                     </div>
+
+                                    {/* Bio */}
+                                    {selectedTrainer.bio && selectedTrainer.bio !== 'none' && (
+                                        <div>
+                                            <label className="text-muted text-sm font-semibold">About</label>
+                                            <p className="text-defaulttextcolor mt-1">{selectedTrainer.bio}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Type of Training */}
                                     <div>
-                                        <label className="text-muted text-sm font-semibold">Duration</label>
-                                        <p className="font-medium mt-1">{selectedTrainer.duration}</p>
+                                        <label className="text-muted text-sm font-semibold">Training Programs Offered</label>
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {Array.isArray(selectedTrainer.typeOfTraining) ? (
+                                                selectedTrainer.typeOfTraining.map((training, idx) => (
+                                                    <span key={idx} className="badge bg-primary/10 text-primary">
+                                                        {training}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="badge bg-primary/10 text-primary">
+                                                    {selectedTrainer.typeOfTraining}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
+
+                                    {/* Status */}
+                                    <div>
+                                        <label className="text-muted text-sm font-semibold">Status</label>
+                                        <div className="mt-1">
+                                            <span className={`badge ${selectedTrainer.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                                                {selectedTrainer.status !== false ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Gallery */}
                                     {selectedTrainer.images && selectedTrainer.images.length > 0 && (
                                         <div>
                                             <label className="text-muted text-sm font-semibold">Gallery</label>
@@ -292,6 +312,17 @@ const TrainersPage = () => {
                     </div>
                 </div>
             )}
+
+            {/* Booking Modal */}
+            <BookingModal
+                trainer={trainerToBook}
+                isOpen={showBookingModal}
+                onClose={() => {
+                    setShowBookingModal(false);
+                    setTrainerToBook(null);
+                }}
+                onSuccess={handleBookingSuccess}
+            />
         </Fragment>
     );
 }

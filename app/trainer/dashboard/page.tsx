@@ -44,64 +44,51 @@ const TrainerDashboard = () => {
                                     </div>
                                 </div>
                             ) : trainer ? (
-                                <>
-                                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
-                                        {trainer.profilePhoto?.path ? (
-                                            <img
-                                                src={trainer.profilePhoto.path}
-                                                alt={trainer.name}
-                                                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-defaultborder flex-shrink-0"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-primary/10 flex items-center justify-center border-2 border-defaultborder flex-shrink-0">
-                                                <span className="text-primary font-semibold text-2xl sm:text-3xl">
-                                                    {trainer.name.charAt(0).toUpperCase()}
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div className="text-center sm:text-left">
-                                            <h3 className="text-xl sm:text-2xl font-bold mb-1">{trainer.name}</h3>
-                                            <p className="text-muted text-sm sm:text-base">{trainer.title}</p>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Welcome to your Dashboard</h3>
-                                    <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">
-                                        Manage your profile, view your training details, and update your information.
-                                    </p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                        <div className="p-3 sm:p-4 bg-primary/10 rounded-lg">
-                                            <h4 className="font-semibold text-base sm:text-lg text-primary mb-2">Specialties</h4>
-                                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                                {Array.isArray(trainer.specialistIn) ? (
-                                                    trainer.specialistIn.map((spec, idx) => (
-                                                        <span key={idx} className="badge bg-primary/20 text-primary">
-                                                            {spec}
-                                                        </span>
-                                                    ))
-                                                ) : (
-                                                    <span className="badge bg-primary/20 text-primary">
-                                                        {trainer.specialistIn}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="p-3 sm:p-4 bg-success/10 rounded-lg">
-                                            <h4 className="font-semibold text-base sm:text-lg text-success mb-2">Training Types</h4>
-                                            <p className="text-xl sm:text-2xl font-bold">
-                                                {Array.isArray(trainer.typeOfTraining) ? trainer.typeOfTraining.length : 1}
-                                            </p>
-                                        </div>
-                                        <div className="p-3 sm:p-4 bg-info/10 rounded-lg">
-                                            <h4 className="font-semibold text-base sm:text-lg text-info mb-2">Status</h4>
-                                            <span className={`badge ${trainer.status !== false ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'}`}>
-                                                {trainer.status !== false ? 'Active' : 'Inactive'}
+                                <div className="flex flex-col items-center text-center">
+                                    {/* Profile Photo */}
+                                    {trainer.profilePhoto?.path ? (
+                                        <img
+                                            src={trainer.profilePhoto.path}
+                                            alt={trainer.name}
+                                            className="w-32 h-32 rounded-full object-cover border-4 border-primary/20 mb-4"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-32 h-32 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center border-4 border-primary/20 mb-4">
+                                            <span className="text-primary font-semibold text-5xl">
+                                                {trainer.name.charAt(0).toUpperCase()}
                                             </span>
                                         </div>
+                                    )}
+
+                                    {/* Name and Title */}
+                                    <h3 className="text-2xl font-bold mb-2">{trainer.name}</h3>
+                                    <p className="text-muted text-lg mb-4">{trainer.title}</p>
+
+                                    {/* Specialties */}
+                                    <div className="flex flex-wrap gap-2 justify-center mb-4">
+                                        {Array.isArray(trainer.specialistIn) ? (
+                                            trainer.specialistIn.map((spec, idx) => (
+                                                <span key={idx} className="badge bg-primary/10 text-primary">
+                                                    {spec}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="badge bg-primary/10 text-primary">
+                                                {trainer.specialistIn}
+                                            </span>
+                                        )}
                                     </div>
-                                </>
+
+                                    {/* Status Badge */}
+                                    <div>
+                                        <span className={`badge ${trainer.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
+                                            {trainer.status !== false ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="text-center py-8">
                                     <p className="text-muted">Unable to load profile</p>

@@ -4,12 +4,14 @@ import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
 import TrainerService, { Trainer } from '@/services/trainerService';
 import { useRouter } from 'next/navigation';
-import Swal from 'sweetalert2';
+import BookingModal from './components/BookingModal';
 
 const CompanyDashboard = () => {
     const [trainers, setTrainers] = useState<Trainer[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalTrainers, setTotalTrainers] = useState(0);
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -40,13 +42,13 @@ const CompanyDashboard = () => {
 
     const handleBookTrainer = (trainer: Trainer, e: React.MouseEvent) => {
         e.stopPropagation();
-        Swal.fire({
-            title: 'Book Trainer',
-            html: `Would you like to book <strong>${trainer.name}</strong>?<br/><br/>This feature will be available soon!`,
-            icon: 'info',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#3085d6',
-        });
+        setTrainerToBook(trainer);
+        setShowBookingModal(true);
+    };
+
+    const handleBookingSuccess = () => {
+        setShowBookingModal(false);
+        setTrainerToBook(null);
     };
 
     return (
@@ -122,36 +124,44 @@ const CompanyDashboard = () => {
                                                         <img
                                                             src={trainer.profilePhoto.path}
                                                             alt={trainer.name}
-                                                            className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border-2 border-defaultborder"
+                                                            className="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-2 border-primary/20"
                                                             onError={(e) => {
                                                                 (e.target as HTMLImageElement).style.display = 'none';
                                                             }}
                                                         />
                                                     ) : (
-                                                        <div className="w-28 h-28 rounded-full bg-gradient-to-b from-gray-300 to-gray-600 flex items-center justify-center mx-auto mb-4 border-2 border-defaultborder">
-                                                            <span className="text-white font-semibold text-3xl">
+                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-3 border-2 border-primary/20">
+                                                            <span className="text-primary font-semibold text-2xl">
                                                                 {trainer.name.charAt(0).toUpperCase()}
                                                             </span>
                                                         </div>
                                                     )}
-                                                    <h5 className="font-bold text-base mb-1 text-defaulttextcolor capitalize">{trainer.name}</h5>
-                                                    <p className="text-muted text-sm mb-4 min-h-[2rem] line-clamp-2">{trainer.title}</p>
-                                                    <div className="flex flex-col gap-2 mt-4">
-                                                        <div className="w-full !bg-info/10 !text-info hover:!bg-info/20 rounded-lg !py-2.5 !px-3 flex items-center justify-center gap-2 border border-info/20 !font-medium !text-sm">
-                                                            <i className="ri-calendar-line text-base"></i>
-                                                            <span className="truncate">
-                                                                {Array.isArray(trainer.specialistIn) 
-                                                                    ? trainer.specialistIn.join(', ')
-                                                                    : trainer.specialistIn}
+                                                    <h5 className="font-bold text-sm mb-1 text-defaulttextcolor">{trainer.name}</h5>
+                                                    <p className="text-muted text-xs mb-3">{trainer.title}</p>
+                                                    <div className="flex flex-wrap gap-1 justify-center mb-3">
+                                                        {Array.isArray(trainer.specialistIn) ? (
+                                                            trainer.specialistIn.slice(0, 1).map((spec, idx) => (
+                                                                <span key={idx} className="badge bg-info/10 text-info text-xs">
+                                                                    {spec}
+                                                                </span>
+                                                            ))
+                                                        ) : (
+                                                            <span className="badge bg-info/10 text-info text-xs">
+                                                                {trainer.specialistIn}
                                                             </span>
-                                                        </div>
-                                                        <button
-                                                            onClick={(e) => handleBookTrainer(trainer, e)}
-                                                            className="ti-btn !bg-primary !text-white hover:!bg-primary/90 w-full !font-medium !py-2.5 rounded-lg"
-                                                        >
-                                                            Book
-                                                        </button>
+                                                        )}
+                                                        {Array.isArray(trainer.specialistIn) && trainer.specialistIn.length > 1 && (
+                                                            <span className="badge bg-secondary/10 text-secondary text-xs">
+                                                                +{trainer.specialistIn.length - 1}
+                                                            </span>
+                                                        )}
                                                     </div>
+                                                    <button
+                                                        onClick={(e) => handleBookTrainer(trainer, e)}
+                                                        className="ti-btn ti-btn-primary w-full text-xs"
+                                                    >
+                                                        Book
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -162,6 +172,17 @@ const CompanyDashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Booking Modal */}
+            <BookingModal
+                trainer={trainerToBook}
+                isOpen={showBookingModal}
+                onClose={() => {
+                    setShowBookingModal(false);
+                    setTrainerToBook(null);
+                }}
+                onSuccess={handleBookingSuccess}
+            />
         </Fragment>
     );
 }
