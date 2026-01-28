@@ -3,7 +3,7 @@ import React, { Fragment, useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { ThemeChanger } from "@/shared/redux/action";
 import Link from "next/link";
-import { basePath } from "@/next.config";
+import { basePath } from "@/Config/basePath";
 import store from "@/shared/redux/store";
 import SimpleBar from 'simplebar-react';
 import Menuloop from "@/shared/layout-components/sidebar/menuloop";
@@ -27,7 +27,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        
+
         window.addEventListener('resize', menuResizeFn);
         window.addEventListener('resize', checkHoriMenu);
         const mainContent = document.querySelector(".main-content");
@@ -38,7 +38,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
             }
         }
         if (mainContent) mainContent.addEventListener('click', menuClose);
-        
+
         // Update overlay visibility on state change
         const updateOverlay = () => {
             const overlay = document.querySelector("#responsive-overlay") as HTMLElement;
@@ -51,10 +51,10 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 }
             }
         };
-        
+
         const unsubscribe = store.subscribe(updateOverlay);
         updateOverlay();
-        
+
         return () => {
             window.removeEventListener("resize", menuResizeFn);
             window.removeEventListener('resize', checkHoriMenu);
@@ -522,7 +522,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
     return (
         <Fragment>
-            <div 
+            <div
                 id="responsive-overlay"
                 onClick={() => { menuClose(); }}
             ></div>
@@ -567,8 +567,8 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                                             </span>
                                             : ""}
                                         {levelone.type === "link" ?
-                                            <Link 
-                                                href={levelone.path} 
+                                            <Link
+                                                href={levelone.path}
                                                 className={`side-menu__item ${levelone.selected ? 'active' : ''}`}
                                                 onClick={handleLinkClick}
                                             >
@@ -603,7 +603,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                                             </Link>
                                             : ""}
                                         {levelone.type === "sub" ?
-                                            <Menuloop MenuItems={levelone} level={level + 1} toggleSidemenu={toggleSidemenu} HoverToggleInnerMenuFn={() => {}} />
+                                            <Menuloop MenuItems={levelone} level={level + 1} toggleSidemenu={toggleSidemenu} HoverToggleInnerMenuFn={() => { }} />
                                             : ''}
                                     </li>
                                 </Fragment>

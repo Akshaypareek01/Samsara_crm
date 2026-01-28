@@ -4,7 +4,7 @@ import React, { Fragment, useEffect } from 'react';
 import { ThemeChanger } from "@/shared/redux/action";
 import { connect } from 'react-redux';
 import store from '@/shared/redux/store';
-import { basePath } from '@/next.config';
+import { basePath } from '@/Config/basePath';
 import { useRouter } from 'next/navigation';
 import ApiService from '@/services/ApiService';
 

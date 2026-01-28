@@ -4,11 +4,11 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { ThemeChanger } from "../../redux/action";
 import { connect } from 'react-redux';
 import store from '@/shared/redux/store';
-import { basePath } from '@/next.config';
+import { basePath } from '@/Config/basePath';
 import { useRouter } from 'next/navigation';
 import AdminService from '@/services/adminService';
 
-const Header = ({ local_varaiable, ThemeChanger }:any) => {
+const Header = ({ local_varaiable, ThemeChanger }: any) => {
   const router = useRouter();
 
   const handleLogout = async (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -30,17 +30,17 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
   const span1 = <span className="text-warning">ID: #1116773</span>
   const span2 = <span className="text-success">ID: 7731116</span>
 
- const notifydata = [
-  { id: 1, class: "Your Order Has Been Shipped", data: "Order No: 123456 Has Shipped To Your Delivery Address", icon: "gift", class2: "", color: "!bg-primary/10",color2: "primary"},
-  { id: 2, class: "Discount Available", data: "Discount Available On Selected Products", icon: "discount-2", class2: "", color: "!bg-secondary/10",color2:"secondary" },
-  { id: 3, class: "Account Has Been Verified", data: "Your Account Has Been Verified Sucessfully", icon: "user-check", class2: "", color: "!bg-pinkmain/10",color2: "pink"},
-  { id: 4, class: "Order Placed", data: "Order Placed Successfully", icon: "circle-check", class2: span1, color: "!bg-warning/10",color2: "warning"},
-  { id: 5, class: "Order Delayed", data: "Order Delayed Unfortunately", icon: "clock", class2: span2, color: "!bg-success/10",color2: "success"},
-]
+  const notifydata = [
+    { id: 1, class: "Your Order Has Been Shipped", data: "Order No: 123456 Has Shipped To Your Delivery Address", icon: "gift", class2: "", color: "!bg-primary/10", color2: "primary" },
+    { id: 2, class: "Discount Available", data: "Discount Available On Selected Products", icon: "discount-2", class2: "", color: "!bg-secondary/10", color2: "secondary" },
+    { id: 3, class: "Account Has Been Verified", data: "Your Account Has Been Verified Sucessfully", icon: "user-check", class2: "", color: "!bg-pinkmain/10", color2: "pink" },
+    { id: 4, class: "Order Placed", data: "Order Placed Successfully", icon: "circle-check", class2: span1, color: "!bg-warning/10", color2: "warning" },
+    { id: 5, class: "Order Delayed", data: "Order Delayed Unfortunately", icon: "clock", class2: span2, color: "!bg-success/10", color2: "success" },
+  ]
 
   const [notifications, setNotifications] = useState([...notifydata]);
 
-  const handleNotificationClose = (index: number,event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+  const handleNotificationClose = (index: number, event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (event) {
       event.stopPropagation();
     }
@@ -99,7 +99,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
     }
   }
 
-  const toggleSidebar = () => { 
+  const toggleSidebar = () => {
     const theme = store.getState();
     let sidemenuType = theme.dataNavLayout;
     if (window.innerWidth >= 992) {
@@ -120,10 +120,10 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
           case "overlay":
             ThemeChanger({ ...theme, "dataNavStyle": "" });
             if (theme.dataToggled === "icon-overlay-close") {
-              ThemeChanger({ ...theme, "dataToggled": "","iconOverlay" :''});
+              ThemeChanger({ ...theme, "dataToggled": "", "iconOverlay": '' });
             } else {
               if (window.innerWidth >= 992) {
-                ThemeChanger({ ...theme, "dataToggled": "icon-overlay-close","iconOverlay" :'' });
+                ThemeChanger({ ...theme, "dataToggled": "icon-overlay-close", "iconOverlay": '' });
               }
             }
             break;
@@ -140,29 +140,29 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
           case "doublemenu":
             ThemeChanger({ ...theme, "dataNavStyle": "" });
             ThemeChanger({ ...theme, "dataNavStyle": "" });
-              if (theme.dataToggled === "double-menu-open") {
-                ThemeChanger({ ...theme, "dataToggled": "double-menu-close" });
-              } else {
-                let sidemenu = document.querySelector(".side-menu__item.active");
-                if (sidemenu) {
-                  ThemeChanger({ ...theme, "dataToggled": "double-menu-open" });
-                  if (sidemenu.nextElementSibling) {
-                    sidemenu.nextElementSibling.classList.add("double-menu-active");
-                  } else {
+            if (theme.dataToggled === "double-menu-open") {
+              ThemeChanger({ ...theme, "dataToggled": "double-menu-close" });
+            } else {
+              let sidemenu = document.querySelector(".side-menu__item.active");
+              if (sidemenu) {
+                ThemeChanger({ ...theme, "dataToggled": "double-menu-open" });
+                if (sidemenu.nextElementSibling) {
+                  sidemenu.nextElementSibling.classList.add("double-menu-active");
+                } else {
 
-                    ThemeChanger({ ...theme, "dataToggled": "double-menu-close" });
-                  }
+                  ThemeChanger({ ...theme, "dataToggled": "double-menu-close" });
                 }
               }
+            }
             break;
           // detached
           case "detached":
             if (theme.dataToggled === "detached-close") {
-              ThemeChanger({ ...theme, "dataToggled": "","iconOverlay" :'' });
+              ThemeChanger({ ...theme, "dataToggled": "", "iconOverlay": '' });
             } else {
-              ThemeChanger({ ...theme, "dataToggled": "detached-close","iconOverlay" :'' });
+              ThemeChanger({ ...theme, "dataToggled": "detached-close", "iconOverlay": '' });
             }
-            
+
             break;
 
           // default
@@ -183,7 +183,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
             if (theme.dataToggled === "menu-hover-closed") {
               ThemeChanger({ ...theme, "dataToggled": "" });
             } else {
-              ThemeChanger({ ...theme, "dataToggled": "menu-hover-closed"});
+              ThemeChanger({ ...theme, "dataToggled": "menu-hover-closed" });
 
             }
             break;
@@ -242,8 +242,8 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
         ThemeChanger({ ...theme, "dataToggled": "close" });
       }
     }
-    
-   
+
+
 
   };
   //Dark Model
@@ -253,7 +253,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
     ThemeChanger({
       ...local_varaiable,
       "class": local_varaiable.class == 'dark' ? 'light' : 'dark',
-      "dataHeaderStyles":local_varaiable.class == 'dark' ? 'light' : 'dark',
+      "dataHeaderStyles": local_varaiable.class == 'dark' ? 'light' : 'dark',
       "dataMenuStyles": local_varaiable.dataNavLayout == 'horizontal' ? local_varaiable.class == 'dark' ? 'light' : 'dark' : "dark"
 
     });
@@ -286,7 +286,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
   useEffect(() => {
     const navbar = document?.querySelector(".header");
     const navbar1 = document?.querySelector(".app-sidebar");
-    const sticky:any = navbar?.clientHeight;
+    const sticky: any = navbar?.clientHeight;
     // const sticky1 = navbar1.clientHeight;
 
     function stickyFn() {
@@ -429,7 +429,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
               <div className="header-element header-theme-mode hidden !items-center sm:block !py-[1rem] md:!px-[0.65rem] px-2" onClick={() => ToggleDark()}>
                 <button aria-label="anchor"
                   className="hs-dark-mode-active:hidden flex hs-dark-mode group flex-shrink-0 justify-center items-center gap-2  rounded-full font-medium transition-all text-xs dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
-                   data-hs-theme-click-value="dark">
+                  data-hs-theme-click-value="dark">
                   <i className="bx bx-moon header-link-icon"></i>
                 </button>
                 <button aria-label="anchor"
@@ -460,7 +460,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
                   </div>
                   <div className="dropdown-divider"></div>
                   <ul className="list-none !m-0 !p-0 end-0" id="header-notification-scroll">
-                  {notifications.map((idx, index) => (
+                    {notifications.map((idx, index) => (
                       <li className="ti-dropdown-item dropdown-item" key={Math.random()}>
                         <div className="flex items-start">
                           <div className="pe-2">
@@ -595,7 +595,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
                 </div>
               </div>
               <div className="header-element header-fullscreen py-[1rem] md:px-[0.65rem] px-2">
-              <button
+                <button
                   aria-label="anchor"
                   onClick={() => toggleFullscreen()}
                   className="inline-flex flex-shrink-0 justify-center items-center gap-2  !rounded-full font-medium dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
@@ -651,7 +651,7 @@ const Header = ({ local_varaiable, ThemeChanger }:any) => {
   )
 }
 
-const mapStateToProps = (state:any) => ({
+const mapStateToProps = (state: any) => ({
   local_varaiable: state
 });
 export default connect(mapStateToProps, { ThemeChanger })(Header);

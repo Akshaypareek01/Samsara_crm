@@ -1,6 +1,7 @@
 
 /**@type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: "",
   reactStrictMode: true,
   trailingSlash: true,
   swcMinify: true,
