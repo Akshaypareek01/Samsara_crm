@@ -9,11 +9,76 @@ import SimpleBar from 'simplebar-react';
 import Menuloop from "./menuloop";
 import { usePathname, useRouter } from "next/navigation";
 import { MenuItems } from "./nav";
+import { hasPermission } from "@/shared/utils/permissionUtils";
 
 const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
-	const [menuitems, setMenuitems] = useState(MenuItems);
+	const [menuitems, setMenuitems] = useState<any[]>([]);
 
-	const path = usePathname()	
+	useEffect(() => {
+		const userStr = localStorage.getItem("user");
+		if (userStr) {
+			const user = JSON.parse(userStr);
+
+			const filterMenuByPermission = (items: any[]): any[] => {
+				return items
+					.map((item) => {
+						// For titles/categories, they don't have permission key directly sometimes
+						// or they might have a permission key to hide the whole section
+						if (item.menutitle) {
+							// If a category has a permission check
+							if (item.permission && !hasPermission(user, item.permission)) {
+								return null;
+							}
+							return item;
+						}
+
+						// For regular items, check their permission
+						const visible = item.permission ? hasPermission(user, item.permission) : true;
+
+						if (!visible) return null;
+
+						// If it has children, filter them too
+						if (item.children && item.children.length > 0) {
+							const filteredChildren = filterMenuByPermission(item.children);
+							// If after filtering children, there are no children left and it's a sub menu, 
+							// we might want to hide it (unless it's a link itself)
+							if (filteredChildren.length === 0 && item.type === "sub") {
+								return null;
+							}
+							return { ...item, children: filteredChildren };
+						}
+
+						return item;
+					})
+					.filter((item) => item !== null);
+			};
+
+			// Special handling for categories: if a category has no items following it before the next category, hide it
+			const filtered = filterMenuByPermission(MenuItems);
+			const finalMenu: any[] = [];
+			for (let i = 0; i < filtered.length; i++) {
+				const item = filtered[i];
+				if (item.menutitle) {
+					// Check if there are any non-menutitle items before the next menutitle or end of list
+					let hasContent = false;
+					for (let j = i + 1; j < filtered.length; j++) {
+						if (filtered[j].menutitle) break;
+						hasContent = true;
+						break;
+					}
+					if (hasContent) finalMenu.push(item);
+				} else {
+					finalMenu.push(item);
+				}
+			}
+
+			setMenuitems(finalMenu);
+		} else {
+			setMenuitems(MenuItems);
+		}
+	}, []);
+
+	const path = usePathname()
 
 	function closeMenu() {
 		const closeMenudata = (items: any) => {
@@ -335,24 +400,24 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 	function setSubmenu(event: any, targetObject: any, MenuItems = menuitems) {
 		const theme = store.getState();
 		if ((window.screen.availWidth <= 992 || theme.dataNavStyle != "icon-hover") && (window.screen.availWidth <= 992 || theme.dataNavStyle != "menu-hover")) {
-		if (!event?.ctrlKey) {
-			for (const item of MenuItems) {
-				if (item === targetObject) {
-					item.active = true;
-					item.selected = true;
-					setMenuAncestorsActive(item);
-				} else if (!item.active && !item.selected) {
-					item.active = false; // Set active to false for items not matching the target
-					item.selected = false; // Set active to false for items not matching the target
-				} else {
-					removeActiveOtherMenus(item);
-				}
-				if (item.children && item.children.length > 0) {
-					setSubmenu(event, targetObject, item.children);
+			if (!event?.ctrlKey) {
+				for (const item of MenuItems) {
+					if (item === targetObject) {
+						item.active = true;
+						item.selected = true;
+						setMenuAncestorsActive(item);
+					} else if (!item.active && !item.selected) {
+						item.active = false; // Set active to false for items not matching the target
+						item.selected = false; // Set active to false for items not matching the target
+					} else {
+						removeActiveOtherMenus(item);
+					}
+					if (item.children && item.children.length > 0) {
+						setSubmenu(event, targetObject, item.children);
+					}
 				}
 			}
 		}
-	}
 		setMenuitems((arr: any) => [...arr]);
 	}
 
@@ -564,8 +629,8 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
 	const Sideclick = () => {
 		if (window.innerWidth > 992) {
-			const	theme = store.getState()  
-			if(theme.iconOverlay != "open"){
+			const theme = store.getState()
+			if (theme.iconOverlay != "open") {
 				ThemeChanger({ ...theme, iconOverlay: "open" });
 			}
 		}
@@ -621,7 +686,7 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 			}
 		}
 	}
-	const handleClick = (event:any) => {
+	const handleClick = (event: any) => {
 		// Your logic here
 		event.preventDefault(); // Prevents the default anchor behavior (navigation)
 		// ... other logic you want to perform on click
@@ -629,7 +694,7 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 	return (
 
 		<Fragment>
-			 
+
 			<div id="responsive-overlay"
 				onClick={() => { menuClose(); }}></div>
 			<aside className="app-sidebar" id="sidebar" onMouseOver={() => Onhover()}
@@ -646,24 +711,24 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 				</div>
 
 				<SimpleBar className="main-sidebar " id="sidebar-scroll">
-						<nav className="main-menu-container nav nav-pills flex-column sub-open">
-							<div className="slide-left" id="slide-left" onClick={() => { slideLeft(); }}><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
-								height="24" viewBox="0 0 24 24">
-								<path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
-							</svg></div>
+					<nav className="main-menu-container nav nav-pills flex-column sub-open">
+						<div className="slide-left" id="slide-left" onClick={() => { slideLeft(); }}><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
+							height="24" viewBox="0 0 24 24">
+							<path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
+						</svg></div>
 
-							<ul className="main-menu" onClick={() => Sideclick()}>
-								{MenuItems.map((levelone: any, index:any) => (
-									<Fragment key={index}>
-										<li className={`${levelone.menutitle ? 'slide__category' : ''} ${levelone.type === 'link' ? 'slide' : ''}
+						<ul className="main-menu" onClick={() => Sideclick()}>
+							{menuitems.map((levelone: any, index: any) => (
+								<Fragment key={index}>
+									<li className={`${levelone.menutitle ? 'slide__category' : ''} ${levelone.type === 'link' ? 'slide' : ''}
                                                ${levelone.type === 'sub' ? 'slide has-sub' : ''} ${levelone?.active ? 'open' : ''} ${levelone?.selected ? 'active' : ''}`}>
-											{levelone.menutitle ?
-												<span className='category-name'>
-													{levelone.menutitle}
-												</span>
-												: ""}
-											{levelone.type === "link" ?
-												<Link href={levelone.path} className={`side-menu__item ${levelone.selected ? 'active' : ''}`} >
+										{levelone.menutitle ?
+											<span className='category-name'>
+												{levelone.menutitle}
+											</span>
+											: ""}
+										{levelone.type === "link" ?
+											<Link href={levelone.path} className={`side-menu__item ${levelone.selected ? 'active' : ''}`} >
 												<span className={`hs-tooltip inline-block [--placement:right] leading-none ${local_varaiable?.dataVerticalStyle == 'doublemenu' ? '' : 'hidden'}`}>
 													<button type="button" className="hs-tooltip-toggle  inline-flex justify-center items-center
 															">
@@ -674,39 +739,39 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 													</button>
 												</span>
 
-												{local_varaiable.dataVerticalStyle != "doublemenu" ? levelone.icon :""}
-										
+												{local_varaiable.dataVerticalStyle != "doublemenu" ? levelone.icon : ""}
+
 
 												<span className="side-menu__label">{levelone.title} {levelone.badgetxt ? (<span className={levelone.class}> {levelone.badgetxt}</span>
-													) : (
-														""
-													)}
-													</span>
-												</Link>
-												: ""}
-											{levelone.type === "empty" ?
-												<Link href="#!" className='side-menu__item'
-												 onClick={handleClick}
-												>{levelone.icon}<span className=""> {levelone.title} {levelone.badgetxt ? (
-													<span className={levelone.class}>{levelone.badgetxt} </span>
 												) : (
 													""
 												)}
 												</span>
-												</Link>
-												: ""}
-											{levelone.type === "sub" ?
-												<Menuloop MenuItems={levelone} level={level + 1} toggleSidemenu={toggleSidemenu} HoverToggleInnerMenuFn={HoverToggleInnerMenuFn} />
-												: ''}
-										</li>
-									</Fragment>
-								))}
-							</ul>
+											</Link>
+											: ""}
+										{levelone.type === "empty" ?
+											<Link href="#!" className='side-menu__item'
+												onClick={handleClick}
+											>{levelone.icon}<span className=""> {levelone.title} {levelone.badgetxt ? (
+												<span className={levelone.class}>{levelone.badgetxt} </span>
+											) : (
+												""
+											)}
+												</span>
+											</Link>
+											: ""}
+										{levelone.type === "sub" ?
+											<Menuloop MenuItems={levelone} level={level + 1} toggleSidemenu={toggleSidemenu} HoverToggleInnerMenuFn={HoverToggleInnerMenuFn} />
+											: ''}
+									</li>
+								</Fragment>
+							))}
+						</ul>
 
-							<div className="slide-right" onClick={() => { slideRight(); }} id="slide-right">
-								<svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
-							</div>
-						</nav>
+						<div className="slide-right" onClick={() => { slideRight(); }} id="slide-right">
+							<svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg>
+						</div>
+					</nav>
 				</SimpleBar>
 			</aside>
 		</Fragment>

@@ -5,12 +5,14 @@ import Seo from '@/shared/layout-components/seo/seo';
 import UserService, { User, CreateUserRequest } from '@/services/userService';
 import membershipService, { UserMembership } from '@/services/membershipService';
 import { useRouter } from 'next/navigation';
+import { hasPermission } from '@/shared/utils/permissionUtils';
 
 const Users = () => {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
@@ -60,59 +62,63 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setAdminUser(JSON.parse(userStr));
+    }
     fetchUsers();
   }, [page, searchTerm]);
 
-const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    const params: any = {
-      role: 'user',
-      page,
-      limit: 10,
-      sortBy: 'name:asc',
-    };
-    
-    if (searchTerm) {
-      params.search = searchTerm;
-    }
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const params: any = {
+        role: 'user',
+        page,
+        limit: 10,
+        sortBy: 'name:asc',
+      };
 
-    const response = await UserService.getAllUsers(params);
-    
-    setUsers(response.data || []);
-    setTotalPages(response.totalPages || 1);
-    setError('');
-    
-    // Fetch memberships for these users
-    await fetchMembershipsForUsers(response.data || []);
-  } catch (err: any) {
-    setError(err.message || 'Failed to fetch users');
-    console.error('Error fetching users:', err);
-  } finally {
-    setLoading(false);
-  }
-};
-
-const fetchMembershipsForUsers = async (users: User[]) => {
-  const membershipsMap = new Map<string, UserMembership | null>();
-  
-  // Fetch memberships for all users on current page
-  await Promise.all(
-    users.map(async (user) => {
-      const userId = user._id || user.id;
-      if (userId) {
-        try {
-          const membership = await membershipService.getUserActiveMembership(userId);
-          membershipsMap.set(userId, membership);
-        } catch (error) {
-          membershipsMap.set(userId, null);
-        }
+      if (searchTerm) {
+        params.search = searchTerm;
       }
-    })
-  );
-  
-  setUserMemberships(membershipsMap);
-};
+
+      const response = await UserService.getAllUsers(params);
+
+      setUsers(response.data || []);
+      setTotalPages(response.totalPages || 1);
+      setError('');
+
+      // Fetch memberships for these users
+      await fetchMembershipsForUsers(response.data || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch users');
+      console.error('Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMembershipsForUsers = async (users: User[]) => {
+    const membershipsMap = new Map<string, UserMembership | null>();
+
+    // Fetch memberships for all users on current page
+    await Promise.all(
+      users.map(async (user) => {
+        const userId = user._id || user.id;
+        if (userId) {
+          try {
+            const membership = await membershipService.getUserActiveMembership(userId);
+            membershipsMap.set(userId, membership);
+          } catch (error) {
+            membershipsMap.set(userId, null);
+          }
+        }
+      })
+    );
+
+    setUserMemberships(membershipsMap);
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -191,7 +197,7 @@ const fetchMembershipsForUsers = async (users: User[]) => {
 
   const handleDelete = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
-    
+
     try {
       await UserService.deleteUser(userId);
       fetchUsers();
@@ -235,7 +241,7 @@ const fetchMembershipsForUsers = async (users: User[]) => {
   return (
     <Fragment>
       <Seo title="Users Management" />
-      
+
       <div className="md:flex block items-center justify-between my-[1.5rem] page-header-breadcrumb">
         <div>
           <p className="font-semibold text-[1.125rem] text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
@@ -246,13 +252,15 @@ const fetchMembershipsForUsers = async (users: User[]) => {
           </p>
         </div>
         <div className="btn-list md:mt-0 mt-2">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
-          >
-            <i className="ri-add-line inline-block me-1"></i>Add User
-          </button>
+          {hasPermission(adminUser, 'userManagement.users', 'create') && (
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
+            >
+              <i className="ri-add-line inline-block me-1"></i>Add User
+            </button>
+          )}
         </div>
       </div>
 
@@ -294,103 +302,105 @@ const fetchMembershipsForUsers = async (users: User[]) => {
                   </tr>
                 </thead>
                 <tbody>
-  {users.length === 0 ? (
-    <tr>
-      <td colSpan={7} className="text-center py-4">
-        No users found
-      </td>
-    </tr>
-  ) : (
-    users.map((user) => {
-      const userId = user._id || user.id;
-      const membership = userId ? userMemberships.get(userId) : null;
-      
-      return (
-        <tr key={userId}>
-          <td>
-            <div className="flex items-center">
-              {user.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt={user.name}
-                  className="w-10 h-10 rounded-full me-2"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center me-2">
-                  <span className="text-primary font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <span className="font-semibold">{user.name}</span>
-            </div>
-          </td>
-          <td>{user.email}</td>
-          <td>{user.mobile || '-'}</td>
-          <td>
-            <span className="badge bg-primary/10 text-primary">
-              {user.userCategory || 'Personal'}
-            </span>
-          </td>
-          <td>
-            {membership ? (
-              <div>
-                <span className={`badge ${
-                  membership.status === 'active' ? 'bg-success/10 text-success' :
-                  membership.status === 'expired' ? 'bg-danger/10 text-danger' :
-                  'bg-warning/10 text-warning'
-                }`}>
-                  {membership.planName}
-                </span>
-                <div className="text-[0.65rem] text-muted mt-1">
-                  Expires: {membershipService.formatDate(membership.endDate)}
-                </div>
-              </div>
-            ) : (
-              <span className="text-muted text-sm">No Membership</span>
-            )}
-          </td>
-          <td>
-            <span
-              className={`badge ${
-                (user.active !== false && user.status !== false) || user.isActive !== false
-                  ? 'bg-success/10 text-success'
-                  : 'bg-danger/10 text-danger'
-              }`}
-            >
-              {(user.active !== false && user.status !== false) || user.isActive !== false ? 'Active' : 'Inactive'}
-            </span>
-          </td>
-          <td>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleView(user)}
-                className="ti-btn ti-btn-sm ti-btn-info"
-                title="View Details"
-              >
-                <i className="ri-eye-line"></i>
-              </button>
-              <button
-                onClick={() => handleEdit(user)}
-                className="ti-btn ti-btn-sm ti-btn-primary"
-                title="Edit"
-              >
-                <i className="ri-edit-line"></i>
-              </button>
-              <button
-                onClick={() => handleDelete(userId!)}
-                className="ti-btn ti-btn-sm ti-btn-danger"
-                title="Delete"
-              >
-                <i className="ri-delete-bin-line"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      );
-    })
-  )}
-</tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4">
+                        No users found
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user) => {
+                      const userId = user._id || user.id;
+                      const membership = userId ? userMemberships.get(userId) : null;
+
+                      return (
+                        <tr key={userId}>
+                          <td>
+                            <div className="flex items-center">
+                              {user.profileImage ? (
+                                <img
+                                  src={user.profileImage}
+                                  alt={user.name}
+                                  className="w-10 h-10 rounded-full me-2"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center me-2">
+                                  <span className="text-primary font-semibold">
+                                    {user.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              <span className="font-semibold">{user.name}</span>
+                            </div>
+                          </td>
+                          <td>{user.email}</td>
+                          <td>{user.mobile || '-'}</td>
+                          <td>
+                            <span className="badge bg-primary/10 text-primary">
+                              {user.userCategory || 'Personal'}
+                            </span>
+                          </td>
+                          <td>
+                            {membership ? (
+                              <div>
+                                <span className={`badge ${membership.status === 'active' ? 'bg-success/10 text-success' :
+                                  membership.status === 'expired' ? 'bg-danger/10 text-danger' :
+                                    'bg-warning/10 text-warning'
+                                  }`}>
+                                  {membership.planName}
+                                </span>
+                                <div className="text-[0.65rem] text-muted mt-1">
+                                  Expires: {membershipService.formatDate(membership.endDate)}
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-muted text-sm">No Membership</span>
+                            )}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${(user.active !== false && user.status !== false) || user.isActive !== false
+                                ? 'bg-success/10 text-success'
+                                : 'bg-danger/10 text-danger'
+                                }`}
+                            >
+                              {(user.active !== false && user.status !== false) || user.isActive !== false ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleView(user)}
+                                className="ti-btn ti-btn-sm ti-btn-info"
+                                title="View Details"
+                              >
+                                <i className="ri-eye-line"></i>
+                              </button>
+                              {hasPermission(adminUser, 'userManagement.users', 'update') && (
+                                <button
+                                  onClick={() => handleEdit(user)}
+                                  className="ti-btn ti-btn-sm ti-btn-primary"
+                                  title="Edit"
+                                >
+                                  <i className="ri-edit-line"></i>
+                                </button>
+                              )}
+                              {hasPermission(adminUser, 'userManagement.users', 'delete') && (
+                                <button
+                                  onClick={() => handleDelete(userId!)}
+                                  className="ti-btn ti-btn-sm ti-btn-danger"
+                                  title="Delete"
+                                >
+                                  <i className="ri-delete-bin-line"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
               </table>
             </div>
           )}
@@ -757,11 +767,10 @@ const fetchMembershipsForUsers = async (users: User[]) => {
                   <h4 className="font-semibold text-lg">{viewingUser.name}</h4>
                   <p className="text-muted">{viewingUser.email}</p>
                   <span
-                    className={`badge mt-2 ${
-                      (viewingUser.active !== false && viewingUser.status !== false) || viewingUser.isActive !== false
-                        ? 'bg-success/10 text-success'
-                        : 'bg-danger/10 text-danger'
-                    }`}
+                    className={`badge mt-2 ${(viewingUser.active !== false && viewingUser.status !== false) || viewingUser.isActive !== false
+                      ? 'bg-success/10 text-success'
+                      : 'bg-danger/10 text-danger'
+                      }`}
                   >
                     {(viewingUser.active !== false && viewingUser.status !== false) || viewingUser.isActive !== false
                       ? 'Active'

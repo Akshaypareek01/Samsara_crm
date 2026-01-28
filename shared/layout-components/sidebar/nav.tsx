@@ -21,6 +21,7 @@ export const MenuItems: any = [
     type: "sub",
     active: false,
     selected: false,
+    permission: "dashboard",
     children: [
       {
         path: "/dashboards/analytics",
@@ -29,6 +30,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Analytics",
+        permission: "dashboard",
       },
     ],
   },
@@ -39,6 +41,7 @@ export const MenuItems: any = [
     type: "sub",
     active: false,
     selected: false,
+    permission: "userManagement",
     children: [
       {
         path: "/apps/crm/users",
@@ -47,6 +50,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Users",
+        permission: "userManagement.users",
       },
       {
         path: "/apps/crm/teachers",
@@ -55,6 +59,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Teachers",
+        permission: "userManagement.teachers",
       },
       {
         path: "/apps/crm/trainers",
@@ -63,6 +68,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Trainers",
+        permission: "userManagement.trainers",
       },
     ],
   },
@@ -75,6 +81,7 @@ export const MenuItems: any = [
     selected: false,
     dirchange: false,
     path: "/apps/crm/companies",
+    permission: "companyManagement",
   },
 
   {
@@ -85,6 +92,7 @@ export const MenuItems: any = [
     selected: false,
     dirchange: false,
     path: "/apps/crm/bookings",
+    permission: "bookingManagement",
   },
 
   {
@@ -93,6 +101,7 @@ export const MenuItems: any = [
     type: "sub",
     active: false,
     selected: false,
+    permission: "membershipManagement",
     children: [
       {
         path: "/apps/crm/membership-plans",
@@ -101,6 +110,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Membership Plans",
+        permission: "membershipManagement",
       },
       {
         path: "/apps/crm/coupons",
@@ -109,6 +119,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Coupons",
+        permission: "membershipManagement",
       },
       {
         path: "/apps/crm/transactions",
@@ -117,6 +128,7 @@ export const MenuItems: any = [
         selected: false,
         dirchange: false,
         title: "Transactions",
+        permission: "membershipManagement",
       },
     ],
   },
@@ -129,5 +141,33 @@ export const MenuItems: any = [
     selected: false,
     dirchange: false,
     path: "/apps/crm/classes",
+    permission: "classManagement",
+  },
+
+  {
+    menutitle: "TEAM MANAGEMENT",
+    permission: "teamManagement",
+  },
+
+  {
+    icon: <i className="bx bx-shield-quarter side-menu__icon"></i>,
+    title: "Role Management",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/roles",
+    permission: "roleManagement",
+  },
+
+  {
+    icon: <i className="bx bx-group side-menu__icon"></i>,
+    title: "Team Members",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/team",
+    permission: "teamManagement",
   },
 ];

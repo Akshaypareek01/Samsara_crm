@@ -5,6 +5,7 @@ import Seo from '@/shared/layout-components/seo/seo';
 import bookingService, { Booking, ApproveBookingRequest, RejectBookingRequest } from '@/services/bookingService';
 import Swal from 'sweetalert2';
 import StatusBadge from '@/shared/components/StatusBadge';
+import { hasPermission } from '@/shared/utils/permissionUtils';
 
 const BookingsManagement = () => {
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
@@ -12,6 +13,7 @@ const BookingsManagement = () => {
     const [allBookings, setAllBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [adminUser, setAdminUser] = useState<any>(null);
 
     // Approval/Rejection modals
     const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -39,6 +41,10 @@ const BookingsManagement = () => {
     const [totalResults, setTotalResults] = useState(0);
 
     useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            setAdminUser(JSON.parse(userStr));
+        }
         if (activeTab === 'pending') {
             fetchPendingBookings();
         } else {
@@ -219,8 +225,8 @@ const BookingsManagement = () => {
                             <button
                                 onClick={() => setActiveTab('pending')}
                                 className={`pb-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted hover:text-defaulttextcolor'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted hover:text-defaulttextcolor'
                                     }`}
                             >
                                 Pending Approvals
@@ -233,8 +239,8 @@ const BookingsManagement = () => {
                             <button
                                 onClick={() => setActiveTab('all')}
                                 className={`pb-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'all'
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted hover:text-defaulttextcolor'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted hover:text-defaulttextcolor'
                                     }`}
                             >
                                 All Bookings
@@ -342,20 +348,24 @@ const BookingsManagement = () => {
                                                         </button>
                                                         {booking.status === 'pending_approval' && (
                                                             <>
-                                                                <button
-                                                                    onClick={() => handleApprove(booking)}
-                                                                    className="ti-btn ti-btn-sm ti-btn-success"
-                                                                    title="Approve"
-                                                                >
-                                                                    <i className="ri-check-line"></i>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleReject(booking)}
-                                                                    className="ti-btn ti-btn-sm ti-btn-danger"
-                                                                    title="Reject"
-                                                                >
-                                                                    <i className="ri-close-line"></i>
-                                                                </button>
+                                                                {hasPermission(adminUser, 'bookingManagement', 'update') && (
+                                                                    <button
+                                                                        onClick={() => handleApprove(booking)}
+                                                                        className="ti-btn ti-btn-sm ti-btn-success"
+                                                                        title="Approve"
+                                                                    >
+                                                                        <i className="ri-check-line"></i>
+                                                                    </button>
+                                                                )}
+                                                                {hasPermission(adminUser, 'bookingManagement', 'update') && (
+                                                                    <button
+                                                                        onClick={() => handleReject(booking)}
+                                                                        className="ti-btn ti-btn-sm ti-btn-danger"
+                                                                        title="Reject"
+                                                                    >
+                                                                        <i className="ri-close-line"></i>
+                                                                    </button>
+                                                                )}
                                                             </>
                                                         )}
                                                     </div>

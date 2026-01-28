@@ -6,54 +6,50 @@ import Header from "@/shared/layout-components/header/header"
 import Sidebar from "@/shared/layout-components/sidebar/sidebar"
 import Switcher from "@/shared/layout-components/switcher/switcher"
 import { ThemeChanger } from "@/shared/redux/action"
-import store from "@/shared/redux/store"
-import { Fragment,  useState } from "react"
-import {  connect } from "react-redux"
+import { Fragment, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import AuthGuard from "@/shared/components/AuthGuard"
 
-const Layout = ({children,}:any) => {
+const Layout = ({ children, }: any) => {
 
+  const dispatch = useDispatch();
+  const theme = useSelector((state: any) => state);
   const [MyclassName, setMyClass] = useState("");
 
   const Bodyclickk = () => {
-    const theme = store.getState();
     if (localStorage.getItem("ynexverticalstyles") == "icontext") {
       setMyClass("");
     }
     if (window.innerWidth > 992) {
       if (theme.iconOverlay === 'open') {
-        ThemeChanger({ ...theme, iconOverlay: "" });
+        dispatch(ThemeChanger({ ...theme, iconOverlay: "" }) as any);
       }
     }
   }
 
   return (
     <>
-    <AuthGuard>
-      <Fragment>
-        <Switcher/>
-        <div className='page'>
-          <Header/>
-          <Sidebar/>
-          <div className='content'>
-            <div className='main-content'  
-            onClick={Bodyclickk}
-            >
-              {children}
+      <AuthGuard>
+        <Fragment>
+          <Switcher />
+          <div className='page'>
+            <Header />
+            <Sidebar />
+            <div className='content'>
+              <div className='main-content'
+                onClick={Bodyclickk}
+              >
+                {children}
+              </div>
             </div>
+            <Footer />
           </div>
-          <Footer/>
-        </div>
-        <Backtotop/>
-        <PrelineScript/>
-      </Fragment>
-    </AuthGuard>
+          <Backtotop />
+          <PrelineScript />
+        </Fragment>
+      </AuthGuard>
     </>
   )
 }
 
-const mapStateToProps = (state: any) => ({
-  local_varaiable: state
-});
-
-export default connect(mapStateToProps, { ThemeChanger})(Layout);
+export default Layout;
