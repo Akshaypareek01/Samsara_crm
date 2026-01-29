@@ -27,6 +27,7 @@ export interface MembershipPlan {
   planType: 'basic' | 'premium' | 'enterprise' | 'trial' | 'limited-time';
   maxUsers: number;
   razorpayPlanId?: string;
+  appleProductId?: string;
   metadata?: any;
   totalPrice?: number;
   createdAt?: string;
@@ -49,7 +50,7 @@ export interface CreateMembershipPlanRequest {
   maxUsers?: number;
 }
 
-export interface UpdateMembershipPlanRequest extends Partial<CreateMembershipPlanRequest> {}
+export interface UpdateMembershipPlanRequest extends Partial<CreateMembershipPlanRequest> { }
 
 export interface GetMembershipPlansParams {
   sortBy?: string;
@@ -74,7 +75,7 @@ class MembershipPlanService {
   async getMembershipPlans(params: GetMembershipPlansParams = {}): Promise<MembershipPlansResponse> {
     try {
       const response = await ApiService.get('/membership-plans', params);
-      
+
       let plansArray: MembershipPlan[] = [];
       let total = 0;
       let page = params.page || 1;
@@ -88,16 +89,16 @@ class MembershipPlanService {
       } else if (response && typeof response === 'object') {
         if (Array.isArray(response.results)) {
           plansArray = response.results;
-          total = (response.total !== undefined && response.total !== null) 
-            ? response.total 
+          total = (response.total !== undefined && response.total !== null)
+            ? response.total
             : response.results.length;
           page = response.page || page;
           limit = response.limit || limit;
           totalPages = response.totalPages || Math.ceil(total / limit);
         } else if (Array.isArray(response.data)) {
           plansArray = response.data;
-          total = (response.total !== undefined && response.total !== null) 
-            ? response.total 
+          total = (response.total !== undefined && response.total !== null)
+            ? response.total
             : response.data.length;
           page = response.page || page;
           limit = response.limit || limit;
