@@ -3,8 +3,11 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import UserService, { User, CreateUserRequest } from '@/services/userService';
+import { hasPermission } from '@/shared/utils/permissionUtils';
+import Swal from 'sweetalert2';
 
 const Teachers = () => {
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [teachers, setTeachers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -48,6 +51,11 @@ const Teachers = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) setAdminUser(JSON.parse(userStr));
+  }, []);
 
   useEffect(() => {
     fetchTeachers();
@@ -143,13 +151,23 @@ const Teachers = () => {
   };
 
   const handleDelete = async (teacherId: string) => {
-    if (!confirm('Are you sure you want to delete this teacher?')) return;
-    
-    try {
-      await UserService.deleteUser(teacherId);
-      fetchTeachers();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete teacher');
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    });
+    if (result.isConfirmed) {
+      try {
+        await UserService.deleteUser(teacherId);
+        Swal.fire('Deleted!', 'Teacher has been deleted.', 'success');
+        fetchTeachers();
+      } catch (err: any) {
+        Swal.fire('Error!', err.message || 'Failed to delete teacher', 'error');
+      }
     }
   };
 
@@ -196,26 +214,29 @@ const Teachers = () => {
       
       <div className="md:flex block items-center justify-between my-[1.5rem] page-header-breadcrumb">
         <div>
-          <p className="font-semibold text-[1.125rem] text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
+          <p className="font-semibold text-sm text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
             Teachers Management
           </p>
-          <p className="font-normal text-[#8c9097] dark:text-white/50 text-[0.813rem]">
+          <p className="font-normal text-[#8c9097] dark:text-white/50 text-xs">
             Manage all teachers in the system
           </p>
         </div>
         <div className="btn-list md:mt-0 mt-2">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
-          >
-            <i className="ri-add-line inline-block me-1"></i>Add Teacher
-          </button>
+          {hasPermission(adminUser, 'userManagement.teachers', 'create') && (
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="ti-btn bg-primary text-white btn-wave shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 !text-sm !py-2 !px-3 !rounded-md font-medium"
+            >
+              <i className="ri-add-line text-sm"></i>
+              <span>Add Teacher</span>
+            </button>
+          )}
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-danger" role="alert">
+        <div className="alert alert-danger text-sm py-2" role="alert">
           {error}
         </div>
       )}
@@ -225,7 +246,7 @@ const Teachers = () => {
           <div className="mb-4">
             <input
               type="text"
-              className="form-control"
+              className="form-control text-sm py-1.5"
               placeholder="Search teachers..."
               value={searchTerm}
               onChange={(e) => {
@@ -236,12 +257,12 @@ const Teachers = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-4">Loading...</div>
+            <div className="text-center py-4 text-sm">Loading...</div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-bordered table-hover whitespace-nowrap min-w-full">
+            <div className="table-responsive text-sm">
+              <table className="table table-bordered table-hover whitespace-nowrap min-w-full text-sm">
                 <thead>
-                  <tr>
+                  <tr className="text-xs">
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile</th>
@@ -255,7 +276,7 @@ const Teachers = () => {
                 <tbody>
                   {teachers.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-4">
+                      <td colSpan={8} className="text-center py-4 text-sm">
                         No teachers found
                       </td>
                     </tr>
@@ -317,28 +338,32 @@ const Teachers = () => {
                           </span>
                         </td>
                         <td>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleView(teacher)}
-                              className="ti-btn ti-btn-sm ti-btn-info"
+                              className="ti-btn ti-btn-sm ti-btn-info !text-xs !py-1 !px-1.5"
                               title="View Details"
                             >
-                              <i className="ri-eye-line"></i>
+                              <i className="ri-eye-line text-xs"></i>
                             </button>
-                            <button
-                              onClick={() => handleEdit(teacher)}
-                              className="ti-btn ti-btn-sm ti-btn-primary"
-                              title="Edit"
-                            >
-                              <i className="ri-edit-line"></i>
-                            </button>
-                            <button
-                              onClick={() => handleDelete(teacher._id || teacher.id!)}
-                              className="ti-btn ti-btn-sm ti-btn-danger"
-                              title="Delete"
-                            >
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
+                            {hasPermission(adminUser, 'userManagement.teachers', 'update') && (
+                              <button
+                                onClick={() => handleEdit(teacher)}
+                                className="ti-btn ti-btn-sm ti-btn-primary !text-xs !py-1 !px-1.5"
+                                title="Edit"
+                              >
+                                <i className="ri-edit-line text-xs"></i>
+                              </button>
+                            )}
+                            {hasPermission(adminUser, 'userManagement.teachers', 'delete') && (
+                              <button
+                                onClick={() => handleDelete(teacher._id || teacher.id!)}
+                                className="ti-btn ti-btn-sm ti-btn-danger !text-xs !py-1 !px-1.5"
+                                title="Delete"
+                              >
+                                <i className="ri-delete-bin-line text-xs"></i>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -350,21 +375,19 @@ const Teachers = () => {
           )}
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 text-sm">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="ti-btn ti-btn-sm"
+                className="ti-btn ti-btn-sm !text-xs !py-1 !px-2"
               >
                 Previous
               </button>
-              <span>
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-xs">Page {page} of {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="ti-btn ti-btn-sm"
+                className="ti-btn ti-btn-sm !text-xs !py-1 !px-2"
               >
                 Next
               </button>
@@ -373,208 +396,234 @@ const Teachers = () => {
         </div>
       </div>
 
+      {/* Edit/Add teacher side drawer */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={handleCloseModal}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-bodybg shadow-xl z-50 flex flex-col animate-slide-in-right"
+            role="dialog"
+            aria-labelledby="drawer-title"
+          >
+            <div className="flex items-center justify-between py-2 px-4 border-b border-defaultborder dark:border-white/10 shrink-0">
+              <h3 id="drawer-title" className="text-base font-semibold">
                 {editingTeacher ? 'Edit Teacher' : 'Add New Teacher'}
               </h3>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="ti-btn ti-btn-sm ti-btn-ghost"
+                className="ti-btn ti-btn-sm ti-btn-ghost !text-xs !p-1"
+                aria-label="Close"
               >
                 <i className="ri-close-line"></i>
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">Name *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Email *</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Mobile</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    value={formData.mobile}
-                    onChange={(e) =>
-                      setFormData({ ...formData, mobile: e.target.value })
-                    }
-                  />
-                </div>
-                {!editingTeacher && (
+            <div className="flex-1 overflow-y-auto px-4 py-4 text-sm">
+              <form onSubmit={handleSubmit} className="h-full">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="form-label">Password *</label>
+                    <label className="form-label text-xs">Name *</label>
                     <input
-                      type="password"
-                      className="form-control"
-                      value={formData.password}
+                      type="text"
+                      className="form-control text-sm py-1.5"
+                      value={formData.name}
                       onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
+                        setFormData({ ...formData, name: e.target.value })
                       }
-                      required={!editingTeacher}
+                      required
                     />
                   </div>
-                )}
-                <div>
-                  <label className="form-label">Gender</label>
-                  <select
-                    className="form-control"
-                    value={formData.gender}
-                    onChange={(e) =>
-                      setFormData({ ...formData, gender: e.target.value })
-                    }
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Age</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.age}
-                    onChange={(e) =>
-                      setFormData({ ...formData, age: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Teacher Category</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.teacherCategory}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        teacherCategory: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., Yoga Trainer, Fitness Coach"
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Teaching Experience</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.teachingExperience}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        teachingExperience: e.target.value,
-                      })
-                    }
-                    placeholder="e.g., 5 years"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="form-label">About Me</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={formData.AboutMe}
-                    onChange={(e) =>
-                      setFormData({ ...formData, AboutMe: e.target.value })
-                    }
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="form-label">Expertise</label>
-                  <div className="flex flex-wrap gap-2">
-                    {['Hatha Yoga', 'Vinyasa', 'Ashtanga', 'Yin Yoga', 'Power Yoga', 'Meditation', 'Restorative Yoga', 'Kids Yoga'].map(
-                      (exp) => (
-                        <label key={exp} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.expertise?.includes(exp)}
-                            onChange={() => handleExpertiseChange(exp)}
-                            className="me-2"
-                          />
-                          {exp}
-                        </label>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 justify-end mt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="ti-btn ti-btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="ti-btn ti-btn-primary">
-                  {editingTeacher ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showViewModal && viewingTeacher && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Teacher Details</h3>
-              <button
-                onClick={handleCloseViewModal}
-                className="ti-btn ti-btn-sm ti-btn-ghost"
-              >
-                <i className="ri-close-line"></i>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12 md:col-span-4">
-                <div className="text-center">
-                  {viewingTeacher.profileImage ? (
-                    <img
-                      src={viewingTeacher.profileImage}
-                      alt={viewingTeacher.name}
-                      className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+                  <div>
+                    <label className="form-label text-xs">Email *</label>
+                    <input
+                      type="email"
+                      className="form-control text-sm py-1.5"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      required
                     />
-                  ) : (
-                    <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <span className="text-primary font-semibold text-4xl">
-                        {viewingTeacher.name.charAt(0).toUpperCase()}
-                      </span>
+                  </div>
+                  <div>
+                    <label className="form-label text-xs">Mobile</label>
+                    <input
+                      type="tel"
+                      className="form-control text-sm py-1.5"
+                      value={formData.mobile}
+                      onChange={(e) =>
+                        setFormData({ ...formData, mobile: e.target.value })
+                      }
+                    />
+                  </div>
+                  {!editingTeacher && (
+                    <div>
+                      <label className="form-label text-xs">Password *</label>
+                      <input
+                        type="password"
+                        className="form-control text-sm py-1.5"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        required={!editingTeacher}
+                      />
                     </div>
                   )}
-                  <h4 className="font-semibold text-lg">{viewingTeacher.name}</h4>
-                  <p className="text-muted">{viewingTeacher.email}</p>
+                  <div>
+                    <label className="form-label text-xs">Gender</label>
+                    <select
+                      className="form-control text-sm py-1.5"
+                      value={formData.gender}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gender: e.target.value })
+                      }
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="form-label text-xs">Age</label>
+                    <input
+                      type="text"
+                      className="form-control text-sm py-1.5"
+                      value={formData.age}
+                      onChange={(e) =>
+                        setFormData({ ...formData, age: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label text-xs">Teacher Category</label>
+                    <input
+                      type="text"
+                      className="form-control text-sm py-1.5"
+                      value={formData.teacherCategory}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacherCategory: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., Yoga Trainer, Fitness Coach"
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label text-xs">Teaching Experience</label>
+                    <input
+                      type="text"
+                      className="form-control text-sm py-1.5"
+                      value={formData.teachingExperience}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teachingExperience: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 5 years"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="form-label text-xs">About Me</label>
+                    <textarea
+                      className="form-control text-sm py-1.5"
+                      rows={3}
+                      value={formData.AboutMe}
+                      onChange={(e) =>
+                        setFormData({ ...formData, AboutMe: e.target.value })
+                      }
+                      placeholder="Tell us about yourself..."
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="form-label text-xs">Expertise</label>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {['Hatha Yoga', 'Vinyasa', 'Ashtanga', 'Yin Yoga', 'Power Yoga', 'Meditation', 'Restorative Yoga', 'Kids Yoga'].map(
+                        (exp) => (
+                          <label key={exp} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={formData.expertise?.includes(exp)}
+                              onChange={() => handleExpertiseChange(exp)}
+                              className="me-2"
+                            />
+                            {exp}
+                          </label>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end mt-4">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="ti-btn ti-btn-sm ti-btn-secondary !text-xs !py-1.5 !px-2.5"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="ti-btn ti-btn-sm ti-btn-primary !text-xs !py-1.5 !px-2.5">
+                    {editingTeacher ? 'Update' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* View teacher side drawer */}
+      {showViewModal && viewingTeacher && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={handleCloseViewModal}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-bodybg shadow-xl z-50 flex flex-col animate-slide-in-right"
+            role="dialog"
+            aria-labelledby="view-drawer-title"
+          >
+            <div className="flex items-center justify-between py-2 px-4 border-b border-defaultborder dark:border-white/10 shrink-0">
+              <h3 id="view-drawer-title" className="text-base font-semibold">Teacher Details</h3>
+              <button
+                type="button"
+                onClick={handleCloseViewModal}
+                className="ti-btn ti-btn-sm ti-btn-ghost !text-xs !p-1"
+                aria-label="Close"
+              >
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4 text-sm">
+              {/* Profile block: avatar + name, email, status — full width, then data below */}
+              <div className="flex items-center gap-3 pb-4 mb-4 border-b border-defaultborder dark:border-white/10">
+                {viewingTeacher.profileImage ? (
+                  <img
+                    src={viewingTeacher.profileImage}
+                    alt={viewingTeacher.name}
+                    className="w-14 h-14 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-primary font-semibold text-xl">
+                      {viewingTeacher.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold text-base truncate">{viewingTeacher.name}</h4>
+                  <p className="text-muted text-xs truncate">{viewingTeacher.email}</p>
                   <span
-                    className={`badge mt-2 ${
+                    className={`badge mt-1 text-xs ${
                       (viewingTeacher.active !== false && viewingTeacher.status !== false) || viewingTeacher.isActive !== false
                         ? 'bg-success/10 text-success'
                         : 'bg-danger/10 text-danger'
@@ -586,102 +635,96 @@ const Teachers = () => {
                   </span>
                 </div>
               </div>
-
-              <div className="col-span-12 md:col-span-8">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-muted text-sm">Mobile</label>
-                    <p className="font-medium">{viewingTeacher.mobile || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Gender</label>
-                    <p className="font-medium">{viewingTeacher.gender || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Age</label>
-                    <p className="font-medium">{viewingTeacher.age || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Teacher Category</label>
-                    <p className="font-medium">
-                      {viewingTeacher.teacherCategory || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Teaching Experience</label>
-                    <p className="font-medium">
-                      {viewingTeacher.teachingExperience || '-'}
-                    </p>
-                  </div>
-                  {viewingTeacher.AboutMe && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">About Me</label>
-                      <p className="font-medium">{viewingTeacher.AboutMe}</p>
+              {/* User data below */}
+              <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-muted text-xs">Mobile</label>
+                      <p className="font-medium text-sm">{viewingTeacher.mobile || '-'}</p>
                     </div>
-                  )}
-                  {viewingTeacher.expertise && viewingTeacher.expertise.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Expertise</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {viewingTeacher.expertise.map((exp, idx) => (
-                          <span
-                            key={idx}
-                            className="badge bg-secondary/10 text-secondary"
-                          >
-                            {exp}
-                          </span>
-                        ))}
+                    <div>
+                      <label className="text-muted text-xs">Gender</label>
+                      <p className="font-medium text-sm">{viewingTeacher.gender || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="text-muted text-xs">Age</label>
+                      <p className="font-medium text-sm">{viewingTeacher.age || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="text-muted text-xs">Teacher Category</label>
+                      <p className="font-medium text-sm">{viewingTeacher.teacherCategory || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="text-muted text-xs">Teaching Experience</label>
+                      <p className="font-medium text-sm">{viewingTeacher.teachingExperience || '-'}</p>
+                    </div>
+                    {viewingTeacher.AboutMe && (
+                      <div className="col-span-2">
+                        <label className="text-muted text-xs">About Me</label>
+                        <p className="font-medium text-sm">{viewingTeacher.AboutMe}</p>
                       </div>
-                    </div>
-                  )}
-                  {viewingTeacher.qualification && viewingTeacher.qualification.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Qualifications</label>
-                      <div className="mt-2 space-y-2">
-                        {viewingTeacher.qualification.map((qual, idx) => (
-                          <div key={idx} className="border border-defaultborder/10 rounded p-2">
-                            <p className="font-medium">{qual.degree}</p>
-                            <p className="text-sm text-muted">{qual.institution}</p>
-                            <p className="text-sm text-muted">Year: {qual.year}</p>
-                          </div>
-                        ))}
+                    )}
+                    {viewingTeacher.expertise && viewingTeacher.expertise.length > 0 && (
+                      <div className="col-span-2">
+                        <label className="text-muted text-xs">Expertise</label>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {viewingTeacher.expertise.map((exp, idx) => (
+                            <span
+                              key={idx}
+                              className="badge bg-secondary/10 text-secondary text-xs"
+                            >
+                              {exp}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {viewingTeacher.additional_courses && viewingTeacher.additional_courses.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Additional Courses</label>
-                      <div className="mt-2 space-y-2">
-                        {viewingTeacher.additional_courses.map((course, idx) => (
-                          <div key={idx} className="border border-defaultborder/10 rounded p-2">
-                            <p className="font-medium">{course.course}</p>
-                            <p className="text-sm text-muted">{course.institution}</p>
-                            <p className="text-sm text-muted">Year: {course.year}</p>
-                          </div>
-                        ))}
+                    )}
+                    {viewingTeacher.qualification && viewingTeacher.qualification.length > 0 && (
+                      <div className="col-span-2">
+                        <label className="text-muted text-xs">Qualifications</label>
+                        <div className="mt-1 space-y-1">
+                          {viewingTeacher.qualification.map((qual, idx) => (
+                            <div key={idx} className="border border-defaultborder/10 rounded p-1.5 text-sm">
+                              <p className="font-medium">{qual.degree}</p>
+                              <p className="text-xs text-muted">{qual.institution}</p>
+                              <p className="text-xs text-muted">Year: {qual.year}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {viewingTeacher.images && viewingTeacher.images.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Additional Images</label>
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {viewingTeacher.images.map((img: any, idx: number) => (
-                          <img
-                            key={idx}
-                            src={typeof img === 'string' ? img : img.url || img.path}
-                            alt={`Image ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded"
-                          />
-                        ))}
+                    )}
+                    {viewingTeacher.additional_courses && viewingTeacher.additional_courses.length > 0 && (
+                      <div className="col-span-2">
+                        <label className="text-muted text-xs">Additional Courses</label>
+                        <div className="mt-1 space-y-1">
+                          {viewingTeacher.additional_courses.map((course, idx) => (
+                            <div key={idx} className="border border-defaultborder/10 rounded p-1.5 text-sm">
+                              <p className="font-medium">{course.course}</p>
+                              <p className="text-xs text-muted">{course.institution}</p>
+                              <p className="text-xs text-muted">Year: {course.year}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    )}
+                    {viewingTeacher.images && viewingTeacher.images.length > 0 && (
+                      <div className="col-span-2">
+                        <label className="text-muted text-xs">Additional Images</label>
+                        <div className="grid grid-cols-4 gap-1 mt-1">
+                          {viewingTeacher.images.map((img: any, idx: number) => (
+                            <img
+                              key={idx}
+                              src={typeof img === 'string' ? img : img.url || img.path}
+                              alt={`Image ${idx + 1}`}
+                              className="w-full h-20 object-cover rounded"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </Fragment>
   );

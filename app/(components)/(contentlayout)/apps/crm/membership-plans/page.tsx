@@ -3,8 +3,10 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import React, { Fragment, useState, useEffect } from 'react'
 import membershipPlanService, { MembershipPlan } from '@/services/membershipPlanService'
+import { hasPermission } from '@/shared/utils/permissionUtils'
 
 const MembershipPlansPage = () => {
+    const [adminUser, setAdminUser] = useState<any>(null);
     const [plans, setPlans] = useState<MembershipPlan[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalPlans, setTotalPlans] = useState<number>(0);
@@ -47,6 +49,10 @@ const MembershipPlansPage = () => {
     const [featureInput, setFeatureInput] = useState<string>('');
     const limit = 10;
 
+    useEffect(() => {
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        if (userStr) setAdminUser(JSON.parse(userStr));
+    }, []);
     useEffect(() => {
         fetchPlans();
     }, [currentPage, filterStatus, filterType]);
@@ -230,10 +236,12 @@ const MembershipPlansPage = () => {
                                     <option value="enterprise">Enterprise</option>
                                     <option value="trial">Trial</option>
                                 </select>
-                                <button type="button" className="ti-btn ti-btn-primary !py-1 !px-2 !text-[0.75rem] !m-0 !font-medium"
-                                    onClick={() => { setEditingPlan(null); resetForm(); setShowCreateModal(true); }}>
-                                    <i className="ri-add-line me-1"></i>Create Plan
-                                </button>
+                                {hasPermission(adminUser, 'membershipManagement', 'create') && (
+                                    <button type="button" className="ti-btn ti-btn-primary !py-1 !px-2 !text-[0.75rem] !m-0 !font-medium"
+                                        onClick={() => { setEditingPlan(null); resetForm(); setShowCreateModal(true); }}>
+                                        <i className="ri-add-line me-1"></i>Create Plan
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -283,22 +291,32 @@ const MembershipPlansPage = () => {
                                                     </td>
                                                     <td className="text-[0.75rem]">{plan.validityDays} days</td>
                                                     <td>
-                                                        <button onClick={() => handleToggleStatus(plan._id!)}
-                                                            className={`badge ${plan.isActive ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} cursor-pointer border-0 !text-[0.65rem] !py-[0.15rem]`}>
-                                                            {plan.isActive ? 'Active' : 'Inactive'}
-                                                        </button>
+                                                        {hasPermission(adminUser, 'membershipManagement', 'update') ? (
+                                                            <button onClick={() => handleToggleStatus(plan._id!)}
+                                                                className={`badge ${plan.isActive ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} cursor-pointer border-0 !text-[0.65rem] !py-[0.15rem]`}>
+                                                                {plan.isActive ? 'Active' : 'Inactive'}
+                                                            </button>
+                                                        ) : (
+                                                            <span className={`badge ${plan.isActive ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'} border-0 !text-[0.65rem] !py-[0.15rem]`}>
+                                                                {plan.isActive ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td>
                                                         <div className="flex gap-1">
-                                                            <button onClick={() => openEditModal(plan)} className="ti-btn !px-1 !py-1 !mb-0 ti-btn-sm ti-btn-warning text-[0.75rem]" title="Edit">
-                                                                <i className="ri-edit-line"></i>
-                                                            </button>
+                                                            {hasPermission(adminUser, 'membershipManagement', 'update') && (
+                                                                <button onClick={() => openEditModal(plan)} className="ti-btn !px-1 !py-1 !mb-0 ti-btn-sm ti-btn-warning text-[0.75rem]" title="Edit">
+                                                                    <i className="ri-edit-line"></i>
+                                                                </button>
+                                                            )}
                                                             <button onClick={() => setSelectedPlan(plan)} className="ti-btn !px-1 !py-1 !mb-0 ti-btn-sm ti-btn-info text-[0.75rem]" title="View">
                                                                 <i className="ri-eye-line"></i>
                                                             </button>
-                                                            <button onClick={() => handleDelete(plan._id!)} className="ti-btn !px-1 !py-1 !mb-0 ti-btn-sm ti-btn-danger text-[0.75rem]" title="Delete">
-                                                                <i className="ri-delete-bin-line"></i>
-                                                            </button>
+                                                            {hasPermission(adminUser, 'membershipManagement', 'delete') && (
+                                                                <button onClick={() => handleDelete(plan._id!)} className="ti-btn !px-1 !py-1 !mb-0 ti-btn-sm ti-btn-danger text-[0.75rem]" title="Delete">
+                                                                    <i className="ri-delete-bin-line"></i>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>

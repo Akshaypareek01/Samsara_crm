@@ -16,12 +16,14 @@ import AdminPeriodService, {
   AdminPeriodOverview,
   PeriodCycle,
 } from "@/services/adminPeriodService";
+import { hasPermission } from "@/shared/utils/permissionUtils";
 
 const UserProfile = () => {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
 
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
   const [trackerData, setTrackerData] = useState<TrackerDashboard | null>(null);
   const [todayWater, setTodayWater] = useState<WaterEntry | null>(null);
@@ -36,6 +38,10 @@ const UserProfile = () => {
   const [periodError, setPeriodError] = useState("");
   const [periodCycles, setPeriodCycles] = useState<any[]>([]);
 
+  useEffect(() => {
+    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (userStr) setAdminUser(JSON.parse(userStr));
+  }, []);
   useEffect(() => {
     if (userId) {
       fetchUserData();
@@ -261,13 +267,15 @@ const UserProfile = () => {
                       {user.name}
                     </h6>
                     <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="ti-btn ti-btn-light !font-medium !gap-0"
-                      >
-                        <i className="ri-edit-line me-1 align-middle inline-block"></i>
-                        Edit
-                      </button>
+                      {hasPermission(adminUser, "userManagement.users", "update") && (
+                        <button
+                          type="button"
+                          className="ti-btn ti-btn-light !font-medium !gap-0"
+                        >
+                          <i className="ri-edit-line me-1 align-middle inline-block"></i>
+                          Edit
+                        </button>
+                      )}
                       <Link
                         href="/apps/crm/users"
                         className="ti-btn ti-btn-outline-light !font-medium !gap-0"

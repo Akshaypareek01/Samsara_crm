@@ -3,9 +3,31 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import CompanyService, { Company, CreateCompanyRequest, ContactPerson } from '@/services/companyService';
+import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
+import {
+  CrmPageHeader,
+  CrmCard,
+  CrmTableWrapper,
+  crmTableClass,
+  crmTheadTrClass,
+  crmThClass,
+  crmTbodyTrClass,
+  crmTdClass,
+  crmThActionsClass,
+  crmTdActionsClass,
+  CrmBtnPrimary,
+  CrmBtnView,
+  CrmBtnEdit,
+  CrmBtnDelete,
+  CrmActionGroup,
+  CrmLoading,
+  crmInputClass,
+  crmSelectClass,
+} from '../components';
 
 const Companies = () => {
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,6 +66,10 @@ const Companies = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<boolean | undefined>(undefined);
 
+  useEffect(() => {
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    if (userStr) setAdminUser(JSON.parse(userStr));
+  }, []);
   useEffect(() => {
     fetchCompanies();
   }, [page, searchTerm, statusFilter]);
@@ -217,185 +243,155 @@ const Companies = () => {
   return (
     <Fragment>
       <Seo title="Company Management" />
-      
-      <div className="md:flex block items-center justify-between my-[1.5rem] page-header-breadcrumb">
-        <div>
-          <p className="font-semibold text-[1.125rem] text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
-            Company Management
-          </p>
-          <p className="font-normal text-[#8c9097] dark:text-white/50 text-[0.813rem]">
-            Manage all companies in the system
-          </p>
-        </div>
-        <div className="btn-list md:mt-0 mt-2">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
-          >
-            <i className="ri-add-line inline-block me-1"></i>Add Company
-          </button>
-        </div>
-      </div>
+      <div className="p-[10px]">
+        <CrmPageHeader
+          title="Company Management"
+          subtitle="Manage all companies in the system"
+          actions={
+            hasPermission(adminUser, 'companyManagement', 'create') ? (
+              <CrmBtnPrimary onClick={() => setShowModal(true)}>
+                <i className="ri-add-line text-xs" /> Add Company
+              </CrmBtnPrimary>
+            ) : null
+          }
+        />
 
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      )}
-
-      <div className="box">
-        <div className="box-body">
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search by company name..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-              }}
-            />
-            <select
-              className="form-control"
-              value={statusFilter === undefined ? '' : statusFilter.toString()}
-              onChange={(e) => {
-                const value = e.target.value;
-                setStatusFilter(value === '' ? undefined : value === 'true');
-                setPage(1);
-              }}
-            >
-              <option value="">All Status</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-            <div className="text-sm text-muted flex items-center">
-              Total: {totalResults} companies
-            </div>
+        {error && (
+          <div className="mb-4 p-3 rounded bg-red-50 border border-red-100 text-red-600 text-[11px] font-medium" role="alert">
+            {error}
           </div>
+        )}
 
-          {loading ? (
-            <div className="text-center py-4">Loading...</div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-bordered table-hover whitespace-nowrap min-w-full">
-                <thead>
-                  <tr>
-                    <th>Company ID</th>
-                    <th>Company Name</th>
-                    <th>Email</th>
-                    <th>Domain</th>
-                    <th>Employees</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {companies.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-4">
-                        No companies found
-                      </td>
+        <CrmCard>
+          <div className="p-[10px]">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                className={crmInputClass}
+                placeholder="Search by company name..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
+              />
+              <select
+                className={crmSelectClass}
+                value={statusFilter === undefined ? '' : statusFilter.toString()}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setStatusFilter(value === '' ? undefined : value === 'true');
+                  setPage(1);
+                }}
+              >
+                <option value="">All Status</option>
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+              <div className="text-[11px] font-medium text-[#495057] flex items-center">
+                Total: {totalResults} companies
+              </div>
+            </div>
+
+            {loading ? (
+              <CrmLoading label="Loading companies..." />
+            ) : (
+              <CrmTableWrapper>
+                <table className={crmTableClass}>
+                  <thead>
+                    <tr className={crmTheadTrClass}>
+                      <th className={crmThClass}>Company ID</th>
+                      <th className={crmThClass}>Company Name</th>
+                      <th className={crmThClass}>Email</th>
+                      <th className={crmThClass}>Domain</th>
+                      <th className={crmThClass}>Employees</th>
+                      <th className={crmThClass}>Status</th>
+                      <th className={crmThActionsClass}>Actions</th>
                     </tr>
-                  ) : (
-                    companies.map((company) => {
-                      const companyId = company._id || company.id;
-                      return (
-                        <tr key={companyId}>
-                          <td>
-                            <span className="font-semibold text-primary">
-                              {company.companyId}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="flex items-center">
-                              {company.companyLogo ? (
-                                <img
-                                  src={company.companyLogo}
-                                  alt={company.companyName}
-                                  className="w-10 h-10 rounded me-2"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center me-2">
-                                  <i className="bx bx-building text-primary text-lg"></i>
-                                </div>
-                              )}
-                              <span className="font-semibold">
-                                {company.companyName || '-'}
+                  </thead>
+                  <tbody>
+                    {companies.length === 0 ? (
+                      <tr className={crmTbodyTrClass}>
+                        <td colSpan={7} className={`${crmTdClass} text-center text-[12px] font-medium text-gray-400 py-8`}>
+                          No companies found
+                        </td>
+                      </tr>
+                    ) : (
+                      companies.map((company) => {
+                        const companyId = company._id || company.id;
+                        return (
+                          <tr key={companyId} className={crmTbodyTrClass}>
+                            <td className={crmTdClass}>
+                              <span className="font-semibold text-purple-600 text-[12px]">
+                                {company.companyId}
                               </span>
-                            </div>
-                          </td>
-                          <td>{company.email || '-'}</td>
-                          <td>{company.domain || '-'}</td>
-                          <td>{company.numberOfEmployees || '-'}</td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                company.status !== false
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-danger/10 text-danger'
-                              }`}
-                            >
-                              {company.status !== false ? 'Active' : 'Inactive'}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleView(company)}
-                                className="ti-btn ti-btn-sm ti-btn-info"
-                                title="View Details"
-                              >
-                                <i className="ri-eye-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleEdit(company)}
-                                className="ti-btn ti-btn-sm ti-btn-primary"
-                                title="Edit"
-                              >
-                                <i className="ri-edit-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleDelete(companyId!)}
-                                className="ti-btn ti-btn-sm ti-btn-danger"
-                                title="Delete"
-                              >
-                                <i className="ri-delete-bin-line"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                            </td>
+                            <td className={crmTdClass}>
+                              <div className="flex items-center gap-2">
+                                {company.companyLogo ? (
+                                  <img src={company.companyLogo} alt={company.companyName} className="w-10 h-10 rounded shrink-0" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded bg-purple-100 flex items-center justify-center shrink-0">
+                                    <i className="bx bx-building text-purple-600 text-lg" />
+                                  </div>
+                                )}
+                                <span className="font-semibold text-gray-900 text-[12px]">{company.companyName || '-'}</span>
+                              </div>
+                            </td>
+                            <td className={`${crmTdClass} text-gray-600`}>{company.email || '-'}</td>
+                            <td className={`${crmTdClass} text-gray-600`}>{company.domain || '-'}</td>
+                            <td className={`${crmTdClass} text-gray-600`}>{company.numberOfEmployees ?? '-'}</td>
+                            <td className={crmTdClass}>
+                              <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded ${company.status !== false ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                                {company.status !== false ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className={crmTdActionsClass}>
+                              <CrmActionGroup>
+                                <CrmBtnView onClick={() => handleView(company)} title="View Details" />
+                                {hasPermission(adminUser, 'companyManagement', 'update') && (
+                                  <CrmBtnEdit onClick={() => handleEdit(company)} title="Edit" />
+                                )}
+                                {hasPermission(adminUser, 'companyManagement', 'delete') && (
+                                  <CrmBtnDelete onClick={() => handleDelete(companyId!)} title="Delete" />
+                                )}
+                              </CrmActionGroup>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </CrmTableWrapper>
+            )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="ti-btn ti-btn-sm"
-              >
-                Previous
-              </button>
-              <span>
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="ti-btn ti-btn-sm"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+            {totalPages > 1 && (
+              <div className="flex flex-wrap justify-between items-center gap-4 p-[10px] pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-[11px] font-medium text-[#495057]">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 text-[11px] font-bold text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </CrmCard>
+
       </div>
 
       {/* Create/Edit Modal */}

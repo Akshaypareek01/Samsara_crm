@@ -6,6 +6,7 @@ import UserService, { User, CreateUserRequest } from '@/services/userService';
 import membershipService, { UserMembership } from '@/services/membershipService';
 import { useRouter } from 'next/navigation';
 import { hasPermission } from '@/shared/utils/permissionUtils';
+import Swal from 'sweetalert2';
 
 const Users = () => {
   const router = useRouter();
@@ -196,13 +197,24 @@ const Users = () => {
   };
 
   const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    });
 
-    try {
-      await UserService.deleteUser(userId);
-      fetchUsers();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete user');
+    if (result.isConfirmed) {
+      try {
+        await UserService.deleteUser(userId);
+        Swal.fire('Deleted!', 'User has been deleted.', 'success');
+        fetchUsers();
+      } catch (err: any) {
+        Swal.fire('Error!', err.message || 'Failed to delete user', 'error');
+      }
     }
   };
 
@@ -244,10 +256,10 @@ const Users = () => {
 
       <div className="md:flex block items-center justify-between my-[1.5rem] page-header-breadcrumb">
         <div>
-          <p className="font-semibold text-[1.125rem] text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
+          <p className="font-semibold text-sm text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
             Users Management
           </p>
-          <p className="font-normal text-[#8c9097] dark:text-white/50 text-[0.813rem]">
+          <p className="font-normal text-[#8c9097] dark:text-white/50 text-xs">
             Manage all users in the system
           </p>
         </div>
@@ -256,16 +268,17 @@ const Users = () => {
             <button
               type="button"
               onClick={() => setShowModal(true)}
-              className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
+              className="ti-btn  bg-primary text-white btn-wave shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 !text-sm !py-2 !px-3 !rounded-md font-medium"
             >
-              <i className="ri-add-line inline-block me-1"></i>Add User
+              <i className="ri-add-line text-sm"></i>
+              <span>Add User</span>
             </button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-danger" role="alert">
+        <div className="alert alert-danger text-sm py-2" role="alert">
           {error}
         </div>
       )}
@@ -275,7 +288,7 @@ const Users = () => {
           <div className="mb-4">
             <input
               type="text"
-              className="form-control"
+              className="form-control text-sm py-1.5"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => {
@@ -286,12 +299,12 @@ const Users = () => {
           </div>
 
           {loading ? (
-            <div className="text-center py-4">Loading...</div>
+            <div className="text-center py-4 text-sm">Loading...</div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-bordered table-hover whitespace-nowrap min-w-full">
+            <div className="table-responsive text-sm">
+              <table className="table table-bordered table-hover whitespace-nowrap min-w-full text-sm">
                 <thead>
-                  <tr>
+                  <tr className="text-xs">
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile</th>
@@ -304,7 +317,7 @@ const Users = () => {
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-4">
+                      <td colSpan={7} className="text-center py-4 text-sm">
                         No users found
                       </td>
                     </tr>
@@ -368,30 +381,30 @@ const Users = () => {
                             </span>
                           </td>
                           <td>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <button
                                 onClick={() => handleView(user)}
-                                className="ti-btn ti-btn-sm ti-btn-info"
+                                className="ti-btn ti-btn-sm ti-btn-info !text-xs !py-1 !px-1.5"
                                 title="View Details"
                               >
-                                <i className="ri-eye-line"></i>
+                                <i className="ri-eye-line text-xs"></i>
                               </button>
                               {hasPermission(adminUser, 'userManagement.users', 'update') && (
                                 <button
                                   onClick={() => handleEdit(user)}
-                                  className="ti-btn ti-btn-sm ti-btn-primary"
+                                  className="ti-btn ti-btn-sm ti-btn-primary !text-xs !py-1 !px-1.5"
                                   title="Edit"
                                 >
-                                  <i className="ri-edit-line"></i>
+                                  <i className="ri-edit-line text-xs"></i>
                                 </button>
                               )}
                               {hasPermission(adminUser, 'userManagement.users', 'delete') && (
                                 <button
                                   onClick={() => handleDelete(userId!)}
-                                  className="ti-btn ti-btn-sm ti-btn-danger"
+                                  className="ti-btn ti-btn-sm ti-btn-danger !text-xs !py-1 !px-1.5"
                                   title="Delete"
                                 >
-                                  <i className="ri-delete-bin-line"></i>
+                                  <i className="ri-delete-bin-line text-xs"></i>
                                 </button>
                               )}
                             </div>
@@ -406,21 +419,19 @@ const Users = () => {
           )}
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 text-sm">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="ti-btn ti-btn-sm"
+                className="ti-btn ti-btn-sm !text-xs !py-1 !px-2"
               >
                 Previous
               </button>
-              <span>
-                Page {page} of {totalPages}
-              </span>
+              <span className="text-xs">Page {page} of {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="ti-btn ti-btn-sm"
+                className="ti-btn ti-btn-sm !text-xs !py-1 !px-2"
               >
                 Next
               </button>
@@ -429,27 +440,40 @@ const Users = () => {
         </div>
       </div>
 
+      {/* Edit/Add user side drawer */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={handleCloseModal}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed right-0 top-0 h-full w-full max-w-2xl bg-white dark:bg-bodybg shadow-xl z-50 flex flex-col animate-slide-in-right"
+            role="dialog"
+            aria-labelledby="drawer-title"
+          >
+            <div className="flex items-center justify-between py-2 px-4 border-b border-defaultborder dark:border-white/10 shrink-0">
+              <h3 id="drawer-title" className="text-base font-semibold">
                 {editingUser ? 'Edit User' : 'Add New User'}
               </h3>
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="ti-btn ti-btn-sm ti-btn-ghost"
+                className="ti-btn ti-btn-sm ti-btn-ghost !text-xs !p-1"
+                aria-label="Close"
               >
                 <i className="ri-close-line"></i>
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="flex-1 overflow-y-auto px-4 py-4 text-sm">
+            <form onSubmit={handleSubmit} className="h-full">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="form-label">Name *</label>
+                  <label className="form-label text-xs">Name *</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -458,10 +482,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Email *</label>
+                  <label className="form-label text-xs">Email *</label>
                   <input
                     type="email"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.email}
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
@@ -470,10 +494,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Mobile</label>
+                  <label className="form-label text-xs">Mobile</label>
                   <input
                     type="tel"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.mobile}
                     onChange={(e) =>
                       setFormData({ ...formData, mobile: e.target.value })
@@ -482,10 +506,10 @@ const Users = () => {
                 </div>
                 {!editingUser && (
                   <div>
-                    <label className="form-label">Password *</label>
+                    <label className="form-label text-xs">Password *</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className="form-control text-sm py-1.5"
                       value={formData.password}
                       onChange={(e) =>
                         setFormData({ ...formData, password: e.target.value })
@@ -495,9 +519,9 @@ const Users = () => {
                   </div>
                 )}
                 <div>
-                  <label className="form-label">Gender</label>
+                  <label className="form-label text-xs">Gender</label>
                   <select
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.gender}
                     onChange={(e) =>
                       setFormData({ ...formData, gender: e.target.value })
@@ -510,10 +534,10 @@ const Users = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Age</label>
+                  <label className="form-label text-xs">Age</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.age}
                     onChange={(e) =>
                       setFormData({ ...formData, age: e.target.value })
@@ -521,10 +545,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Height</label>
+                  <label className="form-label text-xs">Height</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., 175cm"
                     value={formData.height}
                     onChange={(e) =>
@@ -533,10 +557,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Weight</label>
+                  <label className="form-label text-xs">Weight</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., 70kg"
                     value={formData.weight}
                     onChange={(e) =>
@@ -545,10 +569,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Target Weight</label>
+                  <label className="form-label text-xs">Target Weight</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., 65kg"
                     value={formData.targetWeight}
                     onChange={(e) =>
@@ -557,10 +581,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Body Shape</label>
+                  <label className="form-label text-xs">Body Shape</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., Mesomorph"
                     value={formData.bodyshape}
                     onChange={(e) =>
@@ -569,9 +593,9 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">User Category</label>
+                  <label className="form-label text-xs">User Category</label>
                   <select
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.userCategory}
                     onChange={(e) =>
                       setFormData({
@@ -585,10 +609,10 @@ const Users = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="form-label">Practice Time</label>
+                  <label className="form-label text-xs">Practice Time</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., 2 days per week"
                     value={formData.practicetime}
                     onChange={(e) =>
@@ -597,10 +621,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Prior Experience</label>
+                  <label className="form-label text-xs">Prior Experience</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     placeholder="e.g., Beginner"
                     value={formData.PriorExperience}
                     onChange={(e) =>
@@ -612,10 +636,10 @@ const Users = () => {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="form-label">Address</label>
+                  <label className="form-label text-xs">Address</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.Address}
                     onChange={(e) =>
                       setFormData({ ...formData, Address: e.target.value })
@@ -623,10 +647,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">City</label>
+                  <label className="form-label text-xs">City</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.city}
                     onChange={(e) =>
                       setFormData({ ...formData, city: e.target.value })
@@ -634,10 +658,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Pincode</label>
+                  <label className="form-label text-xs">Pincode</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.pincode}
                     onChange={(e) =>
                       setFormData({ ...formData, pincode: e.target.value })
@@ -645,10 +669,10 @@ const Users = () => {
                   />
                 </div>
                 <div>
-                  <label className="form-label">Country</label>
+                  <label className="form-label text-xs">Country</label>
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control text-sm py-1.5"
                     value={formData.country}
                     onChange={(e) =>
                       setFormData({ ...formData, country: e.target.value })
@@ -656,8 +680,8 @@ const Users = () => {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="form-label">Focus Area</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="form-label text-xs">Focus Area</label>
+                  <div className="flex flex-wrap gap-2 text-xs">
                     {['Full Body', 'Strength', 'Flexibility', 'Weight Management', 'Stress Relief', 'Meditation'].map(
                       (area) => (
                         <label key={area} className="flex items-center">
@@ -687,8 +711,8 @@ const Users = () => {
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <label className="form-label">Goals</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="form-label text-xs">Goals</label>
+                  <div className="flex flex-wrap gap-2 text-xs">
                     {['Weight Loss', 'Weight Gain', 'Strength', 'Flexibility', 'Stress Relief', 'General Fitness'].map(
                       (goalItem) => (
                         <label key={goalItem} className="flex items-center">
@@ -722,17 +746,18 @@ const Users = () => {
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="ti-btn ti-btn-secondary"
+                  className="ti-btn ti-btn-sm ti-btn-secondary !text-xs !py-1.5 !px-2.5"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="ti-btn ti-btn-primary">
+                <button type="submit" className="ti-btn ti-btn-sm ti-btn-primary !text-xs !py-1.5 !px-2.5">
                   {editingUser ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {showViewModal && viewingUser && (

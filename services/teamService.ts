@@ -6,7 +6,9 @@ export interface TeamMember {
     _id?: string;
     name: string;
     email: string;
-    role: Role;
+    /** Populated role object (if API populates it), or backend may only send roleId */
+    role?: Role | string;
+    roleId?: string;
     createdAt?: string;
 }
 

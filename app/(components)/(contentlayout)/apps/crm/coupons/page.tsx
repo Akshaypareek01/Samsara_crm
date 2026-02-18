@@ -3,8 +3,10 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import React, { Fragment, useState, useEffect } from 'react'
 import couponService, { Coupon } from '@/services/couponService'
+import { hasPermission } from '@/shared/utils/permissionUtils'
 
 const CouponsPage = () => {
+    const [adminUser, setAdminUser] = useState<any>(null);
     const [coupons, setCoupons] = useState<Coupon[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [totalCoupons, setTotalCoupons] = useState<number>(0);
@@ -29,6 +31,10 @@ const CouponsPage = () => {
     });
     const limit = 10;
 
+    useEffect(() => {
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        if (userStr) setAdminUser(JSON.parse(userStr));
+    }, []);
     useEffect(() => {
         fetchCoupons();
     }, [currentPage, filterStatus, filterType]);
@@ -198,28 +204,30 @@ const CouponsPage = () => {
                                     <option value="percentage">Percentage</option>
                                     <option value="fixed">Fixed</option>
                                 </select>
-                                <button
-                                    type="button"
-                                    className="ti-btn ti-btn-primary !py-1 !px-2 !text-[0.75rem] !m-0 !font-medium"
-                                    onClick={() => {
-                                        setEditingCoupon(null);
-                                        setNewCoupon({
-                                            code: '',
-                                            name: '',
-                                            description: '',
-                                            discountType: 'percentage',
-                                            discountValue: 0,
-                                            startDate: '',
-                                            endDate: '',
-                                            minOrderAmount: 0,
-                                            usageLimit: undefined,
-                                            isActive: true
-                                        });
-                                        setShowCreateModal(true);
-                                    }}
-                                >
-                                    <i className="ri-add-line me-1"></i>Create Coupon
-                                </button>
+                                {hasPermission(adminUser, 'membershipManagement', 'create') && (
+                                    <button
+                                        type="button"
+                                        className="ti-btn ti-btn-primary !py-1 !px-2 !text-[0.75rem] !m-0 !font-medium"
+                                        onClick={() => {
+                                            setEditingCoupon(null);
+                                            setNewCoupon({
+                                                code: '',
+                                                name: '',
+                                                description: '',
+                                                discountType: 'percentage',
+                                                discountValue: 0,
+                                                startDate: '',
+                                                endDate: '',
+                                                minOrderAmount: 0,
+                                                usageLimit: undefined,
+                                                isActive: true
+                                            });
+                                            setShowCreateModal(true);
+                                        }}
+                                    >
+                                        <i className="ri-add-line me-1"></i>Create Coupon
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -281,26 +289,36 @@ const CouponsPage = () => {
                                                         </span>
                                                     </td>
                                                     <td>
-                                                        <button
-                                                            onClick={() => handleToggleStatus(coupon._id!)}
-                                                            className={`badge ${
-                                                                coupon.isActive
-                                                                    ? 'bg-success/10 text-success hover:bg-success/20'
-                                                                    : 'bg-danger/10 text-danger hover:bg-danger/20'
-                                                            } cursor-pointer border-0`}
-                                                        >
-                                                            {coupon.isActive ? 'Active' : 'Inactive'}
-                                                        </button>
+                                                        {hasPermission(adminUser, 'membershipManagement', 'update') ? (
+                                                            <button
+                                                                onClick={() => handleToggleStatus(coupon._id!)}
+                                                                className={`badge ${
+                                                                    coupon.isActive
+                                                                        ? 'bg-success/10 text-success hover:bg-success/20'
+                                                                        : 'bg-danger/10 text-danger hover:bg-danger/20'
+                                                                } cursor-pointer border-0`}
+                                                            >
+                                                                {coupon.isActive ? 'Active' : 'Inactive'}
+                                                            </button>
+                                                        ) : (
+                                                            <span className={`badge ${
+                                                                coupon.isActive ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+                                                            } border-0`}>
+                                                                {coupon.isActive ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                        )}
                                                     </td>
                                                     <td>
                                                         <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => openEditModal(coupon)}
-                                                                className="ti-btn ti-btn-sm ti-btn-warning"
-                                                                title="Edit"
-                                                            >
-                                                                <i className="ri-edit-line"></i>
-                                                            </button>
+                                                            {hasPermission(adminUser, 'membershipManagement', 'update') && (
+                                                                <button
+                                                                    onClick={() => openEditModal(coupon)}
+                                                                    className="ti-btn ti-btn-sm ti-btn-warning"
+                                                                    title="Edit"
+                                                                >
+                                                                    <i className="ri-edit-line"></i>
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={() => setSelectedCoupon(coupon)}
                                                                 className="ti-btn ti-btn-sm ti-btn-info"
@@ -308,13 +326,15 @@ const CouponsPage = () => {
                                                             >
                                                                 <i className="ri-eye-line"></i>
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleDelete(coupon._id!)}
-                                                                className="ti-btn ti-btn-sm ti-btn-danger"
-                                                                title="Delete"
-                                                            >
-                                                                <i className="ri-delete-bin-line"></i>
-                                                            </button>
+                                                            {hasPermission(adminUser, 'membershipManagement', 'delete') && (
+                                                                <button
+                                                                    onClick={() => handleDelete(coupon._id!)}
+                                                                    className="ti-btn ti-btn-sm ti-btn-danger"
+                                                                    title="Delete"
+                                                                >
+                                                                    <i className="ri-delete-bin-line"></i>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 </tr>

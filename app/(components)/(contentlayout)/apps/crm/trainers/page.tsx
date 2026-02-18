@@ -7,8 +7,10 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import MultiSelect from '@/shared/components/MultiSelect';
+import { hasPermission } from '@/shared/utils/permissionUtils';
 
 const Trainers = () => {
+  const [adminUser, setAdminUser] = useState<any>(null);
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,6 +40,11 @@ const Trainers = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) setAdminUser(JSON.parse(userStr));
+  }, []);
 
   useEffect(() => {
     fetchTrainers();
@@ -377,13 +384,15 @@ const Trainers = () => {
           </p>
         </div>
         <div className="btn-list md:mt-0 mt-2">
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
-          >
-            <i className="ri-add-line inline-block me-1"></i>Add Trainer
-          </button>
+          {hasPermission(adminUser, 'userManagement.trainers', 'create') && (
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
+            >
+              <i className="ri-add-line inline-block me-1"></i>Add Trainer
+            </button>
+          )}
         </div>
       </div>
 
@@ -559,20 +568,24 @@ const Trainers = () => {
                               >
                                 <i className="ri-eye-line"></i>
                               </button>
-                              <button
-                                onClick={() => handleEdit(trainer)}
-                                className="ti-btn ti-btn-sm ti-btn-primary"
-                                title="Edit"
-                              >
-                                <i className="ri-edit-line"></i>
-                              </button>
-                              <button
-                                onClick={() => handleDelete(trainer._id || trainer.id!)}
-                                className="ti-btn ti-btn-sm ti-btn-danger"
-                                title="Delete"
-                              >
-                                <i className="ri-delete-bin-line"></i>
-                              </button>
+                              {hasPermission(adminUser, 'userManagement.trainers', 'update') && (
+                                <button
+                                  onClick={() => handleEdit(trainer)}
+                                  className="ti-btn ti-btn-sm ti-btn-primary"
+                                  title="Edit"
+                                >
+                                  <i className="ri-edit-line"></i>
+                                </button>
+                              )}
+                              {hasPermission(adminUser, 'userManagement.trainers', 'delete') && (
+                                <button
+                                  onClick={() => handleDelete(trainer._id || trainer.id!)}
+                                  className="ti-btn ti-btn-sm ti-btn-danger"
+                                  title="Delete"
+                                >
+                                  <i className="ri-delete-bin-line"></i>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

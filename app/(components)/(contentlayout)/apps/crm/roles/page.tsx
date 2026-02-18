@@ -4,6 +4,26 @@ import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import roleService, { Role } from '@/services/roleService';
 import { hasPermission } from '@/shared/utils/permissionUtils';
+import {
+  CrmPageHeader,
+  CrmCard,
+  CrmTableWrapper,
+  crmTableClass,
+  crmTheadTrClass,
+  crmThClass,
+  crmTbodyTrClass,
+  crmTdClass,
+  crmThActionsClass,
+  crmTdActionsClass,
+  CrmBtnPrimary,
+  CrmBtnEdit,
+  CrmBtnDelete,
+  CrmActionGroup,
+  CrmModal,
+  CrmLoading,
+  crmInputClass,
+  crmLabelClass,
+} from '../components';
 
 const Roles = () => {
     const [roles, setRoles] = useState<Role[]>([]);
@@ -113,110 +133,97 @@ const Roles = () => {
     return (
         <Fragment>
             <Seo title="Role Management" />
+            <div className="p-[10px]">
+                <CrmPageHeader
+                    title="Role Management"
+                    subtitle="Define granular permissions for CRM roles"
+                    actions={
+                        hasPermission(user, 'roleManagement', 'create') ? (
+                            <CrmBtnPrimary
+                                onClick={() => {
+                                    setEditingRole(null);
+                                    setFormData({ name: '', permissions: roleService.getDefaultPermissions() });
+                                    setShowModal(true);
+                                }}
+                            >
+                                <i className="ri-add-line text-xs" /> Create New Role
+                            </CrmBtnPrimary>
+                        ) : null
+                    }
+                />
 
-            <div className="md:flex block items-center justify-between my-[1.5rem] page-header-breadcrumb">
-                <div>
-                    <h1 className="font-semibold text-[1.125rem] text-defaulttextcolor dark:text-defaulttextcolor/70 !mb-0">
-                        Role Management
-                    </h1>
-                    <p className="font-normal text-[#8c9097] dark:text-white/50 text-[0.813rem]">
-                        Define granular permissions for CRM roles
-                    </p>
-                </div>
-                <div className="btn-list md:mt-0 mt-2">
-                    {hasPermission(user, 'roleManagement', 'create') && (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setEditingRole(null);
-                                setFormData({ name: '', permissions: roleService.getDefaultPermissions() });
-                                setShowModal(true);
-                            }}
-                            className="ti-btn bg-primary text-white btn-wave !font-medium !me-[0.45rem] !ms-0 !text-[0.85rem] !rounded-[0.35rem] !py-[0.51rem] !px-[0.86rem] shadow-none"
-                        >
-                            <i className="ri-add-line inline-block me-1"></i>Create New Role
-                        </button>
-                    )}
-                </div>
-            </div>
+                {error && (
+                    <div className="mb-4 p-3 rounded bg-red-50 border border-red-100 text-red-600 text-[11px] font-medium" role="alert">
+                        {error}
+                    </div>
+                )}
 
-            {error && (
-                <div className="alert alert-danger mb-4" role="alert">
-                    {error}
-                </div>
-            )}
-
-            <div className="box">
-                <div className="box-body">
-                    {loading ? (
-                        <div className="text-center py-4">Loading roles...</div>
-                    ) : (
-                        <div className="table-responsive">
-                            <table className="table table-bordered table-hover whitespace-nowrap min-w-full">
-                                <thead>
-                                    <tr>
-                                        <th>Role Name</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Array.isArray(roles) && roles.map((role) => (
-                                        <tr key={role.id || role._id}>
-                                            <td className="font-semibold">{role.name}</td>
-                                            <td>
-                                                <div className="flex items-center gap-2">
-                                                    {hasPermission(user, 'roleManagement', 'update') && (
-                                                        <button
-                                                            onClick={() => handleEdit(role)}
-                                                            className="ti-btn ti-btn-sm ti-btn-primary"
-                                                            title="Edit Permissions"
-                                                        >
-                                                            <i className="ri-edit-line"></i>
-                                                        </button>
-                                                    )}
-                                                    {hasPermission(user, 'roleManagement', 'delete') && role.name !== 'Super Admin' && (
-                                                        <button
-                                                            onClick={() => handleDelete(role.id || role._id!)}
-                                                            className="ti-btn ti-btn-sm ti-btn-danger"
-                                                            title="Delete Role"
-                                                        >
-                                                            <i className="ri-delete-bin-line"></i>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
+                <CrmCard>
+                    <div className="p-[10px]">
+                        {loading ? (
+                            <CrmLoading label="Loading roles..." />
+                        ) : (
+                            <CrmTableWrapper>
+                                <table className={crmTableClass}>
+                                    <thead>
+                                        <tr className={crmTheadTrClass}>
+                                            <th className={crmThClass}>Role Name</th>
+                                            <th className={crmThActionsClass}>Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
+                                    </thead>
+                                    <tbody>
+                                        {Array.isArray(roles) && roles.map((role) => (
+                                            <tr key={role.id || role._id} className={crmTbodyTrClass}>
+                                                <td className={`${crmTdClass} font-semibold text-gray-900`}>{role.name}</td>
+                                                <td className={crmTdActionsClass}>
+                                                    <CrmActionGroup>
+                                                        {hasPermission(user, 'roleManagement', 'update') && (
+                                                            <CrmBtnEdit onClick={() => handleEdit(role)} title="Edit Permissions" />
+                                                        )}
+                                                        {hasPermission(user, 'roleManagement', 'delete') && role.name !== 'Super Admin' && (
+                                                            <CrmBtnDelete onClick={() => handleDelete(role.id || role._id!)} title="Delete Role" />
+                                                        )}
+                                                    </CrmActionGroup>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </CrmTableWrapper>
+                        )}
+                    </div>
+                </CrmCard>
 
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">{editingRole ? 'Edit Role' : 'Create New Role'}</h3>
-                            <button onClick={() => setShowModal(false)} className="ti-btn ti-btn-sm ti-btn-ghost">
-                                <i className="ri-close-line"></i>
+                <CrmModal
+                    open={showModal}
+                    onClose={() => { setShowModal(false); setEditingRole(null); }}
+                    title={editingRole ? 'Edit Role' : 'Create New Role'}
+                    maxWidth="max-w-4xl"
+                    footer={
+                        <>
+                            <button type="button" onClick={() => setShowModal(false)} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded bg-white border border-gray-200 text-[#495057] hover:bg-gray-50">
+                                Cancel
                             </button>
+                            <button type="submit" form="role-form" className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold rounded bg-purple-600 text-white hover:bg-purple-700 shadow-sm">
+                                {editingRole ? 'Update Role' : 'Create Role'}
+                            </button>
+                        </>
+                    }
+                >
+                    <form id="role-form" onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label className={crmLabelClass}>Role Name</label>
+                            <input
+                                type="text"
+                                className={crmInputClass}
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                required
+                                placeholder="e.g. Support Manager"
+                            />
                         </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                                <label className="form-label">Role Name</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required
-                                    placeholder="e.g. Support Manager"
-                                />
-                            </div>
 
-                            <div className="permissions-grid">
+                        <div className="permissions-grid">
                                 <h4 className="font-semibold mb-3 border-b pb-2">Permissions</h4>
                                 {modules.map(mod => (
                                     <div key={mod.key} className="mb-6 p-3 bg-gray-50 dark:bg-black/10 rounded">
@@ -262,16 +269,9 @@ const Roles = () => {
                                 ))}
                             </div>
 
-                            <div className="flex gap-2 justify-end mt-6">
-                                <button type="button" onClick={() => setShowModal(false)} className="ti-btn ti-btn-secondary">Cancel</button>
-                                <button type="submit" className="ti-btn ti-btn-primary">
-                                    {editingRole ? 'Update Role' : 'Create Role'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                    </form>
+                </CrmModal>
+            </div>
         </Fragment>
     );
 };
