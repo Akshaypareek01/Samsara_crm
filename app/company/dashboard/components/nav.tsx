@@ -6,6 +6,7 @@ const TrainersIcon = <i className="bx bx-user side-menu__icon"></i>;
 const BookingsIcon = <i className="bx bx-calendar side-menu__icon"></i>;
 const SettingsIcon = <i className="bx bx-cog side-menu__icon"></i>;
 const SpeechIcon = <i className="bx bx-microphone side-menu__icon"></i>;
+const CompanyProfileIcon = <i className="bx bx-id-card side-menu__icon"></i>;
 
 export const MenuItems: any = [
     {
@@ -20,6 +21,17 @@ export const MenuItems: any = [
         dirchange: false,
         title: "Dashboard",
     },
+    {
+        icon: CompanyProfileIcon,
+        title: "Company Profile",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        path: "/company/profile",
+        permission: "companyProfile",
+    },
+
     {
         path: "/company/dashboard/trainers",
         icon: TrainersIcon,
