@@ -21,6 +21,9 @@ const ThyroidIcon        = <i className="bx bx-pulse side-menu__icon"></i>;
 const MenopauseIcon      = <i className="bx bx-female-sign side-menu__icon"></i>;
 const PeriodTrackerIcon  = <i className="bx bx-calendar-check side-menu__icon"></i>;
 
+
+const ReportsAnalyticsIcon = <i className="bx bx-bar-chart-alt-2 side-menu__icon"></i>;
+
 export const MenuItems: any = [
     {
         menutitle: "MAIN",
@@ -164,6 +167,18 @@ export const MenuItems: any = [
         dirchange: false,
         title: "Bookings",
     },
+
+
+        {
+        path: "/company/dashboard/reports-and-analytics",
+        icon: ReportsAnalyticsIcon,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Reports & Analytics",
+    },
+
     {
         path: "/company/dashboard/settings",
         icon: SettingsIcon,
