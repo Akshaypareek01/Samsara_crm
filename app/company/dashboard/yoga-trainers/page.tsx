@@ -85,8 +85,8 @@ const TrainersPage = () => {
 
     return (
         <Fragment>
-            <Seo title={"Trainers"} />
-            <Pageheader currentpage="Trainers" activepage="Company" mainpage="Trainers" />
+            <Seo title={"Yoga Trainers"} />
+            <Pageheader currentpage="Yoga Trainers" activepage="Company" mainpage="Yoga Trainers" />
 
             {error && (
                 <div className="alert alert-danger mb-4" role="alert">
@@ -125,7 +125,7 @@ const TrainersPage = () => {
             </div>
 
             {/* Trainer Profile Management heading */}
-            <h5 className="font-bold text-xl text-defaulttextcolor mb-4">Trainer Profile Management</h5>
+            <h5 className="font-bold text-xl text-defaulttextcolor mb-4">Yoga Trainers Management</h5>
 
             {/* Stat Cards */}
             {/* TODO: replace TRAINER_STATS with API call e.g. fetch(`/api/trainers/stats?period=${activePeriod}`) */}
