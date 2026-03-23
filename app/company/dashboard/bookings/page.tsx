@@ -8,18 +8,18 @@ import CompanyBookingsList from '../components/CompanyBookingsList';
 // ─────────────────────────────────────────────────────────────
 
 const BOOKING_STATS = {
-    totalBookings:      245,
+    totalBookings: 245,
     activeReservations: 87,
-    waitingList:        23,
-    occupancyRate:      '78%',
+    waitingList: 23,
+    occupancyRate: '78%',
 };
 
 // Days that have booking dots on the calendar
 // key = day number, value = array of dot colors
 const CALENDAR_DOTS: Record<number, string[]> = {
-    3:  ['#F97316'],
-    5:  ['#EF4444', '#3B82F6', '#F97316'],
-    7:  ['#F59E0B'],
+    3: ['#F97316'],
+    5: ['#EF4444', '#3B82F6', '#F97316'],
+    7: ['#F59E0B'],
     10: ['#F97316', '#EF4444'],
     12: ['#3B82F6', '#F97316'],
     14: ['#F59E0B'],
@@ -37,15 +37,15 @@ const HIGHLIGHTED_DAYS = [3, 7, 10, 14, 17, 21, 24, 28, 31];
 
 const QUICK_ACTIONS = [
     { icon: 'bx-calendar-check', iconBg: '#EEF2FF', iconColor: '#6366F1', title: "Today's Schedule", sub: 'View all bookings' },
-    { icon: 'bx-time-five',      iconBg: '#FEF9C3', iconColor: '#CA8A04', title: 'Waiting Lists',    sub: 'Manage queues'   },
-    { icon: 'bx-envelope',       iconBg: '#D1FAE5', iconColor: '#059669', title: 'Send Confirmations', sub: 'Email & SMS'   },
-    { icon: 'bx-user-check',     iconBg: '#FCE7F3', iconColor: '#EC4899', title: 'Trainer Availability', sub: 'Check schedules' },
+    { icon: 'bx-time-five', iconBg: '#FEF9C3', iconColor: '#CA8A04', title: 'Waiting Lists', sub: 'Manage queues' },
+    { icon: 'bx-envelope', iconBg: '#D1FAE5', iconColor: '#059669', title: 'Send Confirmations', sub: 'Email & SMS' },
+    { icon: 'bx-user-check', iconBg: '#FCE7F3', iconColor: '#EC4899', title: 'Trainer Availability', sub: 'Check schedules' },
 ];
 
 const RECENT_ACTIVITIES = [
-    { color: '#22C55E', title: 'New booking confirmed',  sub: 'Jennifer Walsh - Hatha Yoga',        time: '2 minutes ago'  },
-    { color: '#EF4444', title: 'Booking cancelled',      sub: 'Robert Kim - Private Session',       time: '15 minutes ago' },
-    { color: '#F59E0B', title: 'Added to waiting list',  sub: 'Sarah Johnson - Vinyasa Flow',       time: '1 hour ago'     },
+    { color: '#22C55E', title: 'New booking confirmed', sub: 'Jennifer Walsh - Hatha Yoga', time: '2 minutes ago' },
+    { color: '#EF4444', title: 'Booking cancelled', sub: 'Robert Kim - Private Session', time: '15 minutes ago' },
+    { color: '#F59E0B', title: 'Added to waiting list', sub: 'Sarah Johnson - Vinyasa Flow', time: '1 hour ago' },
 ];
 
 type ClassStatus = 'Active' | 'Nearly Full' | 'Full';
@@ -65,11 +65,11 @@ interface ClassRow {
 }
 
 const CLASS_SCHEDULE: ClassRow[] = [
-    { dateLabel: 'Today, 8:00 AM',    dateSubLabel: 'March 5, 2026', dotColor: '#22C55E', classType: 'Hatha Yoga',      trainerInitials: 'PS', trainerBg: '#DBEAFE', trainerName: 'Priya Sharma',     capacity: 15, booked: 12, waitingList: 3, status: 'Active'      },
-    { dateLabel: 'Today, 12:00 PM',   dateSubLabel: 'March 5, 2026', dotColor: '#3B82F6', classType: 'Vinyasa Flow',    trainerInitials: 'AT', trainerBg: '#FCE7F3', trainerName: 'Aria Thompson',    capacity: 10, booked: 8,  waitingList: 0, status: 'Active'      },
-    { dateLabel: 'Today, 6:00 PM',    dateSubLabel: 'March 5, 2026', dotColor: '#EF4444', classType: 'Restorative Yin', trainerInitials: 'LR', trainerBg: '#D1FAE5', trainerName: 'Luna Rodriguez',   capacity: 8,  booked: 6,  waitingList: 2, status: 'Active'      },
-    { dateLabel: 'Tomorrow, 7:00 AM', dateSubLabel: 'March 6, 2026', dotColor: '#F97316', classType: 'Hot Yoga',        trainerInitials: 'MC', trainerBg: '#FEF9C3', trainerName: 'Marcus Chen',      capacity: 18, booked: 15, waitingList: 5, status: 'Nearly Full' },
-    { dateLabel: 'Tomorrow, 2:00 PM', dateSubLabel: 'March 6, 2026', dotColor: '#3B82F6', classType: 'Private Session', trainerInitials: 'IM', trainerBg: '#EDE9FE', trainerName: 'Isabella Martinez',capacity: 1,  booked: 1,  waitingList: 0, status: 'Full'        },
+    { dateLabel: 'Today, 8:00 AM', dateSubLabel: 'March 5, 2026', dotColor: '#22C55E', classType: 'Hatha Yoga', trainerInitials: 'PS', trainerBg: '#DBEAFE', trainerName: 'Priya Sharma', capacity: 15, booked: 12, waitingList: 3, status: 'Active' },
+    { dateLabel: 'Today, 12:00 PM', dateSubLabel: 'March 5, 2026', dotColor: '#3B82F6', classType: 'Vinyasa Flow', trainerInitials: 'AT', trainerBg: '#FCE7F3', trainerName: 'Aria Thompson', capacity: 10, booked: 8, waitingList: 0, status: 'Active' },
+    { dateLabel: 'Today, 6:00 PM', dateSubLabel: 'March 5, 2026', dotColor: '#EF4444', classType: 'Restorative Yin', trainerInitials: 'LR', trainerBg: '#D1FAE5', trainerName: 'Luna Rodriguez', capacity: 8, booked: 6, waitingList: 2, status: 'Active' },
+    { dateLabel: 'Tomorrow, 7:00 AM', dateSubLabel: 'March 6, 2026', dotColor: '#F97316', classType: 'Hot Yoga', trainerInitials: 'MC', trainerBg: '#FEF9C3', trainerName: 'Marcus Chen', capacity: 18, booked: 15, waitingList: 5, status: 'Nearly Full' },
+    { dateLabel: 'Tomorrow, 2:00 PM', dateSubLabel: 'March 6, 2026', dotColor: '#3B82F6', classType: 'Private Session', trainerInitials: 'IM', trainerBg: '#EDE9FE', trainerName: 'Isabella Martinez', capacity: 1, booked: 1, waitingList: 0, status: 'Full' },
 ];
 
 interface TrainerAvailRow {
@@ -81,10 +81,10 @@ interface TrainerAvailRow {
 }
 
 const TRAINER_AVAILABILITY: TrainerAvailRow[] = [
-    { initials: 'PS', avatarBg: '#DBEAFE', name: 'Priya Sharma',     speciality: 'Hatha & Vinyasa',   status: 'Available'  },
-    { initials: 'MC', avatarBg: '#FEF9C3', name: 'Marcus Chen',      speciality: 'Ashtanga & Hot Yoga',status: 'In Session' },
-    { initials: 'LR', avatarBg: '#D1FAE5', name: 'Luna Rodriguez',   speciality: 'Yin & Restorative', status: 'Available'  },
-    { initials: 'AT', avatarBg: '#FCE7F3', name: 'Aria Thompson',    speciality: 'Vinyasa & Prenatal', status: 'On Leave'   },
+    { initials: 'PS', avatarBg: '#DBEAFE', name: 'Priya Sharma', speciality: 'Hatha & Vinyasa', status: 'Available' },
+    { initials: 'MC', avatarBg: '#FEF9C3', name: 'Marcus Chen', speciality: 'Ashtanga & Hot Yoga', status: 'In Session' },
+    { initials: 'LR', avatarBg: '#D1FAE5', name: 'Luna Rodriguez', speciality: 'Yin & Restorative', status: 'Available' },
+    { initials: 'AT', avatarBg: '#FCE7F3', name: 'Aria Thompson', speciality: 'Vinyasa & Prenatal', status: 'On Leave' },
 ];
 
 interface WaitingGroup {
@@ -94,8 +94,8 @@ interface WaitingGroup {
 }
 
 const WAITING_LIST: WaitingGroup[] = [
-    { title: 'Hot Yoga - Tomorrow 7:00 AM',    count: 5, people: ['Sarah Johnson', 'David Wilson', 'Emma Davis']  },
-    { title: 'Restorative Yin - Today 6:00 PM', count: 2, people: ['Michael Chen', 'Lisa Park']                   },
+    { title: 'Hot Yoga - Tomorrow 7:00 AM', count: 5, people: ['Sarah Johnson', 'David Wilson', 'Emma Davis'] },
+    { title: 'Restorative Yin - Today 6:00 PM', count: 2, people: ['Michael Chen', 'Lisa Park'] },
 ];
 
 // ─────────────────────────────────────────────────────────────
@@ -105,22 +105,22 @@ const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // March 2026 starts on Sunday (0), has 31 days
 const MARCH_2026_START_DOW = 0; // Sunday
-const MARCH_2026_DAYS      = 31;
+const MARCH_2026_DAYS = 31;
 const CALENDAR_MONTH_LABEL = 'March 2026';
 
 // ─────────────────────────────────────────────────────────────
 // Small atoms
 // ─────────────────────────────────────────────────────────────
 const STATUS_STYLE: Record<ClassStatus, string> = {
-    Active:      'bg-success/15 text-success',
-    'Nearly Full':'bg-warning/15 text-warning',
-    Full:         'bg-danger/15 text-danger',
+    Active: 'bg-success/15 text-success',
+    'Nearly Full': 'bg-warning/15 text-warning',
+    Full: 'bg-danger/15 text-danger',
 };
 
 const AVAIL_STYLE: Record<TrainerAvailRow['status'], string> = {
-    Available:  'bg-success/15 text-success',
-    'In Session':'bg-warning/15 text-warning',
-    'On Leave':  'text-muted',
+    Available: 'bg-success/15 text-success',
+    'In Session': 'bg-warning/15 text-warning',
+    'On Leave': 'text-muted',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ const BookingsPage: React.FC = () => {
 
     // Build calendar grid: leading blanks + day cells + trailing blanks
     const leadingBlanks = MARCH_2026_START_DOW;
-    const totalCells    = Math.ceil((leadingBlanks + MARCH_2026_DAYS) / 7) * 7;
+    const totalCells = Math.ceil((leadingBlanks + MARCH_2026_DAYS) / 7) * 7;
 
     const filteredClasses = CLASS_SCHEDULE.filter(
         (c) =>
@@ -229,23 +229,22 @@ const BookingsPage: React.FC = () => {
                         <div className="grid grid-cols-7 gap-1">
                             {Array.from({ length: totalCells }).map((_, idx) => {
                                 const day = idx - leadingBlanks + 1;
-                                const isValid     = day >= 1 && day <= MARCH_2026_DAYS;
-                                const isToday     = day === TODAY;
+                                const isValid = day >= 1 && day <= MARCH_2026_DAYS;
+                                const isToday = day === TODAY;
                                 const isHighlight = HIGHLIGHTED_DAYS.includes(day);
-                                const dots        = CALENDAR_DOTS[day] ?? [];
+                                const dots = CALENDAR_DOTS[day] ?? [];
 
                                 return (
                                     <div
                                         key={idx}
-                                        className={`relative min-h-[52px] rounded-lg p-1.5 flex flex-col ${
-                                            !isValid
+                                        className={`relative min-h-[52px] rounded-lg p-1.5 flex flex-col ${!isValid
                                                 ? ''
                                                 : isToday
                                                     ? 'border-2 border-primary'
                                                     : isHighlight
                                                         ? 'bg-warning/10'
                                                         : ''
-                                        }`}
+                                            }`}
                                     >
                                         {isValid && (
                                             <>
@@ -272,10 +271,10 @@ const BookingsPage: React.FC = () => {
                         {/* Legend */}
                         <div className="flex items-center gap-4 flex-wrap mt-4 pt-3 border-t border-defaultborder">
                             {[
-                                { label: 'Group Classes',   color: '#EF4444' },
+                                { label: 'Group Classes', color: '#EF4444' },
                                 { label: 'Private Classes', color: '#3B82F6' },
-                                { label: 'Workshops',       color: '#22C55E' },
-                                { label: 'Special Events',  color: '#F97316' },
+                                { label: 'Workshops', color: '#22C55E' },
+                                { label: 'Special Events', color: '#F97316' },
                             ].map((l) => (
                                 <div key={l.label} className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
@@ -346,14 +345,18 @@ const BookingsPage: React.FC = () => {
                 <div className="box-header flex items-center justify-between flex-wrap gap-3">
                     <h6 className="box-title font-bold !mb-0">Class Schedule Management</h6>
                     <div className="flex items-center gap-2">
-                        <div className="relative">
-                            <i className="bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm"></i>
+                        <div className="relative" style={{ minWidth: '200px' }}>
+                            <i
+                                className="bx bx-search absolute top-1/2 -translate-y-1/2 text-muted text-sm"
+                                style={{ left: '10px' }}
+                            ></i>
                             <input
                                 type="text"
                                 placeholder="Search classes..."
                                 value={classSearch}
                                 onChange={(e) => setClassSearch(e.target.value)}
-                                className="form-control pl-8 text-sm py-1.5"
+                                className="ti-form-control !text-[0.875rem]"
+                                style={{ paddingLeft: '32px' }}
                             />
                         </div>
                         <button className="ti-btn ti-btn-sm ti-btn-light gap-1 text-xs">
@@ -375,8 +378,8 @@ const BookingsPage: React.FC = () => {
                                 {filteredClasses.map((row, i) => (
                                     <tr key={i} className="border-b border-defaultborder/50 hover:bg-light/50">
                                         <td className="py-3 px-4">
-                                            <p className="font-semibold text-sm text-defaulttextcolor">{row.dateLabel}</p>
-                                            <p className="text-xs text-muted">{row.dateSubLabel}</p>
+                                            <p className="font-semibold text-sm text-defaulttextcolor mb-0">{row.dateLabel}</p>
+                                            <p className="text-xs text-muted mb-0">{row.dateSubLabel}</p>
                                         </td>
                                         <td className="py-3 px-4">
                                             <div className="flex items-center gap-2">
@@ -448,8 +451,8 @@ const BookingsPage: React.FC = () => {
                                     {t.initials}
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-semibold text-defaulttextcolor leading-tight">{t.name}</p>
-                                    <p className="text-xs text-muted">{t.speciality}</p>
+                                    <p className="text-sm font-semibold text-defaulttextcolor leading-tight mb-0">{t.name}</p>
+                                    <p className="text-xs text-muted mb-0">{t.speciality}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`text-xs font-semibold ${AVAIL_STYLE[t.status]}`}>
