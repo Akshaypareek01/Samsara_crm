@@ -94,7 +94,6 @@ const YOGA_PARTICIPANTS = [
         progressColor: 'bg-success/10 text-success',
     },
 ];
-
 // ─────────────────────────────────────────────
 
 const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
@@ -109,15 +108,63 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
 const YogaPage = () => {
     const [search, setSearch] = useState('');
     const [levelFilter, setLevelFilter] = useState('All Levels');
+    const [showModal, setShowModal] = useState(false);
+const [newParticipant, setNewParticipant] = useState({
+    name: '',
+    email: '',
+    level: 'Beginner',
+});
+const [yogaParticipants, setYogaParticipants] = useState(YOGA_PARTICIPANTS);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredParticipants = YOGA_PARTICIPANTS.filter((p) => {
+    const filteredParticipants = yogaParticipants.filter((p) => {
         const matchesSearch =
             p.name.toLowerCase().includes(search.toLowerCase()) ||
             p.email.toLowerCase().includes(search.toLowerCase());
         const matchesLevel = levelFilter === 'All Levels' || p.level === levelFilter;
         return matchesSearch && matchesLevel;
     });
+
+
+
+
+const handleAddParticipant = () => {
+    if (!newParticipant.name || !newParticipant.email) return;
+
+    const levelColorMap: Record<string, string> = {
+        Beginner: 'bg-warning/10 text-warning',
+        Intermediate: 'bg-primary/10 text-primary',
+        Advanced: 'bg-purple-100 text-purple-600',
+    };
+
+    const initials = newParticipant.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+    const participant = {
+        id: Date.now(),
+        name: newParticipant.name,
+        email: newParticipant.email,
+        initials,
+        level: newParticipant.level,
+        levelColor: levelColorMap[newParticipant.level],
+        sessionsAttended: '0 sessions completed',
+        attendance: 0,
+        attendanceColor: 'bg-danger',
+        progress: 'Just Started',
+        progressColor: 'bg-warning/10 text-warning',
+    };
+
+    // NOTE: Replace this with an API POST call when backend is ready
+    // e.g. await fetch('/api/wellness/yoga/participants', { method: 'POST', body: JSON.stringify(participant) })
+    setYogaParticipants((prev) => [...prev, participant]);
+    setNewParticipant({ name: '', email: '', level: 'Beginner' });
+    setShowModal(false);
+};
+
 
     return (
         <Fragment>
@@ -184,7 +231,7 @@ const YogaPage = () => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {/* TODO: wire Add Participant to modal/API */}
-                                    <button type="button" className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave">
+                                    <button type="button" className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave" onClick={() => setShowModal(true)} >
                                         <i className="ri-add-line me-1"></i> Add Participant
                                     </button>
                                     {/* TODO: wire Export to download API */}
@@ -249,6 +296,77 @@ const YogaPage = () => {
                     </div>
                 </div>
             </div>
+
+
+
+            {showModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white dark:bg-bodybg rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+                <h6 className="text-[1rem] font-semibold text-defaulttextcolor">Add New Participant</h6>
+                <button onClick={() => setShowModal(false)} className="text-[#8c9097] hover:text-danger text-xl">
+                    <i className="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Full Name</label>
+                    <input
+                        type="text"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. Ananya Mehta"
+                        value={newParticipant.name}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Email</label>
+                    <input
+                        type="email"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. ananya@email.com"
+                        value={newParticipant.email}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, email: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Level</label>
+                    <select
+                        className="ti-form-select w-full"
+                        value={newParticipant.level}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, level: e.target.value })}
+                    >
+                        {['Beginner', 'Intermediate', 'Advanced'].map((lvl) => (
+                            <option key={lvl} value={lvl}>{lvl}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+                <button
+                    type="button"
+                    className="ti-btn ti-btn-outline-light !text-defaulttextcolor"
+                    onClick={() => setShowModal(false)}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    className="ti-btn !bg-orange-500 !text-white"
+                    onClick={handleAddParticipant}
+                    disabled={!newParticipant.name || !newParticipant.email}
+                >
+                    <i className="ri-add-line me-1"></i> Add Participant
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
+
         </Fragment>
     );
 };

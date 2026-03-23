@@ -112,15 +112,63 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
 const MeditationPage = () => {
     const [search, setSearch] = useState('');
     const [planFilter, setPlanFilter] = useState('All Treatment Plans');
+    const [showModal, setShowModal] = useState(false);
+const [newClient, setNewClient] = useState({
+    name: '',
+    email: '',
+    treatmentPlan: 'Mindfulness Basics',
+    registrationDate: '',
+});
+const [meditationClients, setMeditationClients] = useState(MEDITATION_CLIENTS);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredClients = MEDITATION_CLIENTS.filter((c) => {
+    const filteredClients =  meditationClients.filter((c) => {
         const matchesSearch =
             c.name.toLowerCase().includes(search.toLowerCase()) ||
             c.email.toLowerCase().includes(search.toLowerCase());
         const matchesPlan = planFilter === 'All Treatment Plans' || c.treatmentPlan === planFilter;
         return matchesSearch && matchesPlan;
     });
+
+   
+    const handleAddClient = () => {
+    if (!newClient.name || !newClient.email || !newClient.registrationDate) return;
+
+    const treatmentColorMap: Record<string, string> = {
+        'Mindfulness Basics': 'bg-purple-100 text-purple-600',
+        'Stress Reduction': 'bg-warning/10 text-warning',
+        'Deep Meditation': 'bg-primary/10 text-primary',
+        'Sleep Therapy': 'bg-success/10 text-success',
+    };
+
+    const initials = newClient.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+    const client = {
+        id: Date.now(),
+        name: newClient.name,
+        email: newClient.email,
+        initials,
+        treatmentPlan: newClient.treatmentPlan,
+        treatmentColor: treatmentColorMap[newClient.treatmentPlan],
+        sessionsAttended: '0 sessions completed',
+        registrationDate: newClient.registrationDate,
+        attendance: 0,
+        attendanceColor: 'bg-danger',
+        progress: 'Just Started',
+        progressColor: 'bg-warning/10 text-warning',
+    };
+
+    // NOTE: Replace with API POST when backend is ready
+    setMeditationClients((prev) => [...prev, client]);
+    setNewClient({ name: '', email: '', treatmentPlan: 'Mindfulness Basics', registrationDate: '' });
+    setShowModal(false);
+};
+    
 
     return (
         <Fragment>
@@ -187,6 +235,7 @@ const MeditationPage = () => {
                             <button
                                 type="button"
                                 className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                                onClick={() => setShowModal(true)}  
                             >
                                 <i className="ri-add-line"></i> Add Client
                             </button>
@@ -254,6 +303,88 @@ const MeditationPage = () => {
                     </div>
                 </div>
             </div>
+
+
+
+
+{showModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white dark:bg-bodybg rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+                <h6 className="text-[1rem] font-semibold text-defaulttextcolor">Add New Client</h6>
+                <button onClick={() => setShowModal(false)} className="text-[#8c9097] hover:text-danger text-xl">
+                    <i className="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Full Name</label>
+                    <input
+                        type="text"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. Ananya Mehta"
+                        value={newClient.name}
+                        onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Email</label>
+                    <input
+                        type="email"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. ananya@email.com"
+                        value={newClient.email}
+                        onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Treatment Plan</label>
+                    <select
+                        className="ti-form-select w-full"
+                        value={newClient.treatmentPlan}
+                        onChange={(e) => setNewClient({ ...newClient, treatmentPlan: e.target.value })}
+                    >
+                        {['Mindfulness Basics', 'Stress Reduction', 'Deep Meditation', 'Sleep Therapy'].map((plan) => (
+                            <option key={plan} value={plan}>{plan}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Registration Date</label>
+                    <input
+                        type="date"
+                        className="ti-form-control w-full"
+                        value={newClient.registrationDate}
+                        onChange={(e) => setNewClient({ ...newClient, registrationDate: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+                <button
+                    type="button"
+                    className="ti-btn ti-btn-outline-light !text-defaulttextcolor"
+                    onClick={() => setShowModal(false)}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    className="ti-btn !bg-orange-500 !text-white"
+                    onClick={handleAddClient}
+                    disabled={!newClient.name || !newClient.email || !newClient.registrationDate}
+                >
+                    <i className="ri-add-line me-1"></i> Add Client
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
+
+
         </Fragment>
     );
 };

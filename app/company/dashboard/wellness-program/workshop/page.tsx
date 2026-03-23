@@ -112,15 +112,64 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
 const WorkshopPage = () => {
     const [search, setSearch] = useState('');
     const [workshopFilter, setWorkshopFilter] = useState('All Workshops');
+    const [showModal, setShowModal] = useState(false);
+const [newParticipant, setNewParticipant] = useState({
+    name: '',
+    email: '',
+    workshop: 'Morning Group Meditation',
+    registrationDate: '',
+});
+const [workshopParticipants, setWorkshopParticipants] = useState(WORKSHOP_PARTICIPANTS);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredParticipants = WORKSHOP_PARTICIPANTS.filter((p) => {
+    const filteredParticipants = workshopParticipants.filter((p) => {
         const matchesSearch =
             p.name.toLowerCase().includes(search.toLowerCase()) ||
             p.email.toLowerCase().includes(search.toLowerCase());
         const matchesWorkshop = workshopFilter === 'All Workshops' || p.workshop === workshopFilter;
         return matchesSearch && matchesWorkshop;
     });
+
+
+
+const handleRegisterParticipant = () => {
+    if (!newParticipant.name || !newParticipant.email || !newParticipant.registrationDate) return;
+
+    const workshopColorMap: Record<string, string> = {
+        'Morning Group Meditation': 'bg-purple-100 text-purple-600',
+        'Stress Relief Workshop': 'bg-warning/10 text-warning',
+        'Weekend Retreat': 'bg-primary/10 text-primary',
+        'Nutrition Masterclass': 'bg-success/10 text-success',
+    };
+
+    const initials = newParticipant.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+    const participant = {
+        id: Date.now(),
+        name: newParticipant.name,
+        email: newParticipant.email,
+        initials,
+        workshop: newParticipant.workshop,
+        workshopColor: workshopColorMap[newParticipant.workshop],
+        registrationDate: newParticipant.registrationDate,
+        sessionsAttended: '0 sessions',
+        attendance: 0,
+        attendanceColor: 'bg-danger',
+        status: 'Registered',
+        statusColor: 'bg-warning/10 text-warning',
+    };
+
+    // NOTE: Replace with API POST when backend is ready
+    setWorkshopParticipants((prev) => [...prev, participant]);
+    setNewParticipant({ name: '', email: '', workshop: 'Morning Group Meditation', registrationDate: '' });
+    setShowModal(false);
+};
+
 
     return (
         <Fragment>
@@ -187,6 +236,7 @@ const WorkshopPage = () => {
                             <button
                                 type="button"
                                 className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                                  onClick={() => setShowModal(true)} 
                             >
                                 <i className="ri-add-line"></i> Register Participant
                             </button>
@@ -254,6 +304,86 @@ const WorkshopPage = () => {
                     </div>
                 </div>
             </div>
+
+
+{showModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white dark:bg-bodybg rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+                <h6 className="text-[1rem] font-semibold text-defaulttextcolor">Register New Participant</h6>
+                <button onClick={() => setShowModal(false)} className="text-[#8c9097] hover:text-danger text-xl">
+                    <i className="ri-close-line"></i>
+                </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Full Name</label>
+                    <input
+                        type="text"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. Jessica Williams"
+                        value={newParticipant.name}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, name: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Email</label>
+                    <input
+                        type="email"
+                        className="ti-form-control w-full"
+                        placeholder="e.g. jessica@email.com"
+                        value={newParticipant.email}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, email: e.target.value })}
+                    />
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Workshop</label>
+                    <select
+                        className="ti-form-select w-full"
+                        value={newParticipant.workshop}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, workshop: e.target.value })}
+                    >
+                        {['Morning Group Meditation', 'Stress Relief Workshop', 'Weekend Retreat', 'Nutrition Masterclass'].map((w) => (
+                            <option key={w} value={w}>{w}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Registration Date</label>
+                    <input
+                        type="date"
+                        className="ti-form-control w-full"
+                        value={newParticipant.registrationDate}
+                        onChange={(e) => setNewParticipant({ ...newParticipant, registrationDate: e.target.value })}
+                    />
+                </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+                <button
+                    type="button"
+                    className="ti-btn ti-btn-outline-light !text-defaulttextcolor"
+                    onClick={() => setShowModal(false)}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    className="ti-btn !bg-orange-500 !text-white"
+                    onClick={handleRegisterParticipant}
+                    disabled={!newParticipant.name || !newParticipant.email || !newParticipant.registrationDate}
+                >
+                    <i className="ri-add-line me-1"></i> Register Participant
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
+
+
         </Fragment>
     );
 };
