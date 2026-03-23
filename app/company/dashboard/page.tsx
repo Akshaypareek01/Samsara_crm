@@ -86,51 +86,8 @@ const PROGRAM_STATS = {
 
 // ─────────────────────────────────────────────
 
-const TimeFilterButtons = ({ active, onChange }: { active: string; onChange: (v: string) => void }) => (
-    <div className="flex gap-1">
-        {['Weekly', 'Monthly', 'Quarterly', 'Yearly'].map((f) => (
-            <button
-                key={f}
-                onClick={() => onChange(f)}
-                className={`px-3 py-1.5 text-xs rounded font-medium transition-all ${
-                    active === f
-                        ? 'bg-warning text-white'
-                        : 'bg-transparent border border-defaultborder text-muted hover:bg-light'
-                }`}
-            >
-                {f}
-            </button>
-        ))}
-    </div>
-);
-
-const StatCard = ({
-    label,
-    value,
-    change,
-    icon,
-    color,
-}: {
-    label: string;
-    value: string | number;
-    change: string;
-    icon: string;
-    color: string;
-}) => (
-    <div className={`flex items-start gap-3 p-4 rounded-xl bg-${color}/10 border border-${color}/20`}>
-        <div className={`w-10 h-10 rounded-full bg-${color}/20 flex items-center justify-center text-lg flex-shrink-0`}>
-            {icon}
-        </div>
-        <div>
-            <p className="text-xs text-muted mb-0.5">{label}</p>
-            <p className={`text-2xl font-bold text-${color}`}>{value}</p>
-            <p className="text-xs text-success mt-0.5">{change}</p>
-        </div>
-    </div>
-);
-
 const ProgressBar = ({ value, color = 'bg-primary' }: { value: number; color?: string }) => (
-    <div className="w-full bg-light rounded-full h-1.5 mt-1">
+    <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
         <div className={`${color} h-1.5 rounded-full`} style={{ width: `${value}%` }} />
     </div>
 );
@@ -142,6 +99,47 @@ const StarRating = ({ rating }: { rating: number }) => (
                 ★
             </span>
         ))}
+    </div>
+);
+
+// ── New Stat Card matching Image 2 design ──
+const StatCard = ({
+    label,
+    value,
+    change,
+    icon,
+    iconBg,
+    iconColor,
+    labelColor,
+    valueColor,
+}: {
+    label: string;
+    value: string | number;
+    change: string;
+    icon: string;
+    iconBg: string;
+    iconColor: string;
+    labelColor: string;
+    valueColor: string;
+}) => (
+    <div className="flex flex-col gap-2 p-5 rounded-xl bg-white border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-3">
+            <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+                style={{ background: iconBg, color: iconColor }}
+            >
+                {icon}
+            </div>
+            <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: labelColor }}>
+                {label}
+            </span>
+        </div>
+        <div>
+            <p className="text-3xl font-bold text-gray-800" style={{ color: valueColor }}>{value}</p>
+            <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+                <span>↑</span> {change}
+            </p>
+        </div>
     </div>
 );
 
@@ -204,7 +202,7 @@ const CompanyDashboard = () => {
                 ══════════════════════════════════ */}
                 <div className="xl:col-span-9 col-span-12 flex flex-col gap-6">
 
-                    {/* ── Original 3 cards — live API data ── */}
+                    {/* ── COMMENTED OUT: Welcome to Company Dashboard section ──
                     <div className="box">
                         <div className="box-body">
                             <h3 className="text-xl font-bold mb-4">Welcome to the Company Dashboard</h3>
@@ -227,208 +225,259 @@ const CompanyDashboard = () => {
                             </div>
                         </div>
                     </div>
+                    ── END COMMENTED OUT ── */}
 
-                    {/* ── Analytics stat cards ── */}
+                    {/* ── Analytics Overview Box ── */}
                     <div className="box">
-                        <div className="box-body">
+                        {/* Header */}
+                        <div className="box-header border-b border-gray-100 pb-4">
+                            <div className="flex flex-wrap justify-between items-center gap-3 w-full">
+                                <div>
+                                    <h5 className="box-title font-bold text-xl !mb-0 text-gray-800">Analytics Overview</h5>
+                                    <p className="text-muted text-xs mt-0.5">Comprehensive wellness metrics and program analytics</p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {/* Time filter buttons */}
+                                    {['Weekly', 'Monthly', 'Quarterly', 'Yearly'].map((f) => (
+                                        <button
+                                            key={f}
+                                            onClick={() => setActiveFilter(f)}
+                                            className={`px-4 py-1.5 text-xs rounded-full font-semibold transition-all whitespace-nowrap ${
+                                                activeFilter === f
+                                                    ? 'bg-orange-500 text-white shadow-sm'
+                                                    : 'bg-transparent border border-gray-200 text-gray-500 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            {f}
+                                        </button>
+                                    ))}
+                                    {/* Filters + Export */}
+                                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-orange-300 text-orange-600 font-medium hover:bg-orange-50 transition-colors">
+                                        <i className="ri-filter-line text-xs"></i> Filters
+                                    </button>
+                                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full bg-orange-500 text-white font-medium hover:bg-orange-600 transition-colors shadow-sm">
+                                        <i className="ri-download-line text-xs"></i> Export Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="box-body flex flex-col gap-6">
+
+                            {/* ── 4 Stat Cards ── */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <StatCard
-                                    label="Overall Wellness Score"
+                                    label="Overall"
                                     value={`${ANALYTICS_OVERVIEW.wellnessScore.value}/100`}
                                     change={ANALYTICS_OVERVIEW.wellnessScore.change}
                                     icon="❤️"
-                                    color="warning"
+                                    iconBg="#FFF3E0"
+                                    iconColor="#F97316"
+                                    labelColor="#F97316"
+                                    valueColor="#1F2937"
                                 />
                                 <StatCard
-                                    label="Total Active Users"
+                                    label="Active"
                                     value={ANALYTICS_OVERVIEW.totalActiveUsers.value.toLocaleString()}
                                     change={ANALYTICS_OVERVIEW.totalActiveUsers.change}
                                     icon="👤"
-                                    color="primary"
+                                    iconBg="#EFF6FF"
+                                    iconColor="#3B82F6"
+                                    labelColor="#3B82F6"
+                                    valueColor="#1F2937"
                                 />
                                 <StatCard
-                                    label="Program Completion Rate"
+                                    label="Completion"
                                     value={`${ANALYTICS_OVERVIEW.completionRate.value}%`}
                                     change={ANALYTICS_OVERVIEW.completionRate.change}
                                     icon="✅"
-                                    color="success"
+                                    iconBg="#F0FDF4"
+                                    iconColor="#10B981"
+                                    labelColor="#10B981"
+                                    valueColor="#1F2937"
                                 />
                                 <StatCard
-                                    label="Avg Session Duration"
+                                    label="Session"
                                     value={ANALYTICS_OVERVIEW.avgSessionDuration.value}
                                     change={ANALYTICS_OVERVIEW.avgSessionDuration.change}
                                     icon="⏱️"
-                                    color="info"
+                                    iconBg="#F5F3FF"
+                                    iconColor="#8B5CF6"
+                                    labelColor="#8B5CF6"
+                                    valueColor="#1F2937"
                                 />
                             </div>
-                        </div>
-                    </div>
 
-                    {/* ── Analytics Overview Header ── */}
-                    <div className="box">
-                        <div className="box-header justify-between items-center flex-wrap gap-3">
-                            <div>
-                                <h5 className="box-title font-bold text-lg !mb-0">Analytics Overview</h5>
-                                <p className="text-muted text-xs mt-0.5">Comprehensive wellness metrics and program analytics</p>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <TimeFilterButtons active={activeFilter} onChange={setActiveFilter} />
-                                <button className="ti-btn ti-btn-sm ti-btn-light gap-1 text-xs">
-                                    <i className="ri-filter-line"></i> Filters
-                                </button>
-                                <button className="ti-btn ti-btn-sm ti-btn-warning gap-1 text-xs">
-                                    <i className="ri-download-line"></i> Export Data
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* ── 3 Metric Panels ── */}
-                        <div className="box-body">
+                            {/* ── 3 Metric Panels ── */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                                 {/* Yoga Metrics */}
-                                <div className="p-4 rounded-xl border border-defaultborder">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h6 className="font-semibold text-sm text-defaulttextcolor">Yoga Metrics</h6>
-                                        <span className="w-7 h-7 rounded-full border-2 border-success flex items-center justify-center text-xs text-success">○</span>
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h6 className="font-bold text-sm text-gray-800">Yoga Metrics</h6>
+                                        <span className="w-8 h-8 rounded-full border-2 border-green-400 flex items-center justify-center text-xs text-green-500 font-bold">○</span>
                                     </div>
-                                    <div className="mb-3">
+                                    <div className="mb-4">
                                         <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-muted">Session Attendance</span>
-                                            <span className="font-semibold">{YOGA_METRICS.sessionAttendance}%</span>
+                                            <span className="text-gray-500">Session Attendance</span>
+                                            <span className="font-semibold text-gray-700">{YOGA_METRICS.sessionAttendance}%</span>
                                         </div>
-                                        <ProgressBar value={YOGA_METRICS.sessionAttendance} color="bg-warning" />
+                                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                            <div className="bg-green-400 h-1.5 rounded-full" style={{ width: `${YOGA_METRICS.sessionAttendance}%` }} />
+                                        </div>
                                     </div>
-                                    <div className="text-xs space-y-1">
-                                        <p className="text-muted">Most Popular Class</p>
-                                        <p className="font-semibold text-defaulttextcolor">{YOGA_METRICS.mostPopularClass}</p>
-                                        <p className="text-muted mt-2">Average Rating</p>
-                                        <div className="flex items-center gap-1">
-                                            <span className="font-semibold">{YOGA_METRICS.avgRating}</span>
-                                            <StarRating rating={YOGA_METRICS.avgRating} />
+                                    <div className="text-xs space-y-2">
+                                        <div>
+                                            <p className="text-gray-400">Most Popular Class</p>
+                                            <p className="font-semibold text-gray-700 mt-0.5">{YOGA_METRICS.mostPopularClass}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-400 mt-2">Average Rating</p>
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <span className="font-semibold text-gray-700">{YOGA_METRICS.avgRating}</span>
+                                                <StarRating rating={YOGA_METRICS.avgRating} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Ayurveda Metrics */}
-                                <div className="p-4 rounded-xl border border-defaultborder">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h6 className="font-semibold text-sm text-defaulttextcolor">Ayurveda Metrics</h6>
-                                        <span className="w-7 h-7 rounded-full bg-warning/20 flex items-center justify-center text-sm">🌿</span>
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h6 className="font-bold text-sm text-gray-800">Ayurveda Metrics</h6>
+                                        <span className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-sm">🌿</span>
                                     </div>
-                                    <div className="mb-3">
+                                    <div className="mb-4">
                                         <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-muted">Consultation Bookings</span>
-                                            <span className="font-semibold">{YOGA_METRICS.consultationBookings}</span>
+                                            <span className="text-gray-500">Consultation Bookings</span>
+                                            <span className="font-bold text-gray-700 text-base">{YOGA_METRICS.consultationBookings}</span>
+                                        </div>
+                                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                            <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: '80%' }} />
                                         </div>
                                     </div>
-                                    <div className="text-xs space-y-1">
-                                        <p className="text-muted">Diet Plan Adherence</p>
-                                        <ProgressBar value={YOGA_METRICS.dietPlanAdherence} color="bg-warning" />
-                                        <div className="flex justify-between mt-1">
-                                            <span></span>
-                                            <span className="font-semibold">{YOGA_METRICS.dietPlanAdherence}%</span>
+                                    <div className="text-xs space-y-2">
+                                        <div>
+                                            <p className="text-gray-400">Diet Plan Adherence</p>
+                                            <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1">
+                                                <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: `${YOGA_METRICS.dietPlanAdherence}%` }} />
+                                            </div>
+                                            <div className="flex justify-end mt-0.5">
+                                                <span className="font-semibold text-gray-700">{YOGA_METRICS.dietPlanAdherence}%</span>
+                                            </div>
                                         </div>
-                                        <p className="text-muted mt-2">Treatment Success Rate</p>
-                                        <p className="font-semibold text-defaulttextcolor">{YOGA_METRICS.treatmentSuccessRate}%</p>
+                                        <div>
+                                            <p className="text-gray-400">Treatment Success Rate</p>
+                                            <p className="font-semibold text-gray-700 mt-0.5">{YOGA_METRICS.treatmentSuccessRate}%</p>
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Women Wellness */}
-                                <div className="p-4 rounded-xl border border-defaultborder">
-                                    <div className="flex justify-between items-center mb-3">
-                                        <h6 className="font-semibold text-sm text-defaulttextcolor">Women Wellness</h6>
-                                        <span className="w-7 h-7 rounded-full bg-pink-100 flex items-center justify-center text-sm">♀</span>
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h6 className="font-bold text-sm text-gray-800">Women Wellness</h6>
+                                        <span className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-sm">♀</span>
                                     </div>
-                                    <div className="mb-3">
+                                    <div className="mb-4">
                                         <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-muted">Program Enrollment</span>
-                                            <span className="font-semibold">{WOMEN_WELLNESS.programEnrollment}%</span>
+                                            <span className="text-gray-500">Program Enrollment</span>
+                                            <span className="font-semibold text-gray-700">{WOMEN_WELLNESS.programEnrollment}%</span>
                                         </div>
-                                        <ProgressBar value={WOMEN_WELLNESS.programEnrollment} color="bg-danger" />
+                                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                            <div className="bg-red-400 h-1.5 rounded-full" style={{ width: `${WOMEN_WELLNESS.programEnrollment}%` }} />
+                                        </div>
                                     </div>
-                                    <div className="text-xs space-y-1.5">
+                                    <div className="text-xs space-y-2">
                                         {WOMEN_WELLNESS.breakdown.map((item) => (
                                             <div key={item.name} className="flex justify-between">
-                                                <span className="text-muted">{item.name}</span>
-                                                <span className="font-semibold">{item.value}%</span>
+                                                <span className="text-gray-500">{item.name}</span>
+                                                <span className="font-semibold text-gray-700">{item.value}%</span>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* ── Charts Row ── */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <h6 className="font-semibold text-sm mb-0.5">Program Engagement Trend</h6>
-                                    <p className="text-xs text-muted mb-3">Weekly participation across all programs</p>
-                                    <ResponsiveContainer width="100%" height={180}>
-                                        <BarChart data={PROGRAM_ENGAGEMENT_DATA} barSize={24}>
-                                            <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <Tooltip />
-                                            <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                            {/* ── Bar Charts Row ── */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <h6 className="font-bold text-sm text-gray-800 mb-0.5">Program Engagement Trend</h6>
+                                    <p className="text-xs text-gray-400 mb-4">Weekly participation across all programs</p>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={PROGRAM_ENGAGEMENT_DATA} barSize={28}>
+                                            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 11 }}
+                                                cursor={{ fill: '#F3F4F6' }}
+                                            />
+                                            <Bar dataKey="value" fill="#60A5FA" radius={[4, 4, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div>
-                                    <h6 className="font-semibold text-sm mb-0.5">User Activity Distribution</h6>
-                                    <p className="text-xs text-muted mb-3">Peak usage times and patterns</p>
-                                    <ResponsiveContainer width="100%" height={180}>
-                                        <BarChart data={USER_ACTIVITY_DATA} barSize={24}>
-                                            <XAxis dataKey="time" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                                            <Tooltip />
-                                            <Bar dataKey="value" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <h6 className="font-bold text-sm text-gray-800 mb-0.5">User Activity Distribution</h6>
+                                    <p className="text-xs text-gray-400 mb-4">Peak usage times and patterns</p>
+                                    <ResponsiveContainer width="100%" height={200}>
+                                        <BarChart data={USER_ACTIVITY_DATA} barSize={28}>
+                                            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                                            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 11 }}
+                                                cursor={{ fill: '#F3F4F6' }}
+                                            />
+                                            <Bar dataKey="value" fill="#60A5FA" radius={[4, 4, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
 
                             {/* ── Pie Charts Row ── */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                                <div>
-                                    <h6 className="font-semibold text-sm mb-0.5">Program Success Rates</h6>
-                                    <p className="text-xs text-muted mb-3">Completion and satisfaction metrics</p>
-                                    <ResponsiveContainer width="100%" height={200}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <h6 className="font-bold text-sm text-gray-800 mb-0.5">Program Success Rates</h6>
+                                    <p className="text-xs text-gray-400 mb-2">Completion and satisfaction metrics</p>
+                                    <ResponsiveContainer width="100%" height={220}>
                                         <PieChart>
                                             <Pie
                                                 data={PROGRAM_SUCCESS_DATA}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={50}
-                                                outerRadius={80}
+                                                innerRadius={55}
+                                                outerRadius={85}
                                                 dataKey="value"
+                                                paddingAngle={2}
                                             >
                                                 {PROGRAM_SUCCESS_DATA.map((entry, index) => (
                                                     <Cell key={index} fill={entry.color} />
                                                 ))}
                                             </Pie>
-                                            <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
-                                            <Tooltip />
+                                            <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
+                                            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 11 }} />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div>
-                                    <h6 className="font-semibold text-sm mb-0.5">User Demographics</h6>
-                                    <p className="text-xs text-muted mb-3">Age and department distribution</p>
-                                    <ResponsiveContainer width="100%" height={200}>
+                                <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <h6 className="font-bold text-sm text-gray-800 mb-0.5">User Demographics</h6>
+                                    <p className="text-xs text-gray-400 mb-2">Age and department distribution</p>
+                                    <ResponsiveContainer width="100%" height={220}>
                                         <PieChart>
                                             <Pie
                                                 data={USER_DEMOGRAPHICS_DATA}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={50}
-                                                outerRadius={80}
+                                                innerRadius={55}
+                                                outerRadius={85}
                                                 dataKey="value"
+                                                paddingAngle={2}
                                             >
                                                 {USER_DEMOGRAPHICS_DATA.map((entry, index) => (
                                                     <Cell key={index} fill={entry.color} />
                                                 ))}
                                             </Pie>
-                                            <Legend iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
-                                            <Tooltip />
+                                            <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
+                                            <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #E5E7EB', fontSize: 11 }} />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -436,7 +485,7 @@ const CompanyDashboard = () => {
                         </div>
                     </div>
 
-                    {/* ── Featured Trainers (kept from original) ── */}
+                    {/* ── COMMENTED OUT: Featured Trainers section ──
                     <div className="box">
                         <div className="box-header justify-between items-center">
                             <div className="flex items-center gap-2">
@@ -524,6 +573,8 @@ const CompanyDashboard = () => {
                             )}
                         </div>
                     </div>
+                    ── END COMMENTED OUT ── */}
+
                 </div>
 
                 {/* ══════════════════════════════════
@@ -533,20 +584,20 @@ const CompanyDashboard = () => {
 
                     {/* ── Wellness Calendar ── */}
                     <div className="box">
-                        <div className="box-header">
+                        <div className="box-header border-b border-gray-100">
                             <div className="flex justify-between items-center w-full">
-                                <h6 className="box-title font-bold !mb-0">Wellness Calendar</h6>
-                                <div className="flex items-center gap-2 text-xs text-muted">
-                                    <button className="hover:text-primary">‹</button>
-                                    <span>{WELLNESS_CALENDAR.month}</span>
-                                    <button className="hover:text-primary">›</button>
+                                <h6 className="box-title font-bold !mb-0 text-gray-800">Wellness Calendar</h6>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <button className="hover:text-orange-500 font-bold text-base leading-none">‹</button>
+                                    <span className="font-medium">{WELLNESS_CALENDAR.month}</span>
+                                    <button className="hover:text-orange-500 font-bold text-base leading-none">›</button>
                                 </div>
                             </div>
                         </div>
                         <div className="box-body pt-0">
-                            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted mb-2">
+                            <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-2">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                                    <span key={i} className="py-1 font-medium">{d}</span>
+                                    <span key={i} className="py-1 font-semibold">{d}</span>
                                 ))}
                             </div>
                             {/* May 2025 starts on Thursday (offset 4) */}
@@ -557,8 +608,8 @@ const CompanyDashboard = () => {
                                         key={day}
                                         className={`py-1.5 rounded-full text-xs font-medium transition-colors ${
                                             day === WELLNESS_CALENDAR.today
-                                                ? 'bg-warning text-white'
-                                                : 'hover:bg-light text-defaulttextcolor'
+                                                ? 'bg-orange-500 text-white shadow-sm'
+                                                : 'hover:bg-orange-50 text-gray-700'
                                         }`}
                                     >
                                         {day}
@@ -570,38 +621,35 @@ const CompanyDashboard = () => {
 
                     {/* ── Quick Actions ── */}
                     <div className="box">
-                        <div className="box-header">
-                            <h6 className="box-title font-bold !mb-0">Quick Actions</h6>
+                        <div className="box-header border-b border-gray-100">
+                            <h6 className="box-title font-bold !mb-0 text-gray-800">Quick Actions</h6>
                         </div>
-                        <div className="box-body flex flex-col gap-3 pt-0">
-                            {/* TODO: wire download to actual report API */}
-                            <button className="flex items-center gap-3 p-3 rounded-xl border border-defaultborder hover:bg-light transition-colors text-left w-full">
-                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-sm flex-shrink-0">
+                        <div className="box-body flex flex-col gap-3 pt-3">
+                            <button className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors text-left w-full">
+                                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 text-sm flex-shrink-0">
                                     <i className="ri-file-download-line"></i>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-defaulttextcolor mb-0">Download Report</p>
-                                    <p className="text-xs text-muted">Export wellness analytics</p>
+                                    <p className="text-sm font-semibold text-gray-700 mb-0">Download Report</p>
+                                    <p className="text-xs text-gray-400">Export wellness analytics</p>
                                 </div>
                             </button>
-                            {/* TODO: wire to share/email API */}
-                            <button className="flex items-center gap-3 p-3 rounded-xl border border-defaultborder hover:bg-light transition-colors text-left w-full">
-                                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center text-success text-sm flex-shrink-0">
+                            <button className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors text-left w-full">
+                                <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center text-green-500 text-sm flex-shrink-0">
                                     <i className="ri-share-line"></i>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-defaulttextcolor mb-0">Share Metrics</p>
-                                    <p className="text-xs text-muted">Send to stakeholders</p>
+                                    <p className="text-sm font-semibold text-gray-700 mb-0">Share Metrics</p>
+                                    <p className="text-xs text-gray-400">Send to stakeholders</p>
                                 </div>
                             </button>
-                            {/* TODO: wire to notifications/alert settings API */}
-                            <button className="flex items-center gap-3 p-3 rounded-xl border border-defaultborder hover:bg-light transition-colors text-left w-full">
-                                <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center text-warning text-sm flex-shrink-0">
+                            <button className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors text-left w-full">
+                                <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500 text-sm flex-shrink-0">
                                     <i className="ri-notification-line"></i>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-defaulttextcolor mb-0">Set Alerts</p>
-                                    <p className="text-xs text-muted">Configure notifications</p>
+                                    <p className="text-sm font-semibold text-gray-700 mb-0">Set Alerts</p>
+                                    <p className="text-xs text-gray-400">Configure notifications</p>
                                 </div>
                             </button>
                         </div>
@@ -609,50 +657,57 @@ const CompanyDashboard = () => {
 
                     {/* ── Program Statistics ── */}
                     <div className="box">
-                        <div className="box-header">
-                            <h6 className="box-title font-bold !mb-0">Program Statistics</h6>
+                        <div className="box-header border-b border-gray-100">
+                            <h6 className="box-title font-bold !mb-0 text-gray-800">Program Statistics</h6>
                         </div>
-                        <div className="box-body flex flex-col gap-4 pt-0">
+                        <div className="box-body flex flex-col gap-4 pt-3">
                             {/* Goals Achievement */}
-                            {/* TODO: replace PROGRAM_STATS with API data when available */}
-                            <div className="p-3 rounded-xl bg-light border border-defaultborder">
+                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
                                 <div className="flex justify-between items-center mb-3">
-                                    <p className="text-sm font-semibold text-defaulttextcolor">Goals Achievement</p>
-                                    <span className="badge bg-primary/10 text-primary text-xs">{PROGRAM_STATS.goalsAchievement.label}</span>
+                                    <p className="text-sm font-semibold text-gray-700">Goals Achievement</p>
+                                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">
+                                        {PROGRAM_STATS.goalsAchievement.label}
+                                    </span>
                                 </div>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <div>
                                         <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-muted">Wellness Sessions</span>
-                                            <span className="font-semibold">{PROGRAM_STATS.goalsAchievement.wellnessSessions}%</span>
+                                            <span className="text-gray-500">Wellness Sessions</span>
+                                            <span className="font-semibold text-gray-700">{PROGRAM_STATS.goalsAchievement.wellnessSessions}%</span>
                                         </div>
-                                        <ProgressBar value={PROGRAM_STATS.goalsAchievement.wellnessSessions} color="bg-warning" />
+                                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div className="bg-orange-400 h-1.5 rounded-full" style={{ width: `${PROGRAM_STATS.goalsAchievement.wellnessSessions}%` }} />
+                                        </div>
                                     </div>
                                     <div>
                                         <div className="flex justify-between text-xs mb-1">
-                                            <span className="text-muted">Health Metrics</span>
-                                            <span className="font-semibold">{PROGRAM_STATS.goalsAchievement.healthMetrics}%</span>
+                                            <span className="text-gray-500">Health Metrics</span>
+                                            <span className="font-semibold text-gray-700">{PROGRAM_STATS.goalsAchievement.healthMetrics}%</span>
                                         </div>
-                                        <ProgressBar value={PROGRAM_STATS.goalsAchievement.healthMetrics} color="bg-primary" />
+                                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                            <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: `${PROGRAM_STATS.goalsAchievement.healthMetrics}%` }} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Stress + Fitness */}
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="p-3 rounded-xl border border-defaultborder text-center">
-                                    <div className="flex items-center gap-1 justify-center text-xs text-muted mb-1">
-                                        <span>📍</span> Stress Score
+                                <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+                                        <span className="text-green-500">🛡</span>
+                                        <span>Stress Score</span>
                                     </div>
-                                    <p className="text-2xl font-bold text-defaulttextcolor">{PROGRAM_STATS.stressScore.value}%</p>
-                                    <p className="text-xs text-danger">{PROGRAM_STATS.stressScore.change}</p>
+                                    <p className="text-2xl font-bold text-gray-800">{PROGRAM_STATS.stressScore.value}%</p>
+                                    <p className="text-xs text-red-400 mt-1">{PROGRAM_STATS.stressScore.change}</p>
                                 </div>
-                                <div className="p-3 rounded-xl border border-defaultborder text-center">
-                                    <div className="flex items-center gap-1 justify-center text-xs text-muted mb-1">
-                                        <span>🏃</span> Fitness Index
+                                <div className="p-4 rounded-xl border border-gray-100 bg-white shadow-sm">
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+                                        <span className="text-orange-400">🏃</span>
+                                        <span>Fitness Index</span>
                                     </div>
-                                    <p className="text-2xl font-bold text-defaulttextcolor">{PROGRAM_STATS.fitnessIndex.value}%</p>
-                                    <p className="text-xs text-success">{PROGRAM_STATS.fitnessIndex.change}</p>
+                                    <p className="text-2xl font-bold text-gray-800">{PROGRAM_STATS.fitnessIndex.value}%</p>
+                                    <p className="text-xs text-green-500 mt-1">{PROGRAM_STATS.fitnessIndex.change}</p>
                                 </div>
                             </div>
                         </div>
