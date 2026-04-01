@@ -238,12 +238,12 @@ const BookingsPage: React.FC = () => {
                                     <div
                                         key={idx}
                                         className={`relative min-h-[52px] rounded-lg p-1.5 flex flex-col ${!isValid
-                                                ? ''
-                                                : isToday
-                                                    ? 'border-2 border-primary'
-                                                    : isHighlight
-                                                        ? 'bg-warning/10'
-                                                        : ''
+                                            ? ''
+                                            : isToday
+                                                ? 'border-2 border-primary'
+                                                : isHighlight
+                                                    ? 'bg-warning/10'
+                                                    : ''
                                             }`}
                                     >
                                         {isValid && (
@@ -342,36 +342,45 @@ const BookingsPage: React.FC = () => {
             {/* ── Class Schedule Management ── */}
             {/* TODO: replace CLASS_SCHEDULE with fetch('/api/bookings/class-schedule') */}
             <div className="box mb-6">
-                <div className="box-header flex items-center justify-between flex-wrap gap-3">
+                <div className="box-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h6 className="box-title font-bold !mb-0">Class Schedule Management</h6>
-                    <div className="flex items-center gap-2">
-                        <div className="relative" style={{ minWidth: '200px' }}>
+
+                    <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-none">
                             <i
                                 className="bx bx-search absolute top-1/2 -translate-y-1/2 text-muted text-sm"
                                 style={{ left: '10px' }}
                             ></i>
+
                             <input
                                 type="text"
                                 placeholder="Search classes..."
                                 value={classSearch}
                                 onChange={(e) => setClassSearch(e.target.value)}
-                                className="ti-form-control !text-[0.875rem]"
+                                className="ti-form-control !text-[0.875rem] w-full sm:w-56"
                                 style={{ paddingLeft: '32px' }}
                             />
                         </div>
-                        <button className="ti-btn ti-btn-sm ti-btn-light gap-1 text-xs">
-                            <i className="bx bx-filter-alt"></i> Filter
+
+                        <button className="flex items-center gap-2 text-xs font-medium whitespace-nowrap px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 shadow-sm border border-gray-200">
+                            <i className="bx bx-filter-alt text-sm"></i>
+                            Filter
                         </button>
                     </div>
                 </div>
                 <div className="box-body p-0">
                     <div className="table-responsive">
-                        <table className="table text-sm whitespace-nowrap mb-0">
+                        <table className="table text-sm whitespace-nowrap mb-0 w-full">
                             <thead>
                                 <tr className="border-b border-defaultborder bg-light/40">
-                                    {['Date & Time', 'Class Type', 'Trainer', 'Capacity', 'Booked', 'Waiting List', 'Status', 'Actions'].map((h) => (
-                                        <th key={h} className="font-semibold text-muted text-xs py-3 px-4">{h}</th>
-                                    ))}
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Date & Time</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Class Type</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Trainer</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Capacity</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Booked</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Waiting List</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Status</th>
+                                    <th className="font-semibold text-muted text-xs py-3 px-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -474,7 +483,7 @@ const BookingsPage: React.FC = () => {
                     <div className="box-header flex items-center justify-between">
                         <h6 className="box-title font-bold !mb-0">Waiting List Management</h6>
                         {/* TODO: wire to manage-all waiting list API */}
-                        <button className="ti-btn ti-btn-sm ti-btn-primary text-xs font-semibold">
+                        <button className="inline-flex items-center justify-center px-4 py-2 rounded-md text-xs font-semibold bg-indigo-500 text-white hover:bg-indigo-600 transition shadow-sm">
                             Manage All
                         </button>
                     </div>
@@ -483,7 +492,9 @@ const BookingsPage: React.FC = () => {
                             <div key={group.title}>
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="text-sm font-semibold text-defaulttextcolor">{group.title}</p>
-                                    <span className="text-xs font-semibold text-danger">{group.count} waiting</span>
+                                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-600">
+                                        {group.count} waiting
+                                    </span>
                                 </div>
                                 <div className="flex flex-col gap-1.5">
                                     {group.people.map((person, i) => (
@@ -493,7 +504,7 @@ const BookingsPage: React.FC = () => {
                                                 <span className="text-sm text-defaulttextcolor">{person}</span>
                                             </div>
                                             {/* TODO: wire Convert button to booking conversion API */}
-                                            <button className="ti-btn ti-btn-sm bg-success/15 text-success border-0 text-xs font-semibold py-0.5 px-2.5">
+                                            <button className="inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-medium bg-green-100 text-green-600 hover:bg-green-200 transition">
                                                 Convert
                                             </button>
                                         </div>
