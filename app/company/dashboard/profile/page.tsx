@@ -2,31 +2,78 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader'
 import Seo from '@/shared/layout-components/seo/seo'
 import React, { Fragment, useState } from 'react'
-
-const initialContacts = {
-    1: {
-        fullName: 'Sarah Johnson',
-        designation: 'Wellness Program Manager',
-        mobile: '+91 98765 12345',
-        email: 'sarah.johnson@samsara.com',
-        contact1: 'Emergency: +91 98765 11111',
-        contact2: 'Office: +91 22 4567 8901',
-    },
-    2: {
-        fullName: 'Rahul Mehta',
-        designation: 'HR Director',
-        mobile: '+91 98765 67890',
-        email: 'rahul.mehta@samsara.com',
-        contact1: 'Emergency: +91 98765 22222',
-        contact2: 'Office: +91 22 4567 9900',
-    },
-};
+import { useEffect } from "react";
+import CompanyService from "@/services/companyService";
+//import { Base_url } from "@/Config/BaseUrl";
 
 const CompanyProfile = () => {
     const [activeContact, setActiveContact] = useState<1 | 2>(1);
     const [activeView, setActiveView] = useState<'profile' | 'form'>('profile');
-    const [contactsData, setContactsData] = useState(initialContacts);
-    const [formData, setFormData] = useState({ ...initialContacts[1] });
+    const [company, setCompany] = useState<any>(null);
+const [contactsData, setContactsData] = useState<any>({});
+const [formData, setFormData] = useState<any>({});
+
+
+
+useEffect(() => {
+  const fetchCompany = async () => {
+    try {
+      const res = await CompanyService.getCompanyProfile();
+      const data = res;
+
+      console.log("DATA:", data);
+      console.log("FULL DATA:", JSON.stringify(data, null, 2));
+        console.log("CONTACT1:", data?.contactPerson1);
+        console.log("CONTACT2:", data?.contactPerson2);
+
+      if (!data) throw new Error("No data");
+
+      setCompany(data);
+
+ const contacts = {
+  1: {
+    fullName:
+      data.contactPerson1?.name ||
+      "N/A",
+
+    designation: data.contactPerson1?.designation,
+
+    mobile:
+      data.contactPerson1?.mobileNumber ||
+      "N/A",
+
+    email: data.contactPerson1?.email,
+    contact1: "",
+    contact2: "",
+  },
+  2: {
+    fullName:
+      data.contactPerson2?.name ||
+      "N/A",
+
+    designation: data.contactPerson2?.designation,
+
+    mobile:
+      data.contactPerson2?.mobileNumber ||
+      "N/A",
+
+    email: data.contactPerson2?.email,
+    contact1: "",
+    contact2: "",
+  },
+};
+
+      setContactsData(contacts);
+      setFormData(contacts[1]);
+
+    } catch (err) {
+      console.error("ERROR:", err);
+      setCompany({}); // prevent loading stuck
+    }
+  };
+
+  fetchCompany();
+}, []);
 
     const handleContactSwitch = (num: 1 | 2) => {
         setActiveContact(num);
@@ -39,6 +86,8 @@ const CompanyProfile = () => {
     };
 
     const currentContact = activeView === 'form' ? formData : contactsData[activeContact];
+
+   if(!company) return <div>Loading...</div>;
 
     return (
         <Fragment>
@@ -59,19 +108,19 @@ const CompanyProfile = () => {
                                     </div>
                                 </div>
                                 <div className="flex-grow">
-                                    <h4 className="font-bold text-[1.25rem] mb-4">Samsara Wellness Corporation</h4>
+                                    <h4 className="font-bold text-[1.25rem] mb-4">{company?.companyName}</h4>
                                     <div className="grid grid-cols-12 gap-4">
                                         <div className="col-span-12 sm:col-span-6">
                                             <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Primary Contact</p>
-                                            <p className="font-semibold text-[0.9375rem]">Dr. Rajesh Kumar</p>
+                                            <p className="font-semibold text-[0.9375rem]">{company?.contactPerson1?.name}</p>
                                         </div>
                                         <div className="col-span-12 sm:col-span-6">
                                             <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Contact Number</p>
-                                            <p className="font-semibold text-[0.9375rem]">+91 98765 43210</p>
+                                            <p className="font-semibold text-[0.9375rem]">{company?.contactPerson1?.mobileNumber}</p>
                                         </div>
                                         <div className="col-span-12">
                                             <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Location</p>
-                                            <p className="font-semibold text-[0.9375rem]">Mumbai, Maharashtra, India</p>
+                                            <p className="font-semibold text-[0.9375rem]">{company?.address}, {company?.city}, {company?.country}</p>
                                         </div>
                                     </div>
                                 </div>
