@@ -7,6 +7,7 @@ const BookingsIcon = <i className="bx bx-calendar side-menu__icon"></i>;
 const SettingsIcon = <i className="bx bx-cog side-menu__icon"></i>;
 const SpeechIcon = <i className="bx bx-microphone side-menu__icon"></i>;
 const CompanyProfileIcon = <i className="bx bx-id-card side-menu__icon"></i>;
+const MembersIcon = <i className="bx bx-group side-menu__icon"></i>;
 const WellnessIcon = <i className="bx bx-heart side-menu__icon"></i>;
 const YogaIcon = <i className="bx bx-body side-menu__icon"></i>;
 const AyurvedaIcon = <i className="bx bx-leaf side-menu__icon"></i>;
@@ -20,8 +21,6 @@ const PCOSIcon           = <i className="bx bx-heart-circle side-menu__icon"></i
 const ThyroidIcon        = <i className="bx bx-pulse side-menu__icon"></i>;
 const MenopauseIcon      = <i className="bx bx-female-sign side-menu__icon"></i>;
 const PeriodTrackerIcon  = <i className="bx bx-calendar-check side-menu__icon"></i>;
-
-
 const ReportsAnalyticsIcon = <i className="bx bx-bar-chart-alt-2 side-menu__icon"></i>;
 
 export const MenuItems: any = [
@@ -48,6 +47,15 @@ export const MenuItems: any = [
         permission: "companyProfile",
     },
 
+ {
+    icon: MembersIcon,
+    title: "Members",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/company/dashboard/members",
+},
 
     {
         icon: WellnessIcon,
