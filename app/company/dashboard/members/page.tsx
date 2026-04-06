@@ -16,10 +16,9 @@ interface Member {
 interface CompanyData {
   _id?: string;
   id?: string;
-  companyId?: string; // business key e.g. "AB12CD34"
+  companyId?: string;
 }
 
-/** Read the saved company object from localStorage (set by ApiService.setUser on login) */
 const getStoredCompany = (): CompanyData | null => {
   try {
     if (typeof window === "undefined") return null;
@@ -30,18 +29,21 @@ const getStoredCompany = (): CompanyData | null => {
   }
 };
 
-/** Mongo _id — used as companyId in POST /company-users */
 const getCompanyMongoId = (): string | null => {
   const company = getStoredCompany();
   if (!company) return null;
   return company._id || company.id || null;
 };
 
-/** Business key e.g. "AB12CD34" — used for listing members */
 const getCompanyKey = (): string | null => {
   const company = getStoredCompany();
   return company?.companyId || null;
 };
+
+// ─── Modal modes ─────────────────────────────────────────────
+type ModalMode = "add" | "edit" | "view" | null;
+
+const EMPTY_FORM = { fullName: "", email: "", level: "beginner" };
 
 const MembersPage = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -49,26 +51,27 @@ const MembersPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    level: "beginner",
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
   const [initError, setInitError] = useState("");
 
-  // ─── Fetch members ───────────────────────────────────────────────────────────
+  // ─── Modal state ──────────────────────────────────────────
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // ─── Delete confirm state ─────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // ─── Fetch members ────────────────────────────────────────
   const fetchMembers = useCallback(async () => {
     const companyKey = getCompanyKey();
-
     if (!companyKey) {
       setInitError("Company data not found. Please log out and log in again.");
       return;
     }
-
     try {
       setLoading(true);
       const data = await ApiService.get("/company-users", {
@@ -77,8 +80,6 @@ const MembersPage = () => {
         page,
         limit: 10,
       });
-
-      console.log("MEMBERS DATA:", data);
       setMembers(data.results || []);
       setTotalPages(data.totalPages ?? 1);
     } catch (err) {
@@ -92,26 +93,53 @@ const MembersPage = () => {
     fetchMembers();
   }, [fetchMembers]);
 
-  // Reset to page 1 when search changes
   useEffect(() => {
     setPage(1);
   }, [search]);
 
-  // ─── Add Member ──────────────────────────────────────────────────────────────
+  // ─── Open modals ──────────────────────────────────────────
+  const openAdd = () => {
+    setFormData(EMPTY_FORM);
+    setFormError("");
+    setSelectedMember(null);
+    setModalMode("add");
+  };
+
+  const openView = (member: Member) => {
+    setSelectedMember(member);
+    setModalMode("view");
+  };
+
+  const openEdit = (member: Member) => {
+    setSelectedMember(member);
+    setFormData({
+      fullName: member.fullName,
+      email: member.email,
+      level: member.level,
+    });
+    setFormError("");
+    setModalMode("edit");
+  };
+
+  const closeModal = () => {
+    setModalMode(null);
+    setSelectedMember(null);
+    setFormData(EMPTY_FORM);
+    setFormError("");
+  };
+
+  // ─── Add member ───────────────────────────────────────────
   const handleAddMember = async () => {
     setFormError("");
-
     if (!formData.fullName.trim() || !formData.email.trim()) {
       setFormError("Full name and email are required.");
       return;
     }
-
     const companyMongoId = getCompanyMongoId();
     if (!companyMongoId) {
       setFormError("Company ID not found. Please log out and log in again.");
       return;
     }
-
     try {
       setSubmitting(true);
       await ApiService.post("/company-users", {
@@ -121,24 +149,61 @@ const MembersPage = () => {
         level: formData.level,
         status: true,
       });
-
-      setShowModal(false);
-      setFormData({ fullName: "", email: "", level: "beginner" });
+      closeModal();
       fetchMembers();
     } catch (err: any) {
-      console.error("ADD MEMBER ERROR:", err);
       setFormError(err.message || "Failed to add member. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setFormData({ fullName: "", email: "", level: "beginner" });
+  // ─── Edit member ──────────────────────────────────────────
+  const handleEditMember = async () => {
     setFormError("");
+    if (!formData.fullName.trim() || !formData.email.trim()) {
+      setFormError("Full name and email are required.");
+      return;
+    }
+    if (!selectedMember) return;
+    try {
+      setSubmitting(true);
+      await ApiService.patch(`/company-users/${selectedMember._id}`, {
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        level: formData.level,
+      });
+      closeModal();
+      fetchMembers();
+    } catch (err: any) {
+      setFormError(err.message || "Failed to update member. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  // ─── Delete member ────────────────────────────────────────
+  const confirmDelete = (member: Member) => {
+    setMemberToDelete(member);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteMember = async () => {
+    if (!memberToDelete) return;
+    try {
+      setDeleting(true);
+      await ApiService.delete(`/company-users/${memberToDelete._id}`);
+      setShowDeleteConfirm(false);
+      setMemberToDelete(null);
+      fetchMembers();
+    } catch (err: any) {
+      console.error("DELETE ERROR:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ─── Helpers ──────────────────────────────────────────────
   const levelBadgeClass = (level: string) => {
     switch (level) {
       case "advanced":
@@ -150,6 +215,8 @@ const MembersPage = () => {
     }
   };
 
+  const isFormModal = modalMode === "add" || modalMode === "edit";
+
   return (
     <div>
       <Seo title={"Members"} />
@@ -159,7 +226,6 @@ const MembersPage = () => {
         mainpage="Dashboard"
       />
 
-      {/* Init error banner */}
       {initError && (
         <div className="alert alert-danger mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">
           {initError}
@@ -170,7 +236,7 @@ const MembersPage = () => {
         <div className="box-header flex justify-between items-center">
           <h5 className="text-lg font-bold">Members</h5>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openAdd}
             className="ti-btn ti-btn-primary"
             disabled={!!initError}
           >
@@ -179,7 +245,6 @@ const MembersPage = () => {
         </div>
 
         <div className="box-body">
-          {/* Search */}
           <input
             type="text"
             placeholder="Search by name or email..."
@@ -188,7 +253,6 @@ const MembersPage = () => {
             className="border p-2 rounded w-full mb-4"
           />
 
-          {/* Table */}
           {loading ? (
             <p className="text-center py-6 text-gray-400">Loading...</p>
           ) : members.length === 0 ? (
@@ -200,6 +264,7 @@ const MembersPage = () => {
                   <th className="p-2 border text-left">Name</th>
                   <th className="p-2 border text-left">Email</th>
                   <th className="p-2 border text-left">Level</th>
+                  <th className="p-2 border text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,6 +276,34 @@ const MembersPage = () => {
                       <span className={levelBadgeClass(m.level)}>
                         {m.level}
                       </span>
+                    </td>
+                    <td className="p-2 border">
+                      <div className="flex items-center justify-center gap-2">
+                        {/* View */}
+                        <button
+                          onClick={() => openView(m)}
+                          title="View"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-primary/10 text-primary transition-colors"
+                        >
+                          <i className="ri-eye-line text-base"></i>
+                        </button>
+                        {/* Edit */}
+                        <button
+                          onClick={() => openEdit(m)}
+                          title="Edit"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-warning/10 text-warning transition-colors"
+                        >
+                          <i className="ri-pencil-line text-base"></i>
+                        </button>
+                        {/* Delete */}
+                        <button
+                          onClick={() => confirmDelete(m)}
+                          title="Delete"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-danger/10 text-danger transition-colors"
+                        >
+                          <i className="ri-delete-bin-line text-base"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -241,11 +334,21 @@ const MembersPage = () => {
         </div>
       </div>
 
-      {/* Add Member Modal */}
-      {showModal && (
+      {/* ── Add / Edit Modal ──────────────────────────────────── */}
+      {isFormModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
-            <h3 className="font-bold text-lg mb-4">Add Member</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg">
+                {modalMode === "add" ? "Add Member" : "Edit Member"}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <i className="ri-close-line text-xl"></i>
+              </button>
+            </div>
 
             <input
               type="text"
@@ -256,7 +359,6 @@ const MembersPage = () => {
               }
               className="border p-2 w-full mb-2 rounded"
             />
-
             <input
               type="email"
               placeholder="Email"
@@ -265,8 +367,8 @@ const MembersPage = () => {
                 setFormData({ ...formData, email: e.target.value })
               }
               className="border p-2 w-full mb-2 rounded"
+              disabled={modalMode === "edit"} // email is unique key, safer not to change
             />
-
             <select
               value={formData.level}
               onChange={(e) =>
@@ -285,18 +387,112 @@ const MembersPage = () => {
 
             <div className="flex justify-end gap-2">
               <button
-                onClick={handleCloseModal}
+                onClick={closeModal}
                 className="ti-btn"
                 disabled={submitting}
               >
                 Cancel
               </button>
               <button
-                onClick={handleAddMember}
+                onClick={
+                  modalMode === "add" ? handleAddMember : handleEditMember
+                }
                 className="ti-btn ti-btn-primary"
                 disabled={submitting}
               >
-                {submitting ? "Adding..." : "Add"}
+                {submitting
+                  ? modalMode === "add"
+                    ? "Adding..."
+                    : "Saving..."
+                  : modalMode === "add"
+                  ? "Add"
+                  : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── View Modal ────────────────────────────────────────── */}
+      {modalMode === "view" && selectedMember && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-96 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-lg">Member Details</h3>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <i className="ri-close-line text-xl"></i>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Full Name</p>
+                <p className="font-semibold text-sm">{selectedMember.fullName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Email</p>
+                <p className="font-semibold text-sm">{selectedMember.email}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Level</p>
+                <span className={levelBadgeClass(selectedMember.level)}>
+                  {selectedMember.level}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button onClick={closeModal} className="ti-btn">
+                Close
+              </button>
+              <button
+                onClick={() => openEdit(selectedMember)}
+                className="ti-btn ti-btn-primary"
+              >
+                <i className="ri-pencil-line me-1"></i> Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirm Modal ──────────────────────────────── */}
+      {showDeleteConfirm && memberToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-80 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center flex-shrink-0">
+                <i className="ri-delete-bin-line text-danger text-lg"></i>
+              </span>
+              <h3 className="font-bold text-base">Delete Member</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-5">
+              Are you sure you want to remove{" "}
+              <span className="font-semibold text-gray-700">
+                {memberToDelete.fullName}
+              </span>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setMemberToDelete(null);
+                }}
+                className="ti-btn"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteMember}
+                className="ti-btn ti-btn-danger"
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
