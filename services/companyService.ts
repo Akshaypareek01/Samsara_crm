@@ -278,6 +278,179 @@ class CompanyService {
       throw error;
     }
   }
+  /**
+   * Aggregated dashboard metrics for authenticated company (from bookings).
+   * GET /v1/companies/dashboard/overview
+   */
+  async getDashboardOverview(): Promise<Record<string, unknown>> {
+    try {
+      return await ApiService.get('/companies/dashboard/overview');
+    } catch (error) {
+      console.error('❌ Get company dashboard overview error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Full programs + reports bundle (company JWT).
+   * GET /v1/companies/insights
+   */
+  async getInsights(): Promise<Record<string, unknown>> {
+    try {
+      return await ApiService.get('/companies/insights');
+    } catch (error) {
+      console.error('❌ Get company insights error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Portal employee list (company JWT). Same row shape as insights employee-scores.
+   */
+  async listPortalEmployees(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    department?: string;
+  } = {}): Promise<{
+    total: number;
+    employees: unknown[];
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      return await ApiService.get('/companies/employees', params);
+    } catch (error) {
+      console.error('❌ List portal employees error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create employee for logged-in company (JWT).
+   */
+  async createPortalEmployee(body: {
+    fullName: string;
+    email: string;
+    level: 'beginner' | 'intermediate' | 'advanced';
+    status?: boolean;
+    department?: string;
+  }): Promise<Record<string, unknown>> {
+    try {
+      return await ApiService.post('/companies/employees', body);
+    } catch (error) {
+      console.error('❌ Create portal employee error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update employee by id (company JWT).
+   */
+  async updatePortalEmployee(
+    employeeId: string,
+    body: {
+      fullName?: string;
+      email?: string;
+      level?: 'beginner' | 'intermediate' | 'advanced';
+      status?: boolean;
+      department?: string;
+    }
+  ): Promise<Record<string, unknown>> {
+    try {
+      return await ApiService.patch(`/companies/employees/${employeeId}`, body);
+    } catch (error) {
+      console.error('❌ Update portal employee error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Soft-delete employee (optional JSON body with `reason`).
+   */
+  async deletePortalEmployee(employeeId: string, body: { reason?: string } = {}): Promise<void> {
+    try {
+      await ApiService.delete(`/companies/employees/${employeeId}`, body);
+    } catch (error) {
+      console.error('❌ Delete portal employee error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Paginated deletion history (soft-deleted employees).
+   */
+  async listPortalDeletionHistory(params: { page?: number; limit?: number } = {}): Promise<{
+    total: number;
+    rows: Array<{
+      employeeName: string;
+      email?: string;
+      deletedBy: string;
+      deletionDateTime: string;
+      reason: string;
+    }>;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      return await ApiService.get('/companies/employees/deletion-history', params);
+    } catch (error) {
+      console.error('❌ Deletion history error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Download CSV export (bookings or employees) for the authenticated company.
+   */
+  async downloadCompanyReportsExport(type: 'bookings' | 'employees'): Promise<void> {
+    if (typeof window === 'undefined') {
+      throw new Error('Export is only available in the browser');
+    }
+    try {
+      const blob = await ApiService.downloadFile('/companies/reports/export', { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `company-export-${type}.csv`;
+      a.rel = 'noopener';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('❌ Company reports export error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Paginated company users as employee wellness rows (insights pipeline).
+   * GET /v1/companies/insights/employee-scores
+   *
+   * @param params - page, limit, search
+   */
+  async getEmployeeWellnessScores(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    department?: string;
+  } = {}): Promise<{
+    total: number;
+    employees: unknown[];
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    try {
+      return await ApiService.get('/companies/insights/employee-scores', params);
+    } catch (error) {
+      console.error('❌ Get employee wellness scores error:', error);
+      throw error;
+    }
+  }
 }
 
 export default new CompanyService();

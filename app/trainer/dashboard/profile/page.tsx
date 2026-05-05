@@ -2,12 +2,13 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState, useRef } from 'react';
-import TrainerService, { Trainer, UpdateTrainerRequest, SPECIALIST_OPTIONS, TYPE_OF_TRAINING_OPTIONS, TrainerImage } from '@/services/trainerService';
+import TrainerService, { Trainer, UpdateTrainerRequest, SPECIALIST_OPTIONS, TYPE_OF_TRAINING_OPTIONS, TrainerImage, isTrainerAcceptingBookings } from '@/services/trainerService';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import MultiSelect from '@/shared/components/MultiSelect';
 import { useRouter } from 'next/navigation';
+import { broadcastTrainerAcceptingBookings } from '@/utils/trainerAvailabilitySync';
 
 const TrainerProfile = () => {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
@@ -16,6 +17,7 @@ const TrainerProfile = () => {
     const [error, setError] = useState('');
     const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [acceptingBookingsSaving, setAcceptingBookingsSaving] = useState(false);
     const profilePhotoInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -225,6 +227,26 @@ const TrainerProfile = () => {
         }
     };
 
+    /**
+     * Turn accepting new company bookings on or off (persists via PATCH /trainers/me).
+     *
+     * @param next - Whether the trainer accepts new bookings.
+     */
+    const handleAcceptingBookingsToggle = async (next: boolean) => {
+        if (!trainer || trainer.status === false) return;
+        try {
+            setAcceptingBookingsSaving(true);
+            const updated = await TrainerService.updateMyProfile({ acceptingBookings: next });
+            setTrainer(updated);
+            broadcastTrainerAcceptingBookings(next);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Could not update booking availability';
+            Swal.fire('Error!', msg, 'error');
+        } finally {
+            setAcceptingBookingsSaving(false);
+        }
+    };
+
     return (
         <Fragment>
             <Seo title={"Trainer Profile"} />
@@ -249,6 +271,33 @@ const TrainerProfile = () => {
                 <div className="box">
                     <div className="box-body !p-4 sm:!p-6 md:!p-[3rem]">
                         <p className="h5 font-semibold mb-4 text-lg sm:text-xl">Update Your Profile</p>
+
+                        {trainer && trainer.status !== false && (
+                            <div className="rounded-lg border border-defaultborder p-4 mb-6 bg-gray-50 dark:bg-black/20">
+                                <h4 className="font-semibold mb-1 text-base">Booking availability</h4>
+                                <p className="text-muted text-sm mb-3">
+                                    When this is off, companies cannot book new sessions with you. Existing bookings are
+                                    unchanged.
+                                </p>
+                                <div className="form-check form-switch">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        id="trainer-accepting-bookings"
+                                        checked={isTrainerAcceptingBookings(trainer)}
+                                        disabled={acceptingBookingsSaving}
+                                        onChange={(e) => {
+                                            void handleAcceptingBookingsToggle(e.target.checked);
+                                        }}
+                                        aria-label="Accept new bookings from companies"
+                                    />
+                                    <label className="form-check-label" htmlFor="trainer-accepting-bookings">
+                                        {acceptingBookingsSaving ? 'Saving…' : 'Accept new bookings'}
+                                    </label>
+                                </div>
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit}>
                             <div className="space-y-4">

@@ -1,17 +1,18 @@
 "use client";
 import Seo from '@/shared/layout-components/seo/seo';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import React, { Fragment, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { Fragment, Suspense, useState } from 'react';
 import CompanyService from '@/services/companyService';
 
-const CompanyLogin = () => {
+const CompanyLoginInner = () => {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState<'email' | 'otp'>('email');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,7 +34,12 @@ const CompanyLogin = () => {
         setError('');
         try {
             await CompanyService.verifyLoginOtp(email, otp);
-            router.push('/company/dashboard');
+            const next = searchParams.get('next');
+            const safe =
+                next && next.startsWith('/') && !next.startsWith('//')
+                    ? next
+                    : '/company/dashboard';
+            router.push(safe);
         } catch (err: any) {
             setError(err.message || 'Invalid OTP. Please try again.');
         } finally {
@@ -144,6 +150,21 @@ const CompanyLogin = () => {
             </div>
         </Fragment>
     );
-}
+};
 
-export default CompanyLogin;
+/**
+ * Company login with OTP; supports `?next=` redirect after success.
+ */
+const CompanyLoginPage = () => (
+    <Suspense
+        fallback={
+            <div className="container flex min-h-[40vh] items-center justify-center">
+                <span className="text-sm text-gray-500">Loading…</span>
+            </div>
+        }
+    >
+        <CompanyLoginInner />
+    </Suspense>
+);
+
+export default CompanyLoginPage;

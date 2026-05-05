@@ -9,6 +9,7 @@ import { ThemeChanger } from "@/shared/redux/action";
 
 import Switcher from "@/shared/layout-components/switcher/switcher";
 import store from "@/shared/redux/store";
+import CompanyDashboardAuthGate from "./components/CompanyDashboardAuthGate";
 
 const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
 
@@ -33,7 +34,9 @@ const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
                 <div className="content">
                     <div className="main-content" onClick={Bodyclickk}>
                         <div className="container-fluid">
-                            {children}
+                            <CompanyDashboardAuthGate>
+                                {children}
+                            </CompanyDashboardAuthGate>
                         </div>
                     </div>
                 </div>

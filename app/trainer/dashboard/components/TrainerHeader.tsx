@@ -1,15 +1,73 @@
 "use client";
 import Link from 'next/link';
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { ThemeChanger } from "@/shared/redux/action";
 import { connect } from 'react-redux';
 import store from '@/shared/redux/store';
 import { basePath } from '@/Config/basePath';
 import { useRouter } from 'next/navigation';
 import ApiService from '@/services/ApiService';
+import TrainerService from '@/services/trainerService';
+import Swal from 'sweetalert2';
+import {
+  TRAINER_ACCEPTING_BOOKINGS_EVENT,
+  broadcastTrainerAcceptingBookings,
+  type TrainerAcceptingBookingsDetail,
+} from '@/utils/trainerAvailabilitySync';
 
 const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
   const router = useRouter();
+  const [availabilityLoading, setAvailabilityLoading] = useState(true);
+  const [availabilitySaving, setAvailabilitySaving] = useState(false);
+  const [acceptingBookings, setAcceptingBookings] = useState(true);
+  const [trainerActive, setTrainerActive] = useState(true);
+
+  const loadAvailability = useCallback(async () => {
+    try {
+      const t = await TrainerService.getMyProfile();
+      setTrainerActive(t.status !== false);
+      setAcceptingBookings(t.acceptingBookings !== false);
+    } catch (err) {
+      console.error('Trainer header: could not load booking availability', err);
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAvailability();
+  }, [loadAvailability]);
+
+  useEffect(() => {
+    const onSync = (ev: Event) => {
+      const ce = ev as CustomEvent<TrainerAcceptingBookingsDetail>;
+      if (typeof ce.detail?.acceptingBookings === 'boolean') {
+        setAcceptingBookings(ce.detail.acceptingBookings);
+      }
+    };
+    window.addEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
+    return () => window.removeEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
+  }, []);
+
+  /**
+   * Persists “open for new bookings” and keeps profile page in sync via broadcast.
+   *
+   * @param next - Target availability flag.
+   */
+  const handleHeaderAvailabilityToggle = async (next: boolean) => {
+    if (!trainerActive || availabilitySaving) return;
+    try {
+      setAvailabilitySaving(true);
+      await TrainerService.updateMyProfile({ acceptingBookings: next });
+      setAcceptingBookings(next);
+      broadcastTrainerAcceptingBookings(next);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not update booking availability';
+      void Swal.fire({ icon: 'error', title: 'Update failed', text: msg });
+    } finally {
+      setAvailabilitySaving(false);
+    }
+  };
 
   const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -114,7 +172,44 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
                 </Link>
               </div>
             </div>
-            <div className="header-content-right">
+            <div className="header-content-right flex flex-wrap items-center gap-2">
+              {!availabilityLoading && trainerActive && (
+                <div
+                  className="header-element py-[1rem] md:px-[0.65rem] px-2 flex items-center gap-2 sm:gap-3 rounded-md border border-defaultborder bg-white/80 dark:bg-bodybg"
+                  title={
+                    acceptingBookings
+                      ? 'Companies can book new sessions with you'
+                      : 'Companies cannot create new bookings until you turn this on'
+                  }
+                >
+                  <span
+                    id="trainer-header-booking-label"
+                    className="hidden md:inline text-[0.8125rem] font-medium text-defaulttextcolor whitespace-nowrap"
+                  >
+                    New bookings
+                  </span>
+                  <div className="form-check form-switch mb-0">
+                    <input
+                      className="form-check-input cursor-pointer"
+                      type="checkbox"
+                      role="switch"
+                      checked={acceptingBookings}
+                      disabled={availabilitySaving}
+                      onChange={(e) => {
+                        void handleHeaderAvailabilityToggle(e.target.checked);
+                      }}
+                      aria-labelledby="trainer-header-booking-label"
+                      aria-label="Accept new bookings from companies"
+                    />
+                  </div>
+                  <span
+                    className={`text-[0.7rem] font-semibold uppercase tracking-wide hidden sm:inline ${acceptingBookings ? 'text-success' : 'text-warning'}`}
+                    aria-live="polite"
+                  >
+                    {acceptingBookings ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+              )}
               <div className="header-element py-[1rem] md:px-[0.65rem] px-2">
                 <button
                   type="button"

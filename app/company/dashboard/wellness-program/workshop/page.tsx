@@ -1,104 +1,89 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { useWellnessProgramInsights, type InsightsWellnessTableRow } from '@/hooks/useWellnessProgramInsights';
+import companyService from '@/services/companyService';
+import { submitPortalEmployee } from '../portalEmployeeSubmit';
 
-// ─────────────────────────────────────────────
-// HARDCODED DATA — replace with API calls later
-// ─────────────────────────────────────────────
-
-const WORKSHOP_STATS = [
+const EMPTY_WORKSHOP_STATS = [
     {
-        label: 'Total Active Workshops',
-        value: '24',
-        change: '+15.2%',
+        label: 'Workshop / retreat',
+        value: '0',
+        change: '+0%',
         changePositive: true,
-        subIcon: null,
+        subIcon: null as string | null,
         icon: 'ri-calendar-line',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
     },
     {
-        label: 'Total Participants',
-        value: '342',
-        change: '+18 new registrations',
+        label: 'Participants (rows)',
+        value: '0',
+        change: '+0%',
         changePositive: true,
-        subIcon: 'ri-user-line',
+        subIcon: 'ri-group-line',
         icon: 'ri-group-line',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
-        label: 'Instructor Assignment Rate',
-        value: '96%',
-        change: '+4.1%',
+        label: 'Completed',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-user-heart-line',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
+        icon: 'ri-check-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
-        label: 'Average Workshop Rating',
-        value: '4.7',
-        change: '+0.3',
+        label: 'Pending approval',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-star-line',
-        iconBg: 'bg-warning/10',
-        iconColor: 'text-warning',
+        icon: 'ri-time-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
-];
+] as const;
 
-const WORKSHOP_OPTIONS = ['All Workshops', 'Morning Group Meditation', 'Stress Relief Workshop', 'Weekend Retreat', 'Nutrition Masterclass'];
+const DEFAULT_WORKSHOP_OPTIONS = ['All Workshops', 'Morning Group Meditation', 'Stress Relief Workshop', 'Weekend Retreat', 'Nutrition Masterclass'];
 
-// TODO: Replace with API response — GET /api/wellness/workshop/participants
-const WORKSHOP_PARTICIPANTS = [
-    {
-        id: 1,
-        name: 'Jessica Williams',
-        email: 'jessica.williams@email.com',
-        initials: 'JW',
-        workshop: 'Morning Group Meditation',
-        workshopColor: 'bg-purple-100 text-purple-600',
-        registrationDate: 'Dec 15, 2024',
-        sessionsAttended: '8/10 sessions',
-        attendance: 88,
-        attendanceColor: 'bg-success',
-        status: 'Active',
-        statusColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 2,
-        name: 'Robert Johnson',
-        email: 'robert.johnson@email.com',
-        initials: 'RJ',
-        workshop: 'Stress Relief Workshop',
-        workshopColor: 'bg-warning/10 text-warning',
-        registrationDate: 'Dec 18, 2024',
-        sessionsAttended: '5/8 sessions',
-        attendance: 65,
-        attendanceColor: 'bg-warning',
-        status: 'Active',
-        statusColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 3,
-        name: 'Amanda Davis',
-        email: 'amanda.davis@email.com',
-        initials: 'AD',
-        workshop: 'Weekend Retreat',
-        workshopColor: 'bg-primary/10 text-primary',
-        registrationDate: 'Dec 20, 2024',
-        sessionsAttended: '2/4 sessions',
-        attendance: 88,
-        attendanceColor: 'bg-success',
-        status: 'Registered',
-        statusColor: 'bg-warning/10 text-warning',
-    },
-];
+type WorkshopStat = (typeof EMPTY_WORKSHOP_STATS)[number];
 
-// ─────────────────────────────────────────────
+interface WorkshopParticipant {
+    id: number | string;
+    name: string;
+    email: string;
+    initials: string;
+    workshop: string;
+    workshopColor: string;
+    registrationDate: string;
+    sessionsAttended: string;
+    attendance: number;
+    attendanceColor: string;
+    status: string;
+    statusColor: string;
+}
+
+function mapInsightsRowToWorkshopParticipant(row: InsightsWellnessTableRow): WorkshopParticipant {
+    return {
+        id: row.id,
+        name: row.name.replace(/^Session with\s+/i, '').trim() || row.name,
+        email: row.email === '—' ? '' : row.email,
+        initials: row.initials,
+        workshop: row.workshop.split(',')[0]?.trim() || row.workshop,
+        workshopColor: row.workshopColor,
+        registrationDate: row.registrationDate,
+        sessionsAttended: row.sessionsAttended,
+        attendance: row.attendance,
+        attendanceColor: row.attendanceColor,
+        status: row.status,
+        statusColor: row.statusColor,
+    };
+}
 
 const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     <div className="flex items-center gap-2">
@@ -110,65 +95,120 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
 );
 
 const WorkshopPage = () => {
+    const insights = useWellnessProgramInsights('workshop');
     const [search, setSearch] = useState('');
     const [workshopFilter, setWorkshopFilter] = useState('All Workshops');
     const [showModal, setShowModal] = useState(false);
-const [newParticipant, setNewParticipant] = useState({
-    name: '',
-    email: '',
-    workshop: 'Morning Group Meditation',
-    registrationDate: '',
-});
-const [workshopParticipants, setWorkshopParticipants] = useState(WORKSHOP_PARTICIPANTS);
+    const [newParticipant, setNewParticipant] = useState({
+        name: '',
+        email: '',
+        workshop: 'Morning Group Meditation',
+        registrationDate: '',
+    });
+    const [workshopStats, setWorkshopStats] = useState<WorkshopStat[]>(() => [...EMPTY_WORKSHOP_STATS]);
+    const [workshopParticipants, setWorkshopParticipants] = useState<WorkshopParticipant[]>([]);
+    const [workshopOptions, setWorkshopOptions] = useState<string[]>(DEFAULT_WORKSHOP_OPTIONS);
+    const [adding, setAdding] = useState(false);
+
+    useEffect(() => {
+        if (!insights?.stats?.length) {
+            setWorkshopStats([...EMPTY_WORKSHOP_STATS]);
+            setWorkshopParticipants([]);
+            return;
+        }
+        setWorkshopStats(insights.stats as WorkshopStat[]);
+        setWorkshopParticipants(insights.rows.map(mapInsightsRowToWorkshopParticipant));
+    }, [insights]);
+
+    useEffect(() => {
+        const fromData = new Set(
+            workshopParticipants.map((p) => p.workshop).filter(Boolean)
+        );
+        const merged = ['All Workshops', ...Array.from(fromData)];
+        setWorkshopOptions(merged.length > 1 ? merged : DEFAULT_WORKSHOP_OPTIONS);
+    }, [workshopParticipants]);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredParticipants = workshopParticipants.filter((p) => {
-        const matchesSearch =
-            p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.email.toLowerCase().includes(search.toLowerCase());
-        const matchesWorkshop = workshopFilter === 'All Workshops' || p.workshop === workshopFilter;
-        return matchesSearch && matchesWorkshop;
-    });
+    const filteredParticipants = useMemo(
+        () =>
+            workshopParticipants.filter((p) => {
+                const matchesSearch =
+                    p.name.toLowerCase().includes(search.toLowerCase()) ||
+                    p.email.toLowerCase().includes(search.toLowerCase());
+                const matchesWorkshop =
+                    workshopFilter === 'All Workshops' || p.workshop === workshopFilter;
+                return matchesSearch && matchesWorkshop;
+            }),
+        [workshopParticipants, search, workshopFilter]
+    );
 
 
 
-const handleRegisterParticipant = () => {
-    if (!newParticipant.name || !newParticipant.email || !newParticipant.registrationDate) return;
-
-    const workshopColorMap: Record<string, string> = {
-        'Morning Group Meditation': 'bg-purple-100 text-purple-600',
-        'Stress Relief Workshop': 'bg-warning/10 text-warning',
-        'Weekend Retreat': 'bg-primary/10 text-primary',
-        'Nutrition Masterclass': 'bg-success/10 text-success',
+    const exportWorkshopCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed.');
+        }
     };
 
-    const initials = newParticipant.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
-    const participant = {
-        id: Date.now(),
-        name: newParticipant.name,
-        email: newParticipant.email,
-        initials,
-        workshop: newParticipant.workshop,
-        workshopColor: workshopColorMap[newParticipant.workshop],
-        registrationDate: newParticipant.registrationDate,
-        sessionsAttended: '0 sessions',
-        attendance: 0,
-        attendanceColor: 'bg-danger',
-        status: 'Registered',
-        statusColor: 'bg-warning/10 text-warning',
+    const handleRegisterParticipant = async () => {
+        if (!newParticipant.name || !newParticipant.email) return;
+        setAdding(true);
+        const workshopColorMap: Record<string, string> = {
+            'Morning Group Meditation': 'bg-purple-100 text-purple-600',
+            'Stress Relief Workshop': 'bg-warning/10 text-warning',
+            'Weekend Retreat': 'bg-primary/10 text-primary',
+            'Nutrition Masterclass': 'bg-success/10 text-success',
+        };
+        const initials = newParticipant.name
+            .trim()
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+        try {
+            const created = await submitPortalEmployee({
+                fullName: newParticipant.name,
+                email: newParticipant.email,
+                levelLabel: 'Beginner',
+                department: `Workshop · ${newParticipant.workshop}`.slice(0, 200),
+            });
+            const id = created._id
+                ? String(created._id)
+                : created.id
+                  ? String(created.id)
+                  : `new-${Date.now()}`;
+            const registrationLabel = newParticipant.registrationDate
+                ? new Date(newParticipant.registrationDate + 'T12:00:00').toLocaleDateString()
+                : '—';
+            const participant: WorkshopParticipant = {
+                id,
+                name: newParticipant.name,
+                email: newParticipant.email,
+                initials,
+                workshop: newParticipant.workshop,
+                workshopColor: workshopColorMap[newParticipant.workshop],
+                registrationDate: registrationLabel,
+                sessionsAttended: '0 sessions',
+                attendance: 0,
+                attendanceColor: 'bg-danger',
+                status: 'Registered',
+                statusColor: 'bg-warning/10 text-warning',
+            };
+            setWorkshopParticipants((prev) => [...prev, participant]);
+            setNewParticipant({ name: '', email: '', workshop: 'Morning Group Meditation', registrationDate: '' });
+            setShowModal(false);
+            alert('Employee added for your company.');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Could not register participant';
+            alert(msg);
+        } finally {
+            setAdding(false);
+        }
     };
-
-    // NOTE: Replace with API POST when backend is ready
-    setWorkshopParticipants((prev) => [...prev, participant]);
-    setNewParticipant({ name: '', email: '', workshop: 'Morning Group Meditation', registrationDate: '' });
-    setShowModal(false);
-};
 
 
     return (
@@ -182,7 +222,7 @@ const handleRegisterParticipant = () => {
 
             {/* ── Stat Cards ── */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {WORKSHOP_STATS.map((stat) => (
+                {workshopStats.map((stat) => (
                     <div key={stat.label} className="box mb-0">
                         <div className="box-body flex items-start justify-between gap-3">
                             <div>
@@ -226,24 +266,25 @@ const handleRegisterParticipant = () => {
                                 value={workshopFilter}
                                 onChange={(e) => setWorkshopFilter(e.target.value)}
                             >
-                                {WORKSHOP_OPTIONS.map((opt) => (
+                                {workshopOptions.map((opt) => (
                                     <option key={opt} value={opt}>{opt}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="flex gap-2">
-                            {/* TODO: wire Register Participant to modal/API */}
                             <button
                                 type="button"
                                 className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
-                                  onClick={() => setShowModal(true)} 
+                                onClick={() => setShowModal(true)}
+                                aria-label="Register participant"
                             >
                                 <i className="ri-add-line"></i> Register Participant
                             </button>
-                            {/* TODO: wire Export to download API */}
                             <button
                                 type="button"
                                 className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave gap-1"
+                                onClick={() => void exportWorkshopCsv()}
+                                aria-label="Export employees CSV"
                             >
                                 <i className="ri-download-line"></i> Export
                             </button>
@@ -371,10 +412,10 @@ const handleRegisterParticipant = () => {
                 <button
                     type="button"
                     className="ti-btn !bg-orange-500 !text-white"
-                    onClick={handleRegisterParticipant}
-                    disabled={!newParticipant.name || !newParticipant.email || !newParticipant.registrationDate}
+                    onClick={() => void handleRegisterParticipant()}
+                    disabled={!newParticipant.name || !newParticipant.email || adding}
                 >
-                    <i className="ri-add-line me-1"></i> Register Participant
+                    <i className="ri-add-line me-1"></i> {adding ? 'Saving…' : 'Register Participant'}
                 </button>
             </div>
         </div>

@@ -3,6 +3,7 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import companyService from '@/services/companyService';
 import {
     getEmployees,
     getDeletionHistory,
@@ -14,6 +15,7 @@ import {
     type PageSize,
     type GetEmployeesParams,
 } from '../_data/employee-score-data';
+import { EditEmployeeWellnessModal } from './EditEmployeeWellnessModal';
 
 // ─────────────────────────────────────────────────────────────
 // Atoms
@@ -75,6 +77,7 @@ const EmployeeScorePage = () => {
     const [selected, setSelected]     = useState<Set<string>>(new Set());
     const [allChecked, setAllChecked] = useState(false);
     const [deletionOpen, setDeletionOpen] = useState(false);
+    const [editRow, setEditRow] = useState<Employee | null>(null);
 
     const totalPages = Math.ceil(total / pageSize);
 
@@ -134,6 +137,24 @@ const EmployeeScorePage = () => {
         }
     };
 
+    const exportEmployeesCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed. Check your connection and try again.');
+        }
+    };
+
+    const exportBookingsCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('bookings');
+        } catch {
+            alert('Export failed. Check your connection and try again.');
+        }
+    };
+
+    const openEdit = (emp: Employee) => setEditRow(emp);
+
     const paginationPages = (): (number | '...')[] => {
         if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
         if (page <= 3) return [1, 2, 3, '...', totalPages];
@@ -156,12 +177,21 @@ const EmployeeScorePage = () => {
             {/* ── Top Action Bar ── */}
             <div className="flex justify-end gap-2 mb-4">
                 {/* TODO: wire to export API */}
-                <button className="ti-btn ti-btn-sm bg-warning text-white border-0 gap-1 text-xs font-semibold">
-                    <i className="ri-download-2-line"></i> Export Data
+                <button
+                    type="button"
+                    onClick={exportEmployeesCsv}
+                    className="ti-btn ti-btn-sm bg-warning text-white border-0 gap-1 text-xs font-semibold"
+                    aria-label="Export employees as CSV"
+                >
+                    <i className="ri-download-2-line"></i> Export employees (CSV)
                 </button>
-                {/* TODO: wire to download report API */}
-                <button className="ti-btn ti-btn-sm ti-btn-primary gap-1 text-xs font-semibold">
-                    <i className="ri-download-line"></i> Download
+                <button
+                    type="button"
+                    onClick={exportBookingsCsv}
+                    className="ti-btn ti-btn-sm ti-btn-primary gap-1 text-xs font-semibold"
+                    aria-label="Export bookings as CSV"
+                >
+                    <i className="ri-download-line"></i> Export bookings (CSV)
                 </button>
             </div>
 
@@ -274,7 +304,17 @@ const EmployeeScorePage = () => {
                                 {employees.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="text-center py-12 text-muted text-sm">
-                                            No employees match the current filters.
+                                            {total === 0 &&
+                                            search === '' &&
+                                            statusFilter === 'All Status' &&
+                                            deptFilter === 'All Departments' ? (
+                                                <span>
+                                                    No employees registered for your company yet. Add participants
+                                                    from the Wellness program pages, or contact your administrator.
+                                                </span>
+                                            ) : (
+                                                <span>No employees match the current filters.</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ) : (
@@ -315,7 +355,12 @@ const EmployeeScorePage = () => {
                                             </td>
                                             <td className="py-3 px-4">
                                                 {/* TODO: wire to edit employee wellness score API */}
-                                                <button className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEdit(emp)}
+                                                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                                                    aria-label={`Edit wellness row for ${emp.name}`}
+                                                >
                                                     <i className="bx bx-edit-alt text-sm"></i> Edit
                                                 </button>
                                             </td>
@@ -455,6 +500,14 @@ const EmployeeScorePage = () => {
                     </div>
                 )}
             </div>
+
+            {editRow && (
+                <EditEmployeeWellnessModal
+                    employee={editRow}
+                    onClose={() => setEditRow(null)}
+                    onSaved={fetchData}
+                />
+            )}
         </Fragment>
     );
 };

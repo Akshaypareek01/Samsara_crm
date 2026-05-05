@@ -4,6 +4,7 @@ import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
 import TrainerService, { Trainer } from '@/services/trainerService';
 import { useRouter } from 'next/navigation';
+import { TRAINER_ACCEPTING_BOOKINGS_EVENT, type TrainerAcceptingBookingsDetail } from '@/utils/trainerAvailabilitySync';
 
 const TrainerDashboard = () => {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
@@ -12,6 +13,18 @@ const TrainerDashboard = () => {
 
     useEffect(() => {
         fetchMyProfile();
+    }, []);
+
+    useEffect(() => {
+        const onSync = (ev: Event) => {
+            const ce = ev as CustomEvent<TrainerAcceptingBookingsDetail>;
+            if (typeof ce.detail?.acceptingBookings !== 'boolean') return;
+            setTrainer((prev) =>
+                prev ? { ...prev, acceptingBookings: ce.detail.acceptingBookings } : prev
+            );
+        };
+        window.addEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
+        return () => window.removeEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
     }, []);
 
     const fetchMyProfile = async () => {
@@ -35,6 +48,12 @@ const TrainerDashboard = () => {
             <Pageheader currentpage="Dashboard" activepage="Trainer" mainpage="Dashboard" />
             <div className="grid grid-cols-12 gap-6">
                 <div className="xl:col-span-12 col-span-12">
+                    {!loading && trainer && trainer.status !== false && trainer.acceptingBookings === false && (
+                        <div className="alert alert-warning mb-4" role="status" aria-live="polite">
+                            You are not accepting new bookings. Companies will see booking disabled until you turn this
+                            back on from the header or Profile.
+                        </div>
+                    )}
                     <div className="box">
                         <div className="box-body">
                             {loading ? (

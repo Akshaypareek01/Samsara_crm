@@ -19,8 +19,24 @@ export interface Trainer {
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
   status?: boolean;
+  /** When false, companies cannot create new bookings for this trainer. */
+  acceptingBookings?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/**
+ * Whether a trainer profile allows new bookings (active and not opted out).
+ *
+ * @param trainer - Trainer or minimal pick with `status` and `acceptingBookings`.
+ * @returns True when booking creation should be allowed in the UI and API.
+ */
+export function isTrainerAcceptingBookings(
+  trainer: Pick<Trainer, 'status' | 'acceptingBookings'> | null | undefined
+): boolean {
+  if (!trainer) return false;
+  if (trainer.status === false) return false;
+  return trainer.acceptingBookings !== false;
 }
 
 export interface CreateTrainerRequest {
@@ -35,6 +51,7 @@ export interface CreateTrainerRequest {
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
   status?: boolean;
+  acceptingBookings?: boolean;
 }
 
 export interface UpdateTrainerRequest {
@@ -49,6 +66,7 @@ export interface UpdateTrainerRequest {
   images?: TrainerImage[];
   profilePhoto?: TrainerImage | null;
   status?: boolean;
+  acceptingBookings?: boolean;
 }
 
 export interface GetTrainersParams {
@@ -56,6 +74,7 @@ export interface GetTrainersParams {
   specialistIn?: string;
   typeOfTraining?: string;
   status?: boolean;
+  acceptingBookings?: boolean;
   page?: number;
   limit?: number;
   sortBy?: string;

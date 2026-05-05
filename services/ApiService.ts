@@ -45,8 +45,16 @@ class ApiService {
         if (error.response?.status === 401) {
           try {
             await this.removeAuthToken();
-            // You can add navigation to login screen here if needed
             console.log('Unauthorized access. Please login again.');
+            if (
+              typeof window !== 'undefined' &&
+              window.location.pathname.startsWith('/company/dashboard')
+            ) {
+              const next = encodeURIComponent(
+                window.location.pathname + window.location.search
+              );
+              window.location.assign(`/company/login?next=${next}`);
+            }
           } catch (tokenError) {
             console.error('Error removing auth token:', tokenError);
           }
@@ -98,6 +106,7 @@ class ApiService {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('Auth');
+      localStorage.removeItem('refreshToken');
     } catch (error) {
       console.error('Error removing auth token:', error);
       throw new Error('Failed to remove authentication token');

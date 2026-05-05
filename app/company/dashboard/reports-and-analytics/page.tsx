@@ -28,6 +28,7 @@ import {
     type TopPerformer,
     type EngagementCard,
 } from './_data/reports-analytics.data';
+import companyService from '@/services/companyService';
 
 // ─────────────────────────────────────────────────────────────
 // Small reusable atoms
@@ -105,6 +106,22 @@ const ReportsAnalyticsPage = () => {
         { key: 'goal',          label: 'Goal'           },
     ];
 
+    const exportEmployeesCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed.');
+        }
+    };
+
+    const exportBookingsCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('bookings');
+        } catch {
+            alert('Export failed.');
+        }
+    };
+
     return (
         <Fragment>
             <Seo title="Reports & Analytics" />
@@ -113,12 +130,21 @@ const ReportsAnalyticsPage = () => {
             {/* ── Top Action Bar ── */}
             <div className="flex justify-end gap-2 mb-4">
                 {/* TODO: wire to export API */}
-                <button className="ti-btn ti-btn-sm bg-warning text-white border-0 gap-1 text-xs font-semibold">
-                    <i className="ri-download-2-line"></i> Export Data
+                <button
+                    type="button"
+                    onClick={() => void exportEmployeesCsv()}
+                    className="ti-btn ti-btn-sm bg-warning text-white border-0 gap-1 text-xs font-semibold"
+                    aria-label="Export employees CSV"
+                >
+                    <i className="ri-download-2-line"></i> Export employees (CSV)
                 </button>
-                {/* TODO: wire to download report API */}
-                <button className="ti-btn ti-btn-sm ti-btn-primary gap-1 text-xs font-semibold">
-                    <i className="ri-download-line"></i> Download
+                <button
+                    type="button"
+                    onClick={() => void exportBookingsCsv()}
+                    className="ti-btn ti-btn-sm ti-btn-primary gap-1 text-xs font-semibold"
+                    aria-label="Export bookings CSV"
+                >
+                    <i className="ri-download-line"></i> Export bookings (CSV)
                 </button>
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import bookingService, { Booking } from '@/services/bookingService';
+import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
 import StatusBadge from '@/shared/components/StatusBadge';
 import { formatBookingDate, formatBookingTime, formatDuration, canCancelBooking } from '@/shared/utils/bookingUtils';
 import Swal from 'sweetalert2';
@@ -62,6 +63,7 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
         if (result.isConfirmed) {
             try {
                 await bookingService.cancelBooking(bookingId);
+                clearCompanyInsightsCache();
                 Swal.fire('Cancelled!', 'Your booking has been cancelled.', 'success');
                 loadBookings();
             } catch (error: any) {

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import trainerService, { Trainer } from '@/services/trainerService';
+import trainerService, { Trainer, isTrainerAcceptingBookings } from '@/services/trainerService';
 import companyService from '@/services/companyService';
 import bookingService, { CreateBookingRequest } from '@/services/bookingService';
 import { TYPE_OF_TRAINING_OPTIONS } from '@/services/trainerService';
@@ -99,6 +99,14 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
             Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please select at least one training type' });
             return false;
         }
+        if (selectedTrainer && !isTrainerAcceptingBookings(selectedTrainer)) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Trainer unavailable',
+                text: 'This trainer is not accepting new bookings at the moment.',
+            });
+            return false;
+        }
 
         // Validate date is in future
         const bookingDateTime = new Date(`${formData.bookingDate}T${formData.startTime}`);
@@ -186,11 +194,18 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                                 required
                             >
                                 <option value="">Choose a trainer...</option>
-                                {trainers.map((trainer) => (
-                                    <option key={trainer._id || trainer.id} value={trainer._id || trainer.id}>
+                                {trainers.map((trainer) => {
+                                    const bookable = isTrainerAcceptingBookings(trainer);
+                                    return (
+                                    <option
+                                        key={trainer._id || trainer.id}
+                                        value={trainer._id || trainer.id}
+                                        disabled={!bookable}
+                                    >
                                         {trainer.name} - {trainer.title}
+                                        {!bookable ? ' (not accepting bookings)' : ''}
                                     </option>
-                                ))}
+                                );})}
                             </select>
                         )}
                     </div>
@@ -247,13 +262,14 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                             <div className="border rounded p-3" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                 {availableTypes.map((type) => (
                                     <div key={type} className="form-check mb-2">
-                                        <input
-                                            type="checkbox"
-                                            className="form-check-input"
-                                            id={`type-${type}`}
-                                            checked={formData.typeOfTraining.includes(type)}
-                                            onChange={() => handleTrainingTypeToggle(type)}
-                                        />
+                                                <input
+                                                    type="checkbox"
+                                                    className="form-check-input"
+                                                    id={`type-${type}`}
+                                                    checked={formData.typeOfTraining.includes(type)}
+                                                    onChange={() => handleTrainingTypeToggle(type)}
+                                                    disabled={!selectedTrainer || !isTrainerAcceptingBookings(selectedTrainer)}
+                                                />
                                         <label className="form-check-label" htmlFor={`type-${type}`}>
                                             {type}
                                         </label>
@@ -281,7 +297,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                         <button
                             type="submit"
                             className="btn btn-primary"
-                            disabled={loading || loadingTrainers}
+                            disabled={loading || loadingTrainers || (selectedTrainer !== null && !isTrainerAcceptingBookings(selectedTrainer))}
                         >
                             {loading ? (
                                 <>

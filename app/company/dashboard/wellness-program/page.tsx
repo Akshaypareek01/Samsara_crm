@@ -1,21 +1,28 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
     PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { getCompanyInsightsBundle, COMPANY_DATA_BUST_EVENT } from '@/services/companyInsightsClient';
+import {
+    mapWellnessLandingFromInsights,
+    maxParticipantValue,
+    isHexColor,
+    type WellnessOverviewStat,
+    type WellnessProgramCard,
+    type NamedSlice,
+    type RecentActivityItem,
+} from './wellnessLandingFromInsights';
 
-// ─────────────────────────────────────────────
-// HARDCODED DATA — replace with API calls later
-// ─────────────────────────────────────────────
-
-const OVERVIEW_STATS = [
+// ── Fallbacks when insights are unavailable (offline / error) ──
+const FALLBACK_OVERVIEW: WellnessOverviewStat[] = [
     {
         label: 'Total Active Users',
-        value: '2,847',
-        change: '+12.5%',
+        value: '0',
+        change: 'Sign in and load data',
         changePositive: true,
         icon: 'ri-user-line',
         iconBg: 'bg-primary/10',
@@ -23,8 +30,8 @@ const OVERVIEW_STATS = [
     },
     {
         label: 'Ongoing Sessions',
-        value: '342',
-        change: '+12.1%',
+        value: '0',
+        change: '—',
         changePositive: true,
         icon: 'ri-pulse-line',
         iconBg: 'bg-success/10',
@@ -32,8 +39,8 @@ const OVERVIEW_STATS = [
     },
     {
         label: 'Program Completion Rate',
-        value: '87%',
-        change: '+5.3%',
+        value: '0%',
+        change: '—',
         changePositive: true,
         icon: 'ri-checkbox-circle-line',
         iconBg: 'bg-purple-100',
@@ -41,8 +48,8 @@ const OVERVIEW_STATS = [
     },
     {
         label: 'Overall Satisfaction',
-        value: '4.8',
-        change: '+0.2',
+        value: '—',
+        change: '—',
         changePositive: true,
         icon: 'ri-star-line',
         iconBg: 'bg-warning/10',
@@ -50,97 +57,112 @@ const OVERVIEW_STATS = [
     },
 ];
 
-const PROGRAM_CARDS = [
+const FALLBACK_CARDS: WellnessProgramCard[] = [
     {
         title: 'Yoga Programs',
-        subtitle: '18 Active Sessions',
-        participants: 456,
-        completionRate: 92,
+        subtitle: '0 bookings',
+        participants: 0,
+        completionRate: 0,
         icon: 'ri-mental-health-line',
         iconBg: 'bg-purple-100',
         iconColor: 'text-purple-500',
-        href: '/company/wellness-program/yoga',
+        href: '/company/dashboard/wellness-program/yoga',
     },
     {
         title: 'Ayurveda Sessions',
-        subtitle: '12 Active Sessions',
-        participants: 298,
-        completionRate: 85,
+        subtitle: '0 bookings',
+        participants: 0,
+        completionRate: 0,
         icon: 'ri-heart-pulse-line',
         iconBg: 'bg-success/10',
         iconColor: 'text-success',
-        href: '/company/wellness-program/ayurveda',
+        href: '/company/dashboard/wellness-program/ayurveda',
     },
     {
         title: 'Meditation Classes',
-        subtitle: '24 Active Sessions',
-        participants: 742,
-        completionRate: 89,
+        subtitle: '0 bookings',
+        participants: 0,
+        completionRate: 0,
         icon: 'ri-map-pin-line',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
-        href: '/company/wellness-program/meditation',
+        href: '/company/dashboard/wellness-program/meditation',
     },
     {
         title: 'Workshops',
-        subtitle: '8 Active Sessions',
-        participants: 186,
-        completionRate: 94,
+        subtitle: '0 bookings',
+        participants: 0,
+        completionRate: 0,
         icon: 'ri-group-line',
         iconBg: 'bg-warning/10',
         iconColor: 'text-warning',
-        href: '/company/wellness-program/workshop',
+        href: '/company/dashboard/wellness-program/workshop',
     },
 ];
 
-const PROGRAM_DISTRIBUTION = [
-    { name: 'Meditation', value: 38, color: '#3B82F6' },
-    { name: 'Yoga', value: 28, color: '#10B981' },
-    { name: 'Ayurveda', value: 22, color: '#F97316' },
-    { name: 'Workshops', value: 12, color: '#EF4444' },
+const FALLBACK_DIST: NamedSlice[] = [
+    { name: 'Meditation', value: 25, color: '#3B82F6' },
+    { name: 'Yoga', value: 25, color: '#10B981' },
+    { name: 'Ayurveda', value: 25, color: '#F97316' },
+    { name: 'Workshops', value: 25, color: '#EF4444' },
 ];
 
-const ACTIVE_PARTICIPANTS = [
-    { name: 'Yoga Programs', value: 456 },
-    { name: 'Meditation', value: 742 },
-    { name: 'Ayurveda', value: 298 },
-    { name: 'Workshops', value: 186 },
-];
-
-const RECENT_ACTIVITY = [
-    {
-        text: 'New registration for Morning Yoga',
-        time: '2 minutes ago',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
-        icon: 'ri-user-add-line',
-    },
-    {
-        text: 'Meditation session completed',
-        time: '15 minutes ago',
-        iconBg: 'bg-primary/10',
-        iconColor: 'text-primary',
-        icon: 'ri-calendar-check-line',
-    },
-    {
-        text: '5-star rating received',
-        time: '32 minutes ago',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
-        icon: 'ri-star-line',
-    },
-    {
-        text: 'Workshop reminder sent',
-        time: '1 hour ago',
-        iconBg: 'bg-warning/10',
-        iconColor: 'text-warning',
-        icon: 'ri-notification-line',
-    },
-];
-
-// ─────────────────────────────────────────────
-
+/**
+ * Company wellness hub: stats, program links, distribution, and recent activity from GET /companies/insights.
+ */
 const WellnessProgramPage = () => {
+    const [overviewStats, setOverviewStats] = useState<WellnessOverviewStat[]>(FALLBACK_OVERVIEW);
+    const [programCards, setProgramCards] = useState<WellnessProgramCard[]>(FALLBACK_CARDS);
+    const [programDistribution, setProgramDistribution] = useState<NamedSlice[]>(FALLBACK_DIST);
+    const [activeParticipants, setActiveParticipants] = useState<{ name: string; value: number }[]>(
+        FALLBACK_CARDS.map((c) => ({ name: c.title, value: 0 }))
+    );
+    const [barMax, setBarMax] = useState(1);
+    const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
+    const [fetchComplete, setFetchComplete] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        const apply = (bundle: Record<string, unknown> | null) => {
+            if (!bundle) return;
+            const hasWellness = Boolean((bundle as { wellness?: unknown }).wellness);
+            if (!hasWellness) return;
+            const m = mapWellnessLandingFromInsights(bundle);
+            if (m.overviewStats.length) setOverviewStats(m.overviewStats);
+            setProgramCards(m.programCards);
+            setProgramDistribution(m.programDistribution.length ? m.programDistribution : FALLBACK_DIST);
+            setActiveParticipants(m.activeParticipants);
+            setBarMax(maxParticipantValue(m.activeParticipants));
+            setRecentActivity(m.recentActivity);
+        };
+
+        const load = async () => {
+            try {
+                const bundle = await getCompanyInsightsBundle();
+                if (cancelled) return;
+                apply(bundle as Record<string, unknown> | null);
+            } catch (err) {
+                console.error('Wellness landing insights:', err);
+            } finally {
+                if (!cancelled) setFetchComplete(true);
+            }
+        };
+
+        void load();
+        const onBust = () => {
+            void load();
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener(COMPANY_DATA_BUST_EVENT, onBust);
+        }
+        return () => {
+            cancelled = true;
+            if (typeof window !== 'undefined') {
+                window.removeEventListener(COMPANY_DATA_BUST_EVENT, onBust);
+            }
+        };
+    }, []);
+
     return (
         <Fragment>
             <Seo title={"Wellness Program"} />
@@ -150,9 +172,15 @@ const WellnessProgramPage = () => {
                 mainpage="Wellness Program"
             />
 
+            {!fetchComplete && (
+                <p className="text-xs text-muted mb-4" role="status">
+                    Loading program analytics…
+                </p>
+            )}
+
             {/* ── Overview Stat Cards ── */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {OVERVIEW_STATS.map((stat) => (
+                {overviewStats.map((stat) => (
                     <div key={stat.label} className="box mb-0">
                         <div className="box-body flex items-start justify-between gap-3">
                             <div>
@@ -162,8 +190,24 @@ const WellnessProgramPage = () => {
                                     {stat.changePositive ? '↑' : '↓'} {stat.change}
                                 </p>
                             </div>
-                            <div className={`w-12 h-12 rounded-full ${stat.iconBg} flex items-center justify-center flex-shrink-0`}>
-                                <i className={`${stat.icon} text-[1.25rem] ${stat.iconColor}`}></i>
+                            <div
+                                className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    isHexColor(stat.iconBg) ? '' : stat.iconBg
+                                }`}
+                                style={
+                                    isHexColor(stat.iconBg) ? { backgroundColor: stat.iconBg } : undefined
+                                }
+                            >
+                                <i
+                                    className={`${stat.icon} text-[1.25rem] ${
+                                        isHexColor(stat.iconColor) ? '' : stat.iconColor
+                                    }`}
+                                    style={
+                                        isHexColor(stat.iconColor)
+                                            ? { color: stat.iconColor }
+                                            : undefined
+                                    }
+                                ></i>
                             </div>
                         </div>
                     </div>
@@ -172,7 +216,7 @@ const WellnessProgramPage = () => {
 
             {/* ── Program Cards ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-                {PROGRAM_CARDS.map((program) => (
+                {programCards.map((program) => (
                     <Link key={program.title} href={program.href} className="box mb-0 hover:shadow-lg transition-shadow cursor-pointer block">
                         <div className="box-body">
                             <div className="flex items-center gap-3 mb-4">
@@ -199,20 +243,19 @@ const WellnessProgramPage = () => {
 
             {/* ── Bottom Row: Chart + Recent Activity ── */}
             <div className="grid grid-cols-12 gap-4">
-                {/* Program Distribution Chart */}
                 <div className="col-span-12 xl:col-span-7 box mb-0">
                     <div className="box-header justify-between items-center flex-wrap gap-2">
                         <div>
                             <h6 className="box-title font-bold !mb-0">Program Distribution</h6>
                         </div>
-                        <div className="text-[0.8125rem] text-[#8c9097]">Active Participants</div>
+                        <div className="text-[0.8125rem] text-[#8c9097]">Share of tagged bookings</div>
                     </div>
                     <div className="box-body">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                             <ResponsiveContainer width="100%" height={240}>
                                 <PieChart>
                                     <Pie
-                                        data={PROGRAM_DISTRIBUTION}
+                                        data={programDistribution}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
@@ -220,19 +263,18 @@ const WellnessProgramPage = () => {
                                         dataKey="value"
                                         paddingAngle={2}
                                     >
-                                        {PROGRAM_DISTRIBUTION.map((entry, index) => (
+                                        {programDistribution.map((entry, index) => (
                                             <Cell key={index} fill={entry.color} />
                                         ))}
                                     </Pie>
                                     <Legend iconSize={10} wrapperStyle={{ fontSize: '12px' }} />
-                                    <Tooltip formatter={(value) => [`${value}%`, '']} />
+                                    <Tooltip formatter={(value) => [`${value}%`, 'share']} />
                                 </PieChart>
                             </ResponsiveContainer>
 
-                            {/* Active Participants List */}
                             <div className="flex flex-col gap-3">
-                                {ACTIVE_PARTICIPANTS.map((item, idx) => (
-                                    <div key={idx}>
+                                {activeParticipants.map((item, idx) => (
+                                    <div key={item.name}>
                                         <div className="flex justify-between text-[0.8125rem] mb-1">
                                             <span className="text-[#8c9097]">{item.name}</span>
                                             <span className="font-semibold text-defaulttextcolor">{item.value}</span>
@@ -241,8 +283,8 @@ const WellnessProgramPage = () => {
                                             <div
                                                 className="h-1.5 rounded-full"
                                                 style={{
-                                                    width: `${(item.value / 1682) * 100}%`,
-                                                    backgroundColor: PROGRAM_DISTRIBUTION[idx]?.color,
+                                                    width: `${(item.value / barMax) * 100}%`,
+                                                    backgroundColor: programDistribution[idx]?.color,
                                                 }}
                                             />
                                         </div>
@@ -253,29 +295,44 @@ const WellnessProgramPage = () => {
                     </div>
                 </div>
 
-                {/* Recent Activity */}
                 <div className="col-span-12 xl:col-span-5 box mb-0">
                     <div className="box-header justify-between items-center">
                         <h6 className="box-title font-bold !mb-0">Recent Activity</h6>
                     </div>
                     <div className="box-body flex flex-col gap-4">
-                        {RECENT_ACTIVITY.map((activity, idx) => (
-                            <div key={idx} className="flex items-start gap-3">
-                                <div className={`w-9 h-9 rounded-full ${activity.iconBg} flex items-center justify-center flex-shrink-0`}>
-                                    <i className={`${activity.icon} text-[1rem] ${activity.iconColor}`}></i>
+                        {recentActivity.length === 0 ? (
+                            <p className="text-sm text-muted mb-0">No recent booking activity yet.</p>
+                        ) : (
+                            recentActivity.map((activity, idx) => (
+                                <div key={`${activity.text}-${idx}`} className="flex items-start gap-3">
+                                    <div
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                            isHexColor(activity.iconBg) ? '' : activity.iconBg
+                                        }`}
+                                        style={
+                                            isHexColor(activity.iconBg)
+                                                ? { backgroundColor: activity.iconBg }
+                                                : undefined
+                                        }
+                                    >
+                                        <i
+                                            className={`${activity.icon} text-[1rem] ${
+                                                isHexColor(activity.iconColor) ? '' : activity.iconColor
+                                            }`}
+                                            style={
+                                                isHexColor(activity.iconColor)
+                                                    ? { color: activity.iconColor }
+                                                    : undefined
+                                            }
+                                        ></i>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-[0.875rem] text-defaulttextcolor mb-0">{activity.text}</p>
+                                        <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">{activity.time}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-[0.875rem] text-defaulttextcolor mb-0">{activity.text}</p>
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">{activity.time}</p>
-                                </div>
-                            </div>
-                        ))}
-                        <button
-                            type="button"
-                            className="text-orange-500 text-[0.875rem] font-medium mt-2 hover:underline text-center w-full"
-                        >
-                            View All Activity
-                        </button>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

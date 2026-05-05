@@ -1,365 +1,254 @@
-"use client"
-import Pageheader from '@/shared/layout-components/page-header/pageheader'
-import Seo from '@/shared/layout-components/seo/seo'
-import React, { Fragment, useState } from 'react'
-import { useEffect } from "react";
-import CompanyService from "@/services/companyService";
-//import { Base_url } from "@/Config/BaseUrl";
+"use client";
+
+import Pageheader from "@/shared/layout-components/page-header/pageheader";
+import Seo from "@/shared/layout-components/seo/seo";
+import Link from "next/link";
+import React, { Fragment, useState } from "react";
+import { ContactPerson, Company } from "@/services/companyService";
+import { useCompanySession } from "@/hooks/useCompanySession";
+
+/**
+ * Build display rows for primary and secondary contact from API shape.
+ *
+ * @param profile - Company profile payload.
+ */
+function getContactsFromProfile(profile: Company): {
+    primary: ContactPerson;
+    secondary: ContactPerson;
+} {
+    const primary = profile.contactPerson1 || {};
+    const secondary = profile.contactPerson2 || {};
+    return {
+        primary: {
+            name: primary.name || "—",
+            designation: primary.designation || "—",
+            mobileNumber: primary.mobileNumber || "—",
+            email: primary.email || "—",
+        },
+        secondary: {
+            name: secondary.name || "—",
+            designation: secondary.designation || "—",
+            mobileNumber: secondary.mobileNumber || "—",
+            email: secondary.email || "—",
+        },
+    };
+}
 
 const CompanyProfile = () => {
-    const [activeContact, setActiveContact] = useState<1 | 2>(1);
-    const [activeView, setActiveView] = useState<'profile' | 'form'>('profile');
-    const [company, setCompany] = useState<any>(null);
-const [contactsData, setContactsData] = useState<any>({});
-const [formData, setFormData] = useState<any>({});
+    const { company, loading, error } = useCompanySession();
+    const [activeTab, setActiveTab] = useState<"primary" | "secondary">("primary");
 
-
-
-useEffect(() => {
-  const fetchCompany = async () => {
-    try {
-      const res = await CompanyService.getCompanyProfile();
-      const data = res;
-
-      console.log("DATA:", data);
-      console.log("FULL DATA:", JSON.stringify(data, null, 2));
-        console.log("CONTACT1:", data?.contactPerson1);
-        console.log("CONTACT2:", data?.contactPerson2);
-
-      if (!data) throw new Error("No data");
-
-      setCompany(data);
-
- const contacts = {
-  1: {
-    fullName:
-      data.contactPerson1?.name ||
-      "N/A",
-
-    designation: data.contactPerson1?.designation,
-
-    mobile:
-      data.contactPerson1?.mobileNumber ||
-      "N/A",
-
-    email: data.contactPerson1?.email,
-    contact1: "",
-    contact2: "",
-  },
-  2: {
-    fullName:
-      data.contactPerson2?.name ||
-      "N/A",
-
-    designation: data.contactPerson2?.designation,
-
-    mobile:
-      data.contactPerson2?.mobileNumber ||
-      "N/A",
-
-    email: data.contactPerson2?.email,
-    contact1: "",
-    contact2: "",
-  },
-};
-
-      setContactsData(contacts);
-      setFormData(contacts[1]);
-
-    } catch (err) {
-      console.error("ERROR:", err);
-      setCompany({}); // prevent loading stuck
-    }
-  };
-
-  fetchCompany();
-}, []);
-
-    const handleContactSwitch = (num: 1 | 2) => {
-        setActiveContact(num);
-        setFormData({ ...contactsData[num] });
-    };
-
-    const handleSave = () => {
-        setContactsData({ ...contactsData, [activeContact]: { ...formData } });
-        setActiveView('profile');
-    };
-
-    const currentContact = activeView === 'form' ? formData : contactsData[activeContact];
-
-   if(!company) return <div>Loading...</div>;
+    const contacts = company ? getContactsFromProfile(company) : null;
+    const current =
+        activeTab === "primary" ? contacts?.primary : contacts?.secondary;
 
     return (
         <Fragment>
             <Seo title={"Company Profile"} />
-            <Pageheader currentpage="Company Overview" activepage="Company Profile" mainpage="Company Overview" />
+            <Pageheader
+                currentpage="Company Overview"
+                activepage="Company Profile"
+                mainpage="Company Overview"
+            />
 
-            <div className="grid grid-cols-12 gap-x-6">
-                {/* Main Content */}
-                <div className="col-span-12 xl:col-span-8">
-                    <div className="box">
-                        <div className="box-body">
-                            {/* Company Header */}
-                            <div className="flex flex-wrap items-start gap-6 mb-6">
-                                <div className="flex-shrink-0">
-                                    <div className="avatar avatar-xxl !rounded-full bg-orange-100 flex items-center justify-center"
-                                        style={{ width: '5rem', height: '5rem' }}>
-                                        <i className="bx bxs-leaf text-[2rem] text-orange-500"></i>
-                                    </div>
-                                </div>
-                                <div className="flex-grow">
-                                    <h4 className="font-bold text-[1.25rem] mb-4">{company?.companyName}</h4>
-                                    <div className="grid grid-cols-12 gap-4">
-                                        <div className="col-span-12 sm:col-span-6">
-                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Primary Contact</p>
-                                            <p className="font-semibold text-[0.9375rem]">{company?.contactPerson1?.name}</p>
-                                        </div>
-                                        <div className="col-span-12 sm:col-span-6">
-                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Contact Number</p>
-                                            <p className="font-semibold text-[0.9375rem]">{company?.contactPerson1?.mobileNumber}</p>
-                                        </div>
-                                        <div className="col-span-12">
-                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Location</p>
-                                            <p className="font-semibold text-[0.9375rem]">{company?.address}, {company?.city}, {company?.country}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            {loading && (
+                <div className="box box-body text-center text-muted py-10">
+                    Loading profile…
+                </div>
+            )}
 
-                            {/* View Toggle + View Details */}
-                            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                                <div className="flex gap-2">
+            {!loading && error && (
+                <div className="alert alert-danger mb-4" role="alert">
+                    {error}
+                </div>
+            )}
+
+            {!loading && company && (
+                <div className="grid grid-cols-12 gap-x-6">
+                    <div className="col-span-12 xl:col-span-8">
+                        <div className="box">
+                            <div className="box-body">
+                                <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+                                    <div className="flex flex-wrap items-start gap-6">
+                                        <div className="flex-shrink-0">
+                                            {company.companyLogo ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={company.companyLogo}
+                                                    alt=""
+                                                    className="rounded-full object-cover bg-orange-50"
+                                                    style={{
+                                                        width: "5rem",
+                                                        height: "5rem",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="avatar avatar-xxl !rounded-full bg-orange-100 flex items-center justify-center"
+                                                    style={{
+                                                        width: "5rem",
+                                                        height: "5rem",
+                                                    }}
+                                                >
+                                                    <i className="bx bxs-leaf text-[2rem] text-orange-500"></i>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-grow">
+                                            <h4 className="font-bold text-[1.25rem] mb-4">
+                                                {company.companyName || "Company"}
+                                            </h4>
+                                            <div className="grid grid-cols-12 gap-4">
+                                                <div className="col-span-12 sm:col-span-6">
+                                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                        Company ID
+                                                    </p>
+                                                    <p className="font-semibold text-[0.9375rem]">
+                                                        {company.companyId || "—"}
+                                                    </p>
+                                                </div>
+                                                <div className="col-span-12 sm:col-span-6">
+                                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                        Email
+                                                    </p>
+                                                    <p className="font-semibold text-[0.9375rem]">
+                                                        {company.email || "—"}
+                                                    </p>
+                                                </div>
+                                                <div className="col-span-12">
+                                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                        Location
+                                                    </p>
+                                                    <p className="font-semibold text-[0.9375rem]">
+                                                        {[
+                                                            company.address,
+                                                            company.city,
+                                                            company.pincode,
+                                                            company.country,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(", ") || "—"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        href="/company/dashboard/settings"
+                                        className="ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave !bg-orange-500 !text-white shrink-0"
+                                        aria-label="Edit company details in settings"
+                                    >
+                                        <i className="ri-settings-3-line me-1"></i>
+                                        Edit in Settings
+                                    </Link>
+                                </div>
+
+                                <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-black/20 rounded-lg w-fit">
                                     <button
                                         type="button"
-                                        onClick={() => setActiveView('profile')}
-                                        className={`ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave ${
-                                            activeView === 'profile'
-                                                ? '!bg-orange-500 !text-white border-orange-500'
-                                                : 'ti-btn-outline-light !text-defaulttextcolor'
+                                        onClick={() => setActiveTab("primary")}
+                                        className={`flex items-center gap-2 !py-2 !px-4 rounded-md text-[0.875rem] font-medium transition-all ${
+                                            activeTab === "primary"
+                                                ? "bg-orange-500 text-white shadow-sm"
+                                                : "text-[#8c9097] hover:text-defaulttextcolor"
                                         }`}
                                     >
-                                        Profile View
+                                        <i className="bx bx-user"></i>
+                                        Primary contact
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setFormData({ ...contactsData[activeContact] });
-                                            setActiveView('form');
-                                        }}
-                                        className={`ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave ${
-                                            activeView === 'form'
-                                                ? '!bg-orange-500 !text-white border-orange-500'
-                                                : 'ti-btn-outline-light !text-defaulttextcolor'
+                                        onClick={() => setActiveTab("secondary")}
+                                        className={`flex items-center gap-2 !py-2 !px-4 rounded-md text-[0.875rem] font-medium transition-all ${
+                                            activeTab === "secondary"
+                                                ? "bg-orange-500 text-white shadow-sm"
+                                                : "text-[#8c9097] hover:text-defaulttextcolor"
                                         }`}
                                     >
-                                        Form View
+                                        <i className="bx bx-user"></i>
+                                        Secondary contact
                                     </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    className="ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave border border-orange-300 !text-orange-500 bg-transparent hover:!bg-orange-50"
-                                >
-                                    <i className="ri-external-link-line me-1"></i>
-                                    View Details
-                                </button>
-                            </div>
 
-                            {/* Contact Tabs */}
-                            <div className="flex gap-2 mb-6 p-1 bg-gray-100 dark:bg-black/20 rounded-lg w-fit">
-                                <button
-                                    type="button"
-                                    onClick={() => handleContactSwitch(1)}
-                                    className={`flex items-center gap-2 !py-2 !px-4 rounded-md text-[0.875rem] font-medium transition-all ${
-                                        activeContact === 1
-                                            ? 'bg-orange-500 text-white shadow-sm'
-                                            : 'text-[#8c9097] hover:text-defaulttextcolor'
-                                    }`}
-                                >
-                                    <i className="bx bx-user"></i>
-                                    Contact 1
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleContactSwitch(2)}
-                                    className={`flex items-center gap-2 !py-2 !px-4 rounded-md text-[0.875rem] font-medium transition-all ${
-                                        activeContact === 2
-                                            ? 'bg-orange-500 text-white shadow-sm'
-                                            : 'text-[#8c9097] hover:text-defaulttextcolor'
-                                    }`}
-                                >
-                                    <i className="bx bx-user"></i>
-                                    Contact 2
-                                </button>
-                            </div>
-
-                            {/* Contact Details */}
-                            <div className="grid grid-cols-12 gap-6">
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Full Name</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.fullName}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.fullName}
-                                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
-                                    )}
-                                </div>
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Designation</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.designation}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.designation}
-                                            onChange={(e) => setFormData({ ...formData, designation: e.target.value })} />
-                                    )}
-                                </div>
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Mobile Number</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.mobile}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.mobile}
-                                            onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
-                                    )}
-                                </div>
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Email ID</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.email}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                                    )}
-                                </div>
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Contact 1</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.contact1}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.contact1}
-                                            onChange={(e) => setFormData({ ...formData, contact1: e.target.value })} />
-                                    )}
-                                </div>
-                                <div className="col-span-12 sm:col-span-6">
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">Contact 2</p>
-                                    {activeView === 'profile' ? (
-                                        <p className="font-bold text-[1rem]">{currentContact.contact2}</p>
-                                    ) : (
-                                        <input type="text" className="ti-form-control" value={formData.contact2}
-                                            onChange={(e) => setFormData({ ...formData, contact2: e.target.value })} />
-                                    )}
-                                </div>
-
-                                {/* Cancel/Save — only in Form View */}
-                                {activeView === 'form' && (
-                                    <div className="col-span-12 flex justify-end gap-3 mt-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveView('profile')}
-                                            className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleSave}
-                                            className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave"
-                                        >
-                                            Save Changes
-                                        </button>
+                                {current && (
+                                    <div className="grid grid-cols-12 gap-6">
+                                        <div className="col-span-12 sm:col-span-6">
+                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                Full name
+                                            </p>
+                                            <p className="font-bold text-[1rem]">
+                                                {current.name}
+                                            </p>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-6">
+                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                Designation
+                                            </p>
+                                            <p className="font-bold text-[1rem]">
+                                                {current.designation}
+                                            </p>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-6">
+                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                Mobile
+                                            </p>
+                                            <p className="font-bold text-[1rem]">
+                                                {current.mobileNumber}
+                                            </p>
+                                        </div>
+                                        <div className="col-span-12 sm:col-span-6">
+                                            <p className="text-[#8c9097] dark:text-white/50 text-[0.8125rem] mb-1">
+                                                Email
+                                            </p>
+                                            <p className="font-bold text-[1rem] break-all">
+                                                {current.email}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Right Sidebar */}
-                <div className="col-span-12 xl:col-span-4">
-                    {/* Quick Actions */}
-                    <div className="box mb-6">
-                        <div className="box-header">
-                            <div className="box-title">Quick Actions</div>
-                        </div>
-                        <div className="box-body !pt-2 flex flex-col gap-3">
-                            <button
-                                type="button"
-                                className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-defaultborder/10 hover:bg-gray-50 dark:hover:bg-light transition-all text-start w-full"
-                            >
-                                <span className="avatar avatar-sm bg-primary/10 text-primary rounded-lg">
-                                    <i className="ri-file-download-line text-[1.125rem]"></i>
-                                </span>
-                                <div>
-                                    <p className="font-semibold text-[0.875rem] mb-0">Download Company Report</p>
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">Export organizational metrics</p>
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-defaultborder/10 hover:bg-gray-50 dark:hover:bg-light transition-all text-start w-full"
-                            >
-                                <span className="avatar avatar-sm bg-success/10 text-success rounded-lg">
-                                    <i className="ri-share-line text-[1.125rem]"></i>
-                                </span>
-                                <div>
-                                    <p className="font-semibold text-[0.875rem] mb-0">Share Overview</p>
-                                    <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">Send to stakeholders</p>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Recent Updates */}
-                    <div className="box mb-6">
-                        <div className="box-header">
-                            <div className="box-title">Recent Updates</div>
-                        </div>
-                        <div className="box-body !pt-2">
-                            <ul className="list-none mb-0 flex flex-col gap-3">
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 w-2 h-2 rounded-full bg-success flex-shrink-0"></span>
-                                    <div>
-                                        <p className="font-medium text-[0.875rem] mb-0">New Yoga Program Launched</p>
-                                        <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">2 hours ago</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 w-2 h-2 rounded-full bg-primary flex-shrink-0"></span>
-                                    <div>
-                                        <p className="font-medium text-[0.875rem] mb-0">Monthly Health Report Published</p>
-                                        <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">1 day ago</p>
-                                    </div>
-                                </li>
-                                <li className="flex items-start gap-3">
-                                    <span className="mt-1 w-2 h-2 rounded-full bg-warning flex-shrink-0"></span>
-                                    <div>
-                                        <p className="font-medium text-[0.875rem] mb-0">Employee Feedback Survey Completed</p>
-                                        <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">3 days ago</p>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    {/* Upcoming Events */}
-                    <div className="box">
-                        <div className="box-header">
-                            <div className="box-title">Upcoming Events</div>
-                        </div>
-                        <div className="box-body !pt-2 flex flex-col gap-3">
-                            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                                <p className="font-semibold text-[0.875rem] mb-1">Wellness Workshop</p>
-                                <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">Tomorrow, 2:00 PM</p>
+                    <div className="col-span-12 xl:col-span-4">
+                        <div className="box mb-6">
+                            <div className="box-header">
+                                <div className="box-title">Organization</div>
                             </div>
-                            <div className="p-3 rounded-lg bg-success/5 border border-success/10">
-                                <p className="font-semibold text-[0.875rem] mb-1">Health Screening Camp</p>
-                                <p className="text-[#8c9097] dark:text-white/50 text-[0.75rem] mb-0">Next Week, Monday</p>
+                            <div className="box-body !pt-2 flex flex-col gap-3 text-[0.875rem]">
+                                <div>
+                                    <p className="text-muted mb-0">Domain</p>
+                                    <p className="font-semibold mb-0">
+                                        {company.domain || "—"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-muted mb-0">Employees (reported)</p>
+                                    <p className="font-semibold mb-0">
+                                        {company.numberOfEmployees ?? "—"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-muted mb-0">GST</p>
+                                    <p className="font-semibold mb-0">
+                                        {company.gstNumber || "—"}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-muted mb-0">Status</p>
+                                    <p className="font-semibold mb-0">
+                                        {company.status !== false
+                                            ? "Active"
+                                            : "Inactive"}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </Fragment>
-    )
-}
+    );
+};
 
-export default CompanyProfile
+export default CompanyProfile;

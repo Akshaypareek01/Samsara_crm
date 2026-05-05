@@ -74,6 +74,60 @@ export interface BookingsResponse {
     totalResults: number;
 }
 
+export interface MyBookingsSummaryTotals {
+    totalBookings: number;
+    activeReservations: number;
+    waitingList: number;
+    occupancyRate: string;
+    statusCounts?: Record<string, number>;
+}
+
+export interface MyBookingsSummaryActivity {
+    color: string;
+    title: string;
+    sub: string;
+    time: string;
+}
+
+export interface MyBookingsSummaryClassRow {
+    dateLabel: string;
+    dateSubLabel: string;
+    dotColor: string;
+    classType: string;
+    trainerInitials: string;
+    trainerBg: string;
+    trainerName: string;
+    capacity: number;
+    booked: number;
+    waitingList: number;
+    status: string;
+}
+
+export interface MyBookingsSummaryTrainerAvail {
+    initials: string;
+    avatarBg: string;
+    name: string;
+    speciality: string;
+    status: string;
+}
+
+export interface MyBookingsSummaryWaitingGroup {
+    title: string;
+    count: number;
+    people: string[];
+}
+
+/** Response from GET /v1/bookings/my-bookings/summary */
+export interface MyBookingsSummary {
+    month: string;
+    totals: MyBookingsSummaryTotals;
+    calendarDots: Record<number, string[]>;
+    recentActivities: MyBookingsSummaryActivity[];
+    classSchedule: MyBookingsSummaryClassRow[];
+    trainerAvailability: MyBookingsSummaryTrainerAvail[];
+    waitingListGroups: MyBookingsSummaryWaitingGroup[];
+}
+
 // ==================== SERVICE CLASS ====================
 
 class BookingService {
@@ -127,6 +181,35 @@ class BookingService {
             };
         } catch (error) {
             console.error('❌ Get my bookings error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Month dashboard summary for company or trainer.
+     * GET /v1/bookings/my-bookings/summary?month=YYYY-MM
+     *
+     * @param month - YYYY-MM
+     */
+    async getMyBookingsSummary(month: string): Promise<MyBookingsSummary> {
+        try {
+            const response = await ApiService.get('/bookings/my-bookings/summary', { month });
+            const dots = response.calendarDots || {};
+            const calendarDots: Record<number, string[]> = {};
+            Object.keys(dots).forEach((k) => {
+                calendarDots[Number(k)] = dots[k];
+            });
+            return {
+                month: response.month,
+                totals: response.totals,
+                calendarDots,
+                recentActivities: response.recentActivities || [],
+                classSchedule: response.classSchedule || [],
+                trainerAvailability: response.trainerAvailability || [],
+                waitingListGroups: response.waitingListGroups || [],
+            };
+        } catch (error) {
+            console.error('❌ Get my bookings summary error:', error);
             throw error;
         }
     }

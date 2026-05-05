@@ -1,104 +1,55 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { useWellnessProgramInsights, mapInsightsRowToAyurvedaClient } from '@/hooks/useWellnessProgramInsights';
+import companyService from '@/services/companyService';
+import { submitPortalEmployee } from '../portalEmployeeSubmit';
 
-// ─────────────────────────────────────────────
-// HARDCODED DATA — replace with API calls later
-// ─────────────────────────────────────────────
-
-const AYURVEDA_STATS = [
+const EMPTY_AYURVEDA_STATS = [
     {
-        label: 'Active Consultations',
-        value: '142',
-        change: '+8.3%',
+        label: 'Ayurveda-tagged',
+        value: '0',
+        change: '+0%',
         changePositive: true,
-        subIcon: null,
-        icon: 'ri-phone-line',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
-    },
-    {
-        label: 'Treatments Scheduled',
-        value: '24',
-        change: 'Today',
-        changePositive: true,
-        subIcon: 'ri-calendar-line',
-        icon: 'ri-calendar-line',
+        subIcon: null as string | null,
+        icon: 'ri-leaf-line',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
     },
     {
-        label: 'Practitioner Availability',
-        value: '92%',
-        change: '+4.1%',
+        label: 'Completed',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-user-heart-line',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
+        icon: 'ri-check-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
-        label: 'Client Satisfaction',
-        value: '4.9',
-        change: '+0.3',
+        label: 'Pending',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-star-line',
-        iconBg: 'bg-warning/10',
-        iconColor: 'text-warning',
+        icon: 'ri-time-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
-];
+    {
+        label: 'Trainers',
+        value: '0',
+        change: '+0%',
+        changePositive: true,
+        subIcon: null,
+        icon: 'ri-user-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
+    },
+] as const;
 
 const TREATMENT_PLAN_OPTIONS = ['All Treatment Plans', 'Detox Program', 'Stress Relief', 'Digestive Health', 'Immunity Boost'];
-
-// TODO: Replace with API response — GET /api/wellness/ayurveda/clients
-const AYURVEDA_CLIENTS = [
-    {
-        id: 1,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        initials: 'PS',
-        treatmentPlan: 'Detox Program',
-        treatmentColor: 'bg-success/10 text-success',
-        consultationHistory: '8 sessions completed',
-        nextAppointment: 'Dec 28, 2024',
-        attendance: 88,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 2,
-        name: 'Raj Patel',
-        email: 'raj.patel@email.com',
-        initials: 'RP',
-        treatmentPlan: 'Stress Relief',
-        treatmentColor: 'bg-warning/10 text-warning',
-        consultationHistory: '5 sessions completed',
-        nextAppointment: 'Dec 30, 2024',
-        attendance: 65,
-        attendanceColor: 'bg-warning',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 3,
-        name: 'Meera Gupta',
-        email: 'meera.gupta@email.com',
-        initials: 'MG',
-        treatmentPlan: 'Digestive Health',
-        treatmentColor: 'bg-primary/10 text-primary',
-        consultationHistory: '12 sessions completed',
-        nextAppointment: 'Jan 3, 2025',
-        attendance: 95,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-];
-
-// ─────────────────────────────────────────────
 
 const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     <div className="flex items-center gap-2">
@@ -109,66 +60,135 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     </div>
 );
 
+type AyurvedaStat = (typeof EMPTY_AYURVEDA_STATS)[number];
+
+interface AyurvedaClient {
+    id: number | string;
+    name: string;
+    email: string;
+    initials: string;
+    treatmentPlan: string;
+    treatmentColor: string;
+    consultationHistory: string;
+    nextAppointment: string;
+    attendance: number;
+    attendanceColor: string;
+    progress: string;
+    progressColor: string;
+}
+
 const AyurvedaPage = () => {
+    const insights = useWellnessProgramInsights('ayurveda');
     const [search, setSearch] = useState('');
     const [planFilter, setPlanFilter] = useState('All Treatment Plans');
     const [showModal, setShowModal] = useState(false);
-const [newClient, setNewClient] = useState({
-    name: '',
-    email: '',
-    treatmentPlan: 'Detox Program',
-    nextAppointment: '',
-});
-const [ayurvedaClients, setAyurvedaClients] = useState(AYURVEDA_CLIENTS);
+    const [newClient, setNewClient] = useState({
+        name: '',
+        email: '',
+        treatmentPlan: 'Detox Program',
+        nextAppointment: '',
+    });
+    const [ayurvedaStats, setAyurvedaStats] = useState<AyurvedaStat[]>(() => [...EMPTY_AYURVEDA_STATS]);
+    const [ayurvedaPlanOptions, setAyurvedaPlanOptions] = useState(TREATMENT_PLAN_OPTIONS);
+    const [ayurvedaClients, setAyurvedaClients] = useState<AyurvedaClient[]>([]);
+    const [adding, setAdding] = useState(false);
+
+    useEffect(() => {
+        if (!insights?.stats?.length) {
+            setAyurvedaStats([...EMPTY_AYURVEDA_STATS]);
+            setAyurvedaClients([]);
+            return;
+        }
+        setAyurvedaStats(insights.stats as AyurvedaStat[]);
+        setAyurvedaClients(insights.rows.map(mapInsightsRowToAyurvedaClient));
+    }, [insights]);
+
+    useEffect(() => {
+        const plans = new Set(
+            ayurvedaClients.map((c) => c.treatmentPlan).filter(Boolean)
+        );
+        const merged = ['All Treatment Plans', ...Array.from(plans)];
+        setAyurvedaPlanOptions(merged.length > 1 ? merged : TREATMENT_PLAN_OPTIONS);
+    }, [ayurvedaClients]);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredClients = ayurvedaClients.filter((c) => {
-        const matchesSearch =
-            c.name.toLowerCase().includes(search.toLowerCase()) ||
-            c.email.toLowerCase().includes(search.toLowerCase());
-        const matchesPlan = planFilter === 'All Treatment Plans' || c.treatmentPlan === planFilter;
-        return matchesSearch && matchesPlan;
-    });
+    const filteredClients = useMemo(
+        () =>
+            ayurvedaClients.filter((c) => {
+                const matchesSearch =
+                    c.name.toLowerCase().includes(search.toLowerCase()) ||
+                    c.email.toLowerCase().includes(search.toLowerCase());
+                const matchesPlan =
+                    planFilter === 'All Treatment Plans' || c.treatmentPlan === planFilter;
+                return matchesSearch && matchesPlan;
+            }),
+        [ayurvedaClients, search, planFilter]
+    );
 
 
 
-const handleAddClient = () => {
-    if (!newClient.name || !newClient.email || !newClient.nextAppointment) return;
-
-    const treatmentColorMap: Record<string, string> = {
-        'Detox Program': 'bg-success/10 text-success',
-        'Stress Relief': 'bg-warning/10 text-warning',
-        'Digestive Health': 'bg-primary/10 text-primary',
-        'Immunity Boost': 'bg-purple-100 text-purple-600',
+    const exportAyurvedaCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed.');
+        }
     };
 
-    const initials = newClient.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
-    const client = {
-        id: Date.now(),
-        name: newClient.name,
-        email: newClient.email,
-        initials,
-        treatmentPlan: newClient.treatmentPlan,
-        treatmentColor: treatmentColorMap[newClient.treatmentPlan],
-        consultationHistory: '0 sessions completed',
-        nextAppointment: newClient.nextAppointment,
-        attendance: 0,
-        attendanceColor: 'bg-danger',
-        progress: 'Just Started',
-        progressColor: 'bg-warning/10 text-warning',
-    };
-
-    // NOTE: Replace with API POST when backend is ready
-    setAyurvedaClients((prev) => [...prev, client]);
-    setNewClient({ name: '', email: '', treatmentPlan: 'Detox Program', nextAppointment: '' });
-    setShowModal(false);
-};    
+    const handleAddClient = async () => {
+        if (!newClient.name || !newClient.email) return;
+        setAdding(true);
+        const treatmentColorMap: Record<string, string> = {
+            'Detox Program': 'bg-success/10 text-success',
+            'Stress Relief': 'bg-warning/10 text-warning',
+            'Digestive Health': 'bg-primary/10 text-primary',
+            'Immunity Boost': 'bg-purple-100 text-purple-600',
+        };
+        const initials = newClient.name
+            .trim()
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+        try {
+            const created = await submitPortalEmployee({
+                fullName: newClient.name,
+                email: newClient.email,
+                levelLabel: 'Beginner',
+                department: `Ayurveda · ${newClient.treatmentPlan}`.slice(0, 200),
+            });
+            const id = created._id
+                ? String(created._id)
+                : created.id
+                  ? String(created.id)
+                  : `new-${Date.now()}`;
+            const client: AyurvedaClient = {
+                id,
+                name: newClient.name,
+                email: newClient.email,
+                initials,
+                treatmentPlan: newClient.treatmentPlan,
+                treatmentColor: treatmentColorMap[newClient.treatmentPlan],
+                consultationHistory: '0 sessions completed',
+                nextAppointment: newClient.nextAppointment || '—',
+                attendance: 0,
+                attendanceColor: 'bg-danger',
+                progress: 'Registered',
+                progressColor: 'bg-warning/10 text-warning',
+            };
+            setAyurvedaClients((prev) => [...prev, client]);
+            setNewClient({ name: '', email: '', treatmentPlan: 'Detox Program', nextAppointment: '' });
+            setShowModal(false);
+            alert('Employee added for your company.');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Could not add client';
+            alert(msg);
+        } finally {
+            setAdding(false);
+        }
+    };    
 
 
     return (
@@ -182,7 +202,7 @@ const handleAddClient = () => {
 
             {/* ── Stat Cards ── */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {AYURVEDA_STATS.map((stat) => (
+                {ayurvedaStats.map((stat) => (
                     <div key={stat.label} className="box mb-0">
                         <div className="box-body flex items-start justify-between gap-3">
                             <div>
@@ -226,24 +246,25 @@ const handleAddClient = () => {
                                 value={planFilter}
                                 onChange={(e) => setPlanFilter(e.target.value)}
                             >
-                                {TREATMENT_PLAN_OPTIONS.map((opt) => (
+                                {ayurvedaPlanOptions.map((opt) => (
                                     <option key={opt} value={opt}>{opt}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="flex gap-2">
-                            {/* TODO: wire Add Client to modal/API */}
                             <button
                                 type="button"
                                 className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
-                                onClick={() => setShowModal(true)} 
+                                onClick={() => setShowModal(true)}
+                                aria-label="Add client"
                             >
                                 <i className="ri-add-line"></i> Add Client
                             </button>
-                            {/* TODO: wire Export to download API */}
                             <button
                                 type="button"
                                 className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave gap-1"
+                                onClick={() => void exportAyurvedaCsv()}
+                                aria-label="Export employees CSV"
                             >
                                 <i className="ri-download-line"></i> Export
                             </button>
@@ -372,10 +393,10 @@ const handleAddClient = () => {
                 <button
                     type="button"
                     className="ti-btn !bg-orange-500 !text-white"
-                    onClick={handleAddClient}
-                    disabled={!newClient.name || !newClient.email || !newClient.nextAppointment}
+                    onClick={() => void handleAddClient()}
+                    disabled={!newClient.name || !newClient.email || adding}
                 >
-                    <i className="ri-add-line me-1"></i> Add Client
+                    <i className="ri-add-line me-1"></i> {adding ? 'Adding…' : 'Add Client'}
                 </button>
             </div>
         </div>

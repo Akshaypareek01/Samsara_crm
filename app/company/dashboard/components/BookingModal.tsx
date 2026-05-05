@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Trainer, TYPE_OF_TRAINING_OPTIONS } from '@/services/trainerService';
+import { Trainer, TYPE_OF_TRAINING_OPTIONS, isTrainerAcceptingBookings } from '@/services/trainerService';
 import companyService from '@/services/companyService';
 import bookingService, { CreateBookingRequest } from '@/services/bookingService';
+import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
 import Swal from 'sweetalert2';
 
 interface BookingModalProps {
@@ -96,9 +97,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
 
         if (!validateForm()) return;
 
+        if (!isTrainerAcceptingBookings(trainer)) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Not available',
+                text: 'This trainer is not accepting new bookings right now.',
+            });
+            return;
+        }
+
         try {
             setLoading(true);
             await bookingService.createBooking(formData);
+            clearCompanyInsightsCache();
 
             Swal.fire({
                 icon: 'success',
@@ -146,6 +157,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
     };
 
     const availableTypes = getAvailableTrainingTypes();
+    const canAcceptNewBookings = isTrainerAcceptingBookings(trainer);
 
     if (!isOpen || !trainer) return null;
 
@@ -165,6 +177,16 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
 
                 <div className="p-6">
                     <form onSubmit={handleSubmit}>
+                        {!canAcceptNewBookings && (
+                            <div
+                                className="alert alert-warning mb-4"
+                                role="alert"
+                                aria-live="polite"
+                            >
+                                This trainer is not accepting new bookings at the moment. You can still view their
+                                profile; try again when they turn availability back on.
+                            </div>
+                        )}
                         {/* Trainer Info */}
                         <div className="mb-4 p-4 bg-primary/5 rounded-lg">
                             <div className="flex items-center gap-3">
@@ -198,6 +220,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                                     value={formData.bookingDate}
                                     min={getMinDate()}
                                     onChange={(e) => setFormData(prev => ({ ...prev, bookingDate: e.target.value }))}
+                                    disabled={!canAcceptNewBookings}
                                     required
                                 />
                             </div>
@@ -208,6 +231,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                                     className="form-control"
                                     value={formData.startTime}
                                     onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                                    disabled={!canAcceptNewBookings}
                                     required
                                 />
                             </div>
@@ -224,6 +248,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                                 max="24"
                                 step="0.5"
                                 onChange={(e) => setFormData(prev => ({ ...prev, duration: parseFloat(e.target.value) }))}
+                                disabled={!canAcceptNewBookings}
                                 required
                             />
                             <small className="text-muted">Enter duration between 0.5 and 24 hours</small>
@@ -244,6 +269,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                                                 id={`modal-type-${type}`}
                                                 checked={formData.typeOfTraining.includes(type)}
                                                 onChange={() => handleTrainingTypeToggle(type)}
+                                                disabled={!canAcceptNewBookings}
                                             />
                                             <label className="form-check-label" htmlFor={`modal-type-${type}`}>
                                                 {type}
@@ -264,6 +290,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                                 value={formData.notes}
                                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                 placeholder="Add any special requirements or notes..."
+                                disabled={!canAcceptNewBookings}
                             />
                         </div>
 
@@ -280,7 +307,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ trainer, isOpen, onClose, o
                             <button
                                 type="submit"
                                 className="ti-btn ti-btn-primary"
-                                disabled={loading}
+                                disabled={loading || !canAcceptNewBookings}
                             >
                                 {loading ? (
                                     <>

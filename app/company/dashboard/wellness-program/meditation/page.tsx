@@ -1,104 +1,55 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { useWellnessProgramInsights, mapInsightsRowToMeditationClient } from '@/hooks/useWellnessProgramInsights';
+import companyService from '@/services/companyService';
+import { submitPortalEmployee } from '../portalEmployeeSubmit';
 
-// ─────────────────────────────────────────────
-// HARDCODED DATA — replace with API calls later
-// ─────────────────────────────────────────────
-
-const MEDITATION_STATS = [
+const EMPTY_MEDITATION_STATS = [
     {
-        label: 'Active Meditation Sessions',
-        value: '38',
-        change: '+12.5%',
+        label: 'Meditation-tagged',
+        value: '0',
+        change: '+0%',
         changePositive: true,
-        subIcon: null,
-        icon: 'ri-map-pin-line',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
-    },
-    {
-        label: 'Participant Enrollment',
-        value: '186',
-        change: '+8 today',
-        changePositive: true,
-        subIcon: 'ri-user-line',
-        icon: 'ri-user-line',
+        subIcon: null as string | null,
+        icon: 'ri-moon-line',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
     },
     {
-        label: 'Instructor Availability',
-        value: '94%',
-        change: '+2.8%',
+        label: 'Completed',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-user-heart-line',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
+        icon: 'ri-check-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
-        label: 'Session Ratings',
-        value: '4.8',
-        change: '+0.2',
+        label: 'Pending',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         subIcon: null,
-        icon: 'ri-star-line',
-        iconBg: 'bg-warning/10',
-        iconColor: 'text-warning',
+        icon: 'ri-time-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
-];
+    {
+        label: 'Trainers',
+        value: '0',
+        change: '+0%',
+        changePositive: true,
+        subIcon: null,
+        icon: 'ri-user-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
+    },
+] as const;
 
 const TREATMENT_PLAN_OPTIONS = ['All Treatment Plans', 'Mindfulness Basics', 'Stress Reduction', 'Deep Meditation', 'Sleep Therapy'];
-
-// TODO: Replace with API response — GET /api/wellness/meditation/clients
-const MEDITATION_CLIENTS = [
-    {
-        id: 1,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        initials: 'PS',
-        treatmentPlan: 'Mindfulness Basics',
-        treatmentColor: 'bg-purple-100 text-purple-600',
-        sessionsAttended: '8 sessions completed',
-        registrationDate: 'Dec 28, 2024',
-        attendance: 88,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 2,
-        name: 'Raj Patel',
-        email: 'raj.patel@email.com',
-        initials: 'RP',
-        treatmentPlan: 'Stress Reduction',
-        treatmentColor: 'bg-warning/10 text-warning',
-        sessionsAttended: '5 sessions completed',
-        registrationDate: 'Dec 30, 2024',
-        attendance: 65,
-        attendanceColor: 'bg-warning',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 3,
-        name: 'Meera Gupta',
-        email: 'meera.gupta@email.com',
-        initials: 'MG',
-        treatmentPlan: 'Deep Meditation',
-        treatmentColor: 'bg-primary/10 text-primary',
-        sessionsAttended: '12 sessions completed',
-        registrationDate: 'Jan 3, 2025',
-        attendance: 95,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-];
-
-// ─────────────────────────────────────────────
 
 const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     <div className="flex items-center gap-2">
@@ -109,65 +60,133 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     </div>
 );
 
+type MeditationStat = (typeof EMPTY_MEDITATION_STATS)[number];
+
+interface MeditationClient {
+    id: number | string;
+    name: string;
+    email: string;
+    initials: string;
+    treatmentPlan: string;
+    treatmentColor: string;
+    sessionsAttended: string;
+    registrationDate: string;
+    attendance: number;
+    attendanceColor: string;
+    progress: string;
+    progressColor: string;
+}
+
 const MeditationPage = () => {
+    const insights = useWellnessProgramInsights('meditation');
     const [search, setSearch] = useState('');
     const [planFilter, setPlanFilter] = useState('All Treatment Plans');
     const [showModal, setShowModal] = useState(false);
-const [newClient, setNewClient] = useState({
-    name: '',
-    email: '',
-    treatmentPlan: 'Mindfulness Basics',
-    registrationDate: '',
-});
-const [meditationClients, setMeditationClients] = useState(MEDITATION_CLIENTS);
+    const [newClient, setNewClient] = useState({
+        name: '',
+        email: '',
+        treatmentPlan: 'Mindfulness Basics',
+        registrationDate: '',
+    });
+    const [meditationStats, setMeditationStats] = useState<MeditationStat[]>(() => [...EMPTY_MEDITATION_STATS]);
+    const [meditationPlanOptions, setMeditationPlanOptions] = useState(TREATMENT_PLAN_OPTIONS);
+    const [meditationClients, setMeditationClients] = useState<MeditationClient[]>([]);
+    const [adding, setAdding] = useState(false);
+
+    useEffect(() => {
+        if (!insights?.stats?.length) {
+            setMeditationStats([...EMPTY_MEDITATION_STATS]);
+            setMeditationClients([]);
+            return;
+        }
+        setMeditationStats(insights.stats as MeditationStat[]);
+        setMeditationClients(insights.rows.map(mapInsightsRowToMeditationClient));
+    }, [insights]);
+
+    useEffect(() => {
+        const plans = new Set(
+            meditationClients.map((c) => c.treatmentPlan).filter(Boolean)
+        );
+        const merged = ['All Treatment Plans', ...Array.from(plans)];
+        setMeditationPlanOptions(merged.length > 1 ? merged : TREATMENT_PLAN_OPTIONS);
+    }, [meditationClients]);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredClients =  meditationClients.filter((c) => {
-        const matchesSearch =
-            c.name.toLowerCase().includes(search.toLowerCase()) ||
-            c.email.toLowerCase().includes(search.toLowerCase());
-        const matchesPlan = planFilter === 'All Treatment Plans' || c.treatmentPlan === planFilter;
-        return matchesSearch && matchesPlan;
-    });
+    const filteredClients = useMemo(
+        () =>
+            meditationClients.filter((c) => {
+                const matchesSearch =
+                    c.name.toLowerCase().includes(search.toLowerCase()) ||
+                    c.email.toLowerCase().includes(search.toLowerCase());
+                const matchesPlan =
+                    planFilter === 'All Treatment Plans' || c.treatmentPlan === planFilter;
+                return matchesSearch && matchesPlan;
+            }),
+        [meditationClients, search, planFilter]
+    );
 
-   
-    const handleAddClient = () => {
-    if (!newClient.name || !newClient.email || !newClient.registrationDate) return;
-
-    const treatmentColorMap: Record<string, string> = {
-        'Mindfulness Basics': 'bg-purple-100 text-purple-600',
-        'Stress Reduction': 'bg-warning/10 text-warning',
-        'Deep Meditation': 'bg-primary/10 text-primary',
-        'Sleep Therapy': 'bg-success/10 text-success',
+    const exportMeditationCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed.');
+        }
     };
 
-    const initials = newClient.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
-    const client = {
-        id: Date.now(),
-        name: newClient.name,
-        email: newClient.email,
-        initials,
-        treatmentPlan: newClient.treatmentPlan,
-        treatmentColor: treatmentColorMap[newClient.treatmentPlan],
-        sessionsAttended: '0 sessions completed',
-        registrationDate: newClient.registrationDate,
-        attendance: 0,
-        attendanceColor: 'bg-danger',
-        progress: 'Just Started',
-        progressColor: 'bg-warning/10 text-warning',
+    const handleAddClient = async () => {
+        if (!newClient.name || !newClient.email) return;
+        setAdding(true);
+        const treatmentColorMap: Record<string, string> = {
+            'Mindfulness Basics': 'bg-purple-100 text-purple-600',
+            'Stress Reduction': 'bg-warning/10 text-warning',
+            'Deep Meditation': 'bg-primary/10 text-primary',
+            'Sleep Therapy': 'bg-success/10 text-success',
+        };
+        const initials = newClient.name
+            .trim()
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+        try {
+            const created = await submitPortalEmployee({
+                fullName: newClient.name,
+                email: newClient.email,
+                levelLabel: 'Beginner',
+                department: `Meditation · ${newClient.treatmentPlan}`.slice(0, 200),
+            });
+            const id = created._id
+                ? String(created._id)
+                : created.id
+                  ? String(created.id)
+                  : `new-${Date.now()}`;
+            const client: MeditationClient = {
+                id,
+                name: newClient.name,
+                email: newClient.email,
+                initials,
+                treatmentPlan: newClient.treatmentPlan,
+                treatmentColor: treatmentColorMap[newClient.treatmentPlan],
+                sessionsAttended: '0 sessions completed',
+                registrationDate: newClient.registrationDate || '—',
+                attendance: 0,
+                attendanceColor: 'bg-danger',
+                progress: 'Registered',
+                progressColor: 'bg-warning/10 text-warning',
+            };
+            setMeditationClients((prev) => [...prev, client]);
+            setNewClient({ name: '', email: '', treatmentPlan: 'Mindfulness Basics', registrationDate: '' });
+            setShowModal(false);
+            alert('Employee added for your company.');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Could not add client';
+            alert(msg);
+        } finally {
+            setAdding(false);
+        }
     };
-
-    // NOTE: Replace with API POST when backend is ready
-    setMeditationClients((prev) => [...prev, client]);
-    setNewClient({ name: '', email: '', treatmentPlan: 'Mindfulness Basics', registrationDate: '' });
-    setShowModal(false);
-};
     
 
     return (
@@ -181,7 +200,7 @@ const [meditationClients, setMeditationClients] = useState(MEDITATION_CLIENTS);
 
             {/* ── Stat Cards ── */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                {MEDITATION_STATS.map((stat) => (
+                {meditationStats.map((stat) => (
                     <div key={stat.label} className="box mb-0">
                         <div className="box-body flex items-start justify-between gap-3">
                             <div>
@@ -225,24 +244,25 @@ const [meditationClients, setMeditationClients] = useState(MEDITATION_CLIENTS);
                                 value={planFilter}
                                 onChange={(e) => setPlanFilter(e.target.value)}
                             >
-                                {TREATMENT_PLAN_OPTIONS.map((opt) => (
+                                {meditationPlanOptions.map((opt) => (
                                     <option key={opt} value={opt}>{opt}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="flex gap-2">
-                            {/* TODO: wire Add Client to modal/API */}
                             <button
                                 type="button"
                                 className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
-                                onClick={() => setShowModal(true)}  
+                                onClick={() => setShowModal(true)}
+                                aria-label="Add client"
                             >
                                 <i className="ri-add-line"></i> Add Client
                             </button>
-                            {/* TODO: wire Export to download API */}
                             <button
                                 type="button"
                                 className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave gap-1"
+                                onClick={() => void exportMeditationCsv()}
+                                aria-label="Export employees CSV"
                             >
                                 <i className="ri-download-line"></i> Export
                             </button>
@@ -372,10 +392,10 @@ const [meditationClients, setMeditationClients] = useState(MEDITATION_CLIENTS);
                 <button
                     type="button"
                     className="ti-btn !bg-orange-500 !text-white"
-                    onClick={handleAddClient}
-                    disabled={!newClient.name || !newClient.email || !newClient.registrationDate}
+                    onClick={() => void handleAddClient()}
+                    disabled={!newClient.name || !newClient.email || adding}
                 >
-                    <i className="ri-add-line me-1"></i> Add Client
+                    <i className="ri-add-line me-1"></i> {adding ? 'Adding…' : 'Add Client'}
                 </button>
             </div>
         </div>

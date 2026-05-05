@@ -1,17 +1,26 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import { useWellnessProgramInsights, mapInsightsRowToYogaParticipant } from '@/hooks/useWellnessProgramInsights';
+import companyService from '@/services/companyService';
+import { submitPortalEmployee } from '../portalEmployeeSubmit';
 
-// ─────────────────────────────────────────────
-// HARDCODED DATA — replace with API calls later
-// ─────────────────────────────────────────────
-
-const YOGA_STATS = [
+const EMPTY_YOGA_STATS = [
     {
-        label: 'Active Participants',
-        value: '247',
-        change: '+12.5%',
+        label: 'Yoga bookings',
+        value: '0',
+        change: '+0%',
+        changePositive: true,
+        isScheduled: false,
+        icon: 'ri-heart-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
+    },
+    {
+        label: 'Unique trainers',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         isScheduled: false,
         icon: 'ri-user-line',
@@ -19,82 +28,28 @@ const YOGA_STATS = [
         iconColor: 'text-primary',
     },
     {
-        label: 'Classes Today',
-        value: '8',
-        change: 'Scheduled',
-        changePositive: true,
-        isScheduled: true,
-        icon: 'ri-calendar-line',
-        iconBg: 'bg-success/10',
-        iconColor: 'text-success',
-    },
-    {
-        label: 'Attendance Rate',
-        value: '87%',
-        change: '+3.2%',
+        label: 'Completed',
+        value: '0',
+        change: '+0%',
         changePositive: true,
         isScheduled: false,
-        icon: 'ri-bar-chart-line',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
+        icon: 'ri-check-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
-        label: 'Completion Rate',
-        value: '73%',
-        change: '-1.8%',
-        changePositive: false,
+        label: 'Pending',
+        value: '0',
+        change: '+0%',
+        changePositive: true,
         isScheduled: false,
-        icon: 'ri-award-line',
-        iconBg: 'bg-warning/10',
-        iconColor: 'text-warning',
+        icon: 'ri-time-line',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
-];
+] as const;
 
 const LEVEL_OPTIONS = ['All Levels', 'Beginner', 'Intermediate', 'Advanced'];
-
-// TODO: Replace with API response — GET /api/wellness/yoga/participants
-const YOGA_PARTICIPANTS = [
-    {
-        id: 1,
-        name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        initials: 'PS',
-        level: 'Intermediate',
-        levelColor: 'bg-primary/10 text-primary',
-        sessionsAttended: '8 sessions completed',
-        attendance: 88,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 2,
-        name: 'Raj Patel',
-        email: 'raj.patel@email.com',
-        initials: 'RP',
-        level: 'Beginner',
-        levelColor: 'bg-warning/10 text-warning',
-        sessionsAttended: '5 sessions completed',
-        attendance: 65,
-        attendanceColor: 'bg-warning',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-    {
-        id: 3,
-        name: 'Meera Gupta',
-        email: 'meera.gupta@email.com',
-        initials: 'MG',
-        level: 'Advanced',
-        levelColor: 'bg-purple-100 text-purple-600',
-        sessionsAttended: '12 sessions completed',
-        attendance: 95,
-        attendanceColor: 'bg-success',
-        progress: 'On Track',
-        progressColor: 'bg-success/10 text-success',
-    },
-];
-// ─────────────────────────────────────────────
 
 const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     <div className="flex items-center gap-2">
@@ -105,67 +60,126 @@ const AttendanceBar = ({ value, color }: { value: number; color: string }) => (
     </div>
 );
 
+type YogaStat = (typeof EMPTY_YOGA_STATS)[number] & { isScheduled?: boolean };
+
+interface YogaParticipant {
+    id: number | string;
+    name: string;
+    email: string;
+    initials: string;
+    level: string;
+    levelColor: string;
+    sessionsAttended: string;
+    attendance: number;
+    attendanceColor: string;
+    progress: string;
+    progressColor: string;
+}
+
 const YogaPage = () => {
+    const insights = useWellnessProgramInsights('yoga');
     const [search, setSearch] = useState('');
     const [levelFilter, setLevelFilter] = useState('All Levels');
     const [showModal, setShowModal] = useState(false);
-const [newParticipant, setNewParticipant] = useState({
-    name: '',
-    email: '',
-    level: 'Beginner',
-});
-const [yogaParticipants, setYogaParticipants] = useState(YOGA_PARTICIPANTS);
+    const [newParticipant, setNewParticipant] = useState({
+        name: '',
+        email: '',
+        level: 'Beginner',
+    });
+    const [yogaStats, setYogaStats] = useState<YogaStat[]>(
+        () => [...EMPTY_YOGA_STATS].map((s) => ({ ...s, isScheduled: false })) as YogaStat[]
+    );
+    const [yogaParticipants, setYogaParticipants] = useState<YogaParticipant[]>([]);
+    const [adding, setAdding] = useState(false);
+
+    useEffect(() => {
+        if (!insights?.stats?.length) {
+            setYogaStats([...EMPTY_YOGA_STATS].map((s) => ({ ...s, isScheduled: false })) as YogaStat[]);
+            setYogaParticipants([]);
+            return;
+        }
+        const withFlags = (insights.stats as YogaStat[]).map((s) => ({
+            ...s,
+            isScheduled: s.isScheduled ?? false,
+        }));
+        setYogaStats(withFlags);
+        setYogaParticipants(insights.rows.map(mapInsightsRowToYogaParticipant));
+    }, [insights]);
 
     // TODO: Replace filter logic with API query params when backend is ready
-    const filteredParticipants = yogaParticipants.filter((p) => {
-        const matchesSearch =
-            p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.email.toLowerCase().includes(search.toLowerCase());
-        const matchesLevel = levelFilter === 'All Levels' || p.level === levelFilter;
-        return matchesSearch && matchesLevel;
-    });
+    const filteredParticipants = useMemo(
+        () =>
+            yogaParticipants.filter((p) => {
+                const matchesSearch =
+                    p.name.toLowerCase().includes(search.toLowerCase()) ||
+                    p.email.toLowerCase().includes(search.toLowerCase());
+                const matchesLevel = levelFilter === 'All Levels' || p.level === levelFilter;
+                return matchesSearch && matchesLevel;
+            }),
+        [yogaParticipants, search, levelFilter]
+    );
 
 
-
-
-const handleAddParticipant = () => {
-    if (!newParticipant.name || !newParticipant.email) return;
-
-    const levelColorMap: Record<string, string> = {
-        Beginner: 'bg-warning/10 text-warning',
-        Intermediate: 'bg-primary/10 text-primary',
-        Advanced: 'bg-purple-100 text-purple-600',
+    const exportYogaCsv = async () => {
+        try {
+            await companyService.downloadCompanyReportsExport('employees');
+        } catch {
+            alert('Export failed.');
+        }
     };
 
-    const initials = newParticipant.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
-    const participant = {
-        id: Date.now(),
-        name: newParticipant.name,
-        email: newParticipant.email,
-        initials,
-        level: newParticipant.level,
-        levelColor: levelColorMap[newParticipant.level],
-        sessionsAttended: '0 sessions completed',
-        attendance: 0,
-        attendanceColor: 'bg-danger',
-        progress: 'Just Started',
-        progressColor: 'bg-warning/10 text-warning',
+    const handleAddParticipant = async () => {
+        if (!newParticipant.name || !newParticipant.email) return;
+        setAdding(true);
+        const levelColorMap: Record<string, string> = {
+            Beginner: 'bg-warning/10 text-warning',
+            Intermediate: 'bg-primary/10 text-primary',
+            Advanced: 'bg-purple-100 text-purple-600',
+        };
+        const initials = newParticipant.name
+            .trim()
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+        try {
+            const created = await submitPortalEmployee({
+                fullName: newParticipant.name,
+                email: newParticipant.email,
+                levelLabel: newParticipant.level,
+                department: 'Yoga',
+            });
+            const id = created._id
+                ? String(created._id)
+                : created.id
+                  ? String(created.id)
+                  : `new-${Date.now()}`;
+            const participant: YogaParticipant = {
+                id,
+                name: newParticipant.name,
+                email: newParticipant.email,
+                initials,
+                level: newParticipant.level,
+                levelColor: levelColorMap[newParticipant.level],
+                sessionsAttended: '0 sessions completed',
+                attendance: 0,
+                attendanceColor: 'bg-danger',
+                progress: 'Registered',
+                progressColor: 'bg-warning/10 text-warning',
+            };
+            setYogaParticipants((prev) => [...prev, participant]);
+            setNewParticipant({ name: '', email: '', level: 'Beginner' });
+            setShowModal(false);
+            alert('Employee added for your company.');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Could not add participant';
+            alert(msg);
+        } finally {
+            setAdding(false);
+        }
     };
-
-    // NOTE: Replace this with an API POST call when backend is ready
-    // e.g. await fetch('/api/wellness/yoga/participants', { method: 'POST', body: JSON.stringify(participant) })
-    setYogaParticipants((prev) => [...prev, participant]);
-    setNewParticipant({ name: '', email: '', level: 'Beginner' });
-    setShowModal(false);
-};
-
-
     return (
         <Fragment>
             <Seo title={"Yoga"} />
@@ -173,7 +187,7 @@ const handleAddParticipant = () => {
 
             {/* ── Stat Cards ── */}
             <div className="grid grid-cols-12 gap-x-6 mb-6">
-                {YOGA_STATS.map((stat) => (
+                {yogaStats.map((stat) => (
                     <div key={stat.label} className="col-span-12 sm:col-span-6 xl:col-span-3">
                         <div className="box">
                             <div className="box-body">
@@ -230,12 +244,20 @@ const handleAddParticipant = () => {
                                     </select>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {/* TODO: wire Add Participant to modal/API */}
-                                    <button type="button" className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave" onClick={() => setShowModal(true)} >
+                                    <button
+                                        type="button"
+                                        className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave"
+                                        onClick={() => setShowModal(true)}
+                                        aria-label="Add participant"
+                                    >
                                         <i className="ri-add-line me-1"></i> Add Participant
                                     </button>
-                                    {/* TODO: wire Export to download API */}
-                                    <button type="button" className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave">
+                                    <button
+                                        type="button"
+                                        className="ti-btn ti-btn-outline-light !text-defaulttextcolor !font-medium ti-btn-wave"
+                                        onClick={() => void exportYogaCsv()}
+                                        aria-label="Export employees CSV"
+                                    >
                                         <i className="ri-download-line me-1"></i> Export
                                     </button>
                                 </div>
@@ -355,10 +377,10 @@ const handleAddParticipant = () => {
                 <button
                     type="button"
                     className="ti-btn !bg-orange-500 !text-white"
-                    onClick={handleAddParticipant}
-                    disabled={!newParticipant.name || !newParticipant.email}
+                    onClick={() => void handleAddParticipant()}
+                    disabled={!newParticipant.name || !newParticipant.email || adding}
                 >
-                    <i className="ri-add-line me-1"></i> Add Participant
+                    <i className="ri-add-line me-1"></i> {adding ? 'Adding…' : 'Add Participant'}
                 </button>
             </div>
         </div>
