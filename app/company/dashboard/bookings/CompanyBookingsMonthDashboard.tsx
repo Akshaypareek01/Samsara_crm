@@ -432,8 +432,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                     </div>
                 </div>
                 <div className="box-body p-0">
-                    <div className="table-responsive">
-                        <table className="table text-sm whitespace-nowrap mb-0">
+                    <div className="table-responsive w-full">
+                        <table className="table w-full text-sm whitespace-nowrap mb-0">
                             <thead>
                                 <tr className="border-b border-defaultborder bg-light/40">
                                     {[

@@ -41,7 +41,7 @@ const TrainersPage = () => {
                 limit: 50,
                 sortBy: 'createdAt:desc',
             };
-            if (searchTerm)       params.name         = searchTerm;
+            if (searchTerm) params.name = searchTerm;
             if (filterSpecialist) params.specialistIn = filterSpecialist;
 
             const response = await TrainerService.getTrainers(params);
@@ -105,19 +105,19 @@ const TrainersPage = () => {
                             <button
                                 key={p}
                                 onClick={() => setActivePeriod(p)}
-                                className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all ${
-                                    activePeriod === p
+                                className={`px-3 py-1.5 text-xs rounded-md font-semibold transition-all ${activePeriod === p
                                         ? 'bg-primary text-white shadow-sm'
                                         : 'text-muted hover:text-defaulttextcolor'
-                                }`}
+                                    }`}
                             >
                                 {p}
                             </button>
                         ))}
                     </div>
                     {/* Period tabs reserved for future server-side stats filters */}
-                    <button className="ti-btn ti-btn-sm ti-btn-light gap-1 text-xs">
-                        <i className="bx bx-calendar"></i> Select Date
+                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-defaultborder bg-white text-sm whitespace-nowrap">
+                        <i className="bx bx-calendar text-base"></i>
+                        <span>Select Date</span>
                     </button>
                 </div>
             </div>
@@ -173,10 +173,10 @@ const TrainersPage = () => {
                                     {trainerStats.loading
                                         ? "—"
                                         : trainerStats.totalTrainers > 0
-                                          ? Math.round(
+                                            ? Math.round(
                                                 (trainerStats.activeTrainers / trainerStats.totalTrainers) * 100
                                             )
-                                          : 0}
+                                            : 0}
                                     {!trainerStats.loading && <span className="text-lg font-semibold">%</span>}
                                 </p>
                                 <p className="text-[0.7rem] text-muted mt-1">Active ÷ total</p>

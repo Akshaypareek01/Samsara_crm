@@ -133,7 +133,7 @@ const ReportsAnalyticsPage = () => {
                 <button
                     type="button"
                     onClick={() => void exportEmployeesCsv()}
-                    className="ti-btn ti-btn-sm bg-warning text-white border-0 gap-1 text-xs font-semibold"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-warning text-white text-sm font-semibold whitespace-nowrap hover:opacity-90 transition"
                     aria-label="Export employees CSV"
                 >
                     <i className="ri-download-2-line"></i> Export employees (CSV)
@@ -141,7 +141,7 @@ const ReportsAnalyticsPage = () => {
                 <button
                     type="button"
                     onClick={() => void exportBookingsCsv()}
-                    className="ti-btn ti-btn-sm ti-btn-primary gap-1 text-xs font-semibold"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white text-sm font-semibold whitespace-nowrap hover:opacity-90 transition"
                     aria-label="Export bookings CSV"
                 >
                     <i className="ri-download-line"></i> Export bookings (CSV)
@@ -181,7 +181,7 @@ const ReportsAnalyticsPage = () => {
                         ))}
                     </div>
                     {/* TODO: wire to date-picker API param */}
-                    <button className="ti-btn ti-btn-sm ti-btn-light gap-1 text-xs">
+                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-defaultborder bg-white text-sm whitespace-nowrap">
                         <i className="bx bx-calendar"></i> Select Date
                     </button>
                 </div>
@@ -351,14 +351,14 @@ const ReportsAnalyticsPage = () => {
                         <h6 className="box-title font-bold !mb-0">Employee Wellness Score</h6>
                         <button
                             onClick={() => router.push('/company/dashboard/reports-and-analytics/employee-score')}
-                            className="ti-btn ti-btn-sm ti-btn-light text-xs font-semibold gap-1"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-defaultborder bg-white text-sm font-semibold whitespace-nowrap hover:bg-light transition"
                         >
                             View All <i className="bx bx-right-arrow-alt"></i>
                         </button>
                     </div>
                     <div className="box-body p-0">
-                        <div className="table-responsive">
-                            <table className="table text-sm whitespace-nowrap mb-0">
+                        <div className="table-responsive w-full">
+                            <table className="table w-full text-sm whitespace-nowrap mb-0">
                                 <thead>
                                     <tr className="border-b border-defaultborder">
                                         <th className="font-semibold text-muted text-xs py-3 px-4">Employee ID</th>

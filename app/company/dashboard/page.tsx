@@ -102,13 +102,13 @@ const CompanyDashboard = () => {
                                 </div>
                                 <div className="box-title !mb-0 font-bold text-lg">Featured Trainers</div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => router.push("/company/dashboard/trainers")}
-                                className="ti-btn ti-btn-sm ti-btn-primary"
-                            >
-                                View All
-                            </button>
+      <button
+    type="button"
+    onClick={() => router.push("/company/dashboard/trainers")}
+    className="bg-primary text-white px-4 py-2 rounded-md inline-flex items-center justify-center whitespace-nowrap leading-none hover:bg-primary/90 transition"
+>
+    View All
+</button>
                         </div>
                         <div className="box-body">
                             {loading ? (
