@@ -5,6 +5,8 @@ import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { useWellnessProgramInsights, mapInsightsRowToYogaParticipant } from '@/hooks/useWellnessProgramInsights';
 import companyService from '@/services/companyService';
 import { submitPortalEmployee } from '../portalEmployeeSubmit';
+import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
+import Swal from 'sweetalert2';
 
 const EMPTY_YOGA_STATS = [
     {
@@ -124,58 +126,27 @@ const YogaPage = () => {
         try {
             await companyService.downloadCompanyReportsExport('employees');
         } catch {
-            alert('Export failed.');
+            void Swal.fire('Export failed', 'Could not download employee CSV.', 'error');
         }
     };
 
     const handleAddParticipant = async () => {
         if (!newParticipant.name || !newParticipant.email) return;
         setAdding(true);
-        const levelColorMap: Record<string, string> = {
-            Beginner: 'bg-warning/10 text-warning',
-            Intermediate: 'bg-primary/10 text-primary',
-            Advanced: 'bg-purple-100 text-purple-600',
-        };
-        const initials = newParticipant.name
-            .trim()
-            .split(' ')
-            .filter(Boolean)
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
         try {
-            const created = await submitPortalEmployee({
+            await submitPortalEmployee({
                 fullName: newParticipant.name,
                 email: newParticipant.email,
                 levelLabel: newParticipant.level,
                 department: 'Yoga',
             });
-            const id = created._id
-                ? String(created._id)
-                : created.id
-                  ? String(created.id)
-                  : `new-${Date.now()}`;
-            const participant: YogaParticipant = {
-                id,
-                name: newParticipant.name,
-                email: newParticipant.email,
-                initials,
-                level: newParticipant.level,
-                levelColor: levelColorMap[newParticipant.level],
-                sessionsAttended: '0 sessions completed',
-                attendance: 0,
-                attendanceColor: 'bg-danger',
-                progress: 'Registered',
-                progressColor: 'bg-warning/10 text-warning',
-            };
-            setYogaParticipants((prev) => [...prev, participant]);
+            clearCompanyInsightsCache();
             setNewParticipant({ name: '', email: '', level: 'Beginner' });
             setShowModal(false);
-            alert('Employee added for your company.');
+            void Swal.fire('Success', 'Participant added. Refreshing list…', 'success');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : 'Could not add participant';
-            alert(msg);
+            void Swal.fire('Error', msg, 'error');
         } finally {
             setAdding(false);
         }
@@ -268,7 +239,7 @@ const YogaPage = () => {
                                 <table className="table table-hover text-nowrap">
                                     <thead>
                                         <tr className="border-b border-defaultborder">
-                                            <th className="!text-[0.8125rem] !font-semibold text-[#8c9097]">Trainer</th>
+                                            <th className="!text-[0.8125rem] !font-semibold text-[#8c9097]">Participant</th>
                                             <th className="!text-[0.8125rem] !font-semibold text-[#8c9097]">Levels</th>
                                             <th className="!text-[0.8125rem] !font-semibold text-[#8c9097]">Sessions Attended</th>
                                             <th className="!text-[0.8125rem] !font-semibold text-[#8c9097]">Attendance</th>

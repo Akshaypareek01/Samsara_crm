@@ -121,6 +121,8 @@ type Props = {
     monthKey: string;
     onPrevMonth: () => void;
     onNextMonth: () => void;
+    nextMonthDisabled?: boolean;
+    onRetrySummary?: () => void;
     onRefreshList: () => void;
 };
 
@@ -134,6 +136,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
     monthKey,
     onPrevMonth,
     onNextMonth,
+    nextMonthDisabled = false,
+    onRetrySummary,
     onRefreshList,
 }) => {
     const [classSearch, setClassSearch] = useState("");
@@ -174,8 +178,17 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
             <h5 className="font-bold text-xl text-defaulttextcolor mb-5">Booking Management</h5>
 
             {error && (
-                <div className="alert alert-danger mb-4" role="alert">
-                    {error}
+                <div className="alert alert-danger mb-4 flex flex-wrap items-center justify-between gap-2" role="alert">
+                    <span>{error}</span>
+                    {onRetrySummary && (
+                        <button
+                            type="button"
+                            className="ti-btn ti-btn-sm ti-btn-danger"
+                            onClick={onRetrySummary}
+                        >
+                            Retry
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -265,7 +278,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                             <button
                                 type="button"
                                 onClick={onNextMonth}
-                                className="w-7 h-7 rounded-full hover:bg-light flex items-center justify-center text-muted"
+                                disabled={nextMonthDisabled}
+                                className="w-7 h-7 rounded-full hover:bg-light flex items-center justify-center text-muted disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label="Next month"
                             >
                                 <i className="bx bx-chevron-right text-lg"></i>

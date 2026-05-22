@@ -25,10 +25,14 @@ const initial: CompanyTrainerStats = {
     error: "",
 };
 
+type TrainerStatsPeriod = "Weekly" | "Monthly" | "Quarterly" | "Yearly";
+
 /**
  * Loads catalog trainer counts, company booking total, and completion % from dashboard overview.
+ *
+ * @param period - Optional analytics window passed to dashboard overview API
  */
-export function useCompanyTrainerStats(): CompanyTrainerStats {
+export function useCompanyTrainerStats(period?: TrainerStatsPeriod): CompanyTrainerStats {
     const [state, setState] = useState<CompanyTrainerStats>(initial);
 
     useEffect(() => {
@@ -46,7 +50,7 @@ export function useCompanyTrainerStats(): CompanyTrainerStats {
                         sortBy: "createdAt:desc",
                     }),
                     bookingService.getMyBookings({ page: 1, limit: 1, sortBy: "createdAt:desc" }),
-                    companyService.getDashboardOverview(),
+                    companyService.getDashboardOverview(period),
                 ]);
                 if (cancelled) return;
                 const ao = overview?.analyticsOverview as
@@ -82,7 +86,7 @@ export function useCompanyTrainerStats(): CompanyTrainerStats {
                 window.removeEventListener(COMPANY_DATA_BUST_EVENT, onBust);
             }
         };
-    }, []);
+    }, [period]);
 
     return state;
 }

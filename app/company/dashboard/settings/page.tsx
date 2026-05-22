@@ -3,6 +3,8 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
 import CompanyService, { Company, UpdateCompanyRequest, ContactPerson } from '@/services/companyService';
+import ApiService from '@/services/ApiService';
+import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
 import Swal from 'sweetalert2';
 
 const SettingsPage = () => {
@@ -84,6 +86,8 @@ const SettingsPage = () => {
             setError('');
             const updatedCompany = await CompanyService.updateCompanyProfile(formData);
             setCompany(updatedCompany);
+            await ApiService.setUser(updatedCompany);
+            clearCompanyInsightsCache();
             Swal.fire('Success!', 'Company profile updated successfully', 'success');
         } catch (err: any) {
             setError(err.message || 'Failed to update company profile');

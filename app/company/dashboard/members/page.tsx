@@ -6,12 +6,17 @@ import Seo from "@/shared/layout-components/seo/seo";
 import ApiService from "@/services/ApiService";
 
 interface Member {
-  _id: string;
+  _id?: string;
+  id?: string;
   fullName: string;
   email: string;
   level: string;
   companyId?: { _id: string } | string;
 }
+
+/** Resolve Mongo id whether API returns `_id` or `id`. */
+const getMemberId = (member: Member): string | undefined =>
+  member._id || member.id;
 
 interface CompanyData {
   _id?: string;
@@ -48,6 +53,7 @@ const EMPTY_FORM = { fullName: "", email: "", level: "beginner" };
 const MembersPage = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -64,6 +70,12 @@ const MembersPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // ─── Fetch members ────────────────────────────────────────
   const fetchMembers = useCallback(async () => {
@@ -150,7 +162,7 @@ const MembersPage = () => {
         status: true,
       });
       closeModal();
-      fetchMembers();
+      void fetchMembers();
     } catch (err: any) {
       setFormError(err.message || "Failed to add member. Please try again.");
     } finally {
@@ -166,15 +178,20 @@ const MembersPage = () => {
       return;
     }
     if (!selectedMember) return;
+    const memberId = getMemberId(selectedMember);
+    if (!memberId) {
+      setFormError("Member id missing. Please refresh and try again.");
+      return;
+    }
     try {
       setSubmitting(true);
-      await ApiService.patch(`/company-users/${selectedMember._id}`, {
+      await ApiService.patch(`/company-users/${memberId}`, {
         fullName: formData.fullName.trim(),
         email: formData.email.trim().toLowerCase(),
         level: formData.level,
       });
       closeModal();
-      fetchMembers();
+      void fetchMembers();
     } catch (err: any) {
       setFormError(err.message || "Failed to update member. Please try again.");
     } finally {
@@ -185,19 +202,26 @@ const MembersPage = () => {
   // ─── Delete member ────────────────────────────────────────
   const confirmDelete = (member: Member) => {
     setMemberToDelete(member);
+    setDeleteError("");
     setShowDeleteConfirm(true);
   };
 
   const handleDeleteMember = async () => {
     if (!memberToDelete) return;
+    const memberId = getMemberId(memberToDelete);
+    if (!memberId) {
+      setDeleteError("Member id missing. Please refresh and try again.");
+      return;
+    }
     try {
       setDeleting(true);
-      await ApiService.delete(`/company-users/${memberToDelete._id}`);
+      setDeleteError("");
+      await ApiService.delete(`/company-users/${memberId}`);
       setShowDeleteConfirm(false);
       setMemberToDelete(null);
-      fetchMembers();
+      void fetchMembers();
     } catch (err: any) {
-      console.error("DELETE ERROR:", err);
+      setDeleteError(err.message || "Failed to delete member. Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -248,8 +272,8 @@ const MembersPage = () => {
           <input
             type="text"
             placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="border p-2 rounded w-full mb-4"
           />
 
@@ -269,7 +293,7 @@ const MembersPage = () => {
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m._id} className="hover:bg-gray-50">
+                  <tr key={getMemberId(m) ?? m.email} className="hover:bg-gray-50">
                     <td className="p-2 border">{m.fullName}</td>
                     <td className="p-2 border">{m.email}</td>
                     <td className="p-2 border">
@@ -476,6 +500,9 @@ const MembersPage = () => {
               </span>
               ? This action cannot be undone.
             </p>
+            {deleteError && (
+              <p className="text-red-500 text-sm mb-3">{deleteError}</p>
+            )}
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => {

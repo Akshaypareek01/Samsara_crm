@@ -1,7 +1,7 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import TrainerService, { Trainer, SPECIALIST_OPTIONS, isTrainerAcceptingBookings } from '@/services/trainerService';
 import BookingModal from '../components/BookingModal';
 
@@ -11,9 +11,8 @@ type FilterPeriod = 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
 const PERIODS: FilterPeriod[] = ['Weekly', 'Monthly', 'Quarterly', 'Yearly'];
 
 const TrainersPage = () => {
-    const trainerStats = useCompanyTrainerStats();
-    // ── NEW: analytics period state ───────────────────────────
     const [activePeriod, setActivePeriod] = useState<FilterPeriod>('Weekly');
+    const trainerStats = useCompanyTrainerStats(activePeriod);
 
     // ── EXISTING state (unchanged) ────────────────────────────
     const [trainers, setTrainers] = useState<Trainer[]>([]);
@@ -23,15 +22,16 @@ const TrainersPage = () => {
     const [showProfileModal, setShowProfileModal] = useState(false);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
+    const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialist, setFilterSpecialist] = useState('');
 
     useEffect(() => {
-        fetchTrainers();
-    }, [searchTerm, filterSpecialist]);
+        const timer = setTimeout(() => setSearchTerm(searchInput), 300);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
 
-    // ── EXISTING fetch (unchanged) ────────────────────────────
-    const fetchTrainers = async () => {
+    const fetchTrainers = useCallback(async () => {
         try {
             setLoading(true);
             setError('');
@@ -52,7 +52,11 @@ const TrainersPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [searchTerm, filterSpecialist]);
+
+    useEffect(() => {
+        void fetchTrainers();
+    }, [fetchTrainers]);
 
     // ── EXISTING handlers (unchanged) ─────────────────────────
     const handleTrainerClick = (trainer: Trainer) => {
@@ -114,11 +118,6 @@ const TrainersPage = () => {
                             </button>
                         ))}
                     </div>
-                    {/* Period tabs reserved for future server-side stats filters */}
-                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-defaultborder bg-white text-sm whitespace-nowrap">
-                        <i className="bx bx-calendar text-base"></i>
-                        <span>Select Date</span>
-                    </button>
                 </div>
             </div>
 
@@ -226,8 +225,8 @@ const TrainersPage = () => {
                                 type="text"
                                 className="form-control"
                                 placeholder="Search by name or specialty..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
                             />
                         </div>
                         <div>

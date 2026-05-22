@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import CompanyService, { Company } from "@/services/companyService";
+import { COMPANY_DATA_BUST_EVENT } from "@/services/companyInsightsClient";
 
 type UseCompanySessionResult = {
     company: Company | null;
@@ -39,6 +40,20 @@ export function useCompanySession(): UseCompanySessionResult {
 
     useEffect(() => {
         void refetch();
+    }, [refetch]);
+
+    useEffect(() => {
+        const onBust = () => {
+            void refetch();
+        };
+        if (typeof window !== "undefined") {
+            window.addEventListener(COMPANY_DATA_BUST_EVENT, onBust);
+        }
+        return () => {
+            if (typeof window !== "undefined") {
+                window.removeEventListener(COMPANY_DATA_BUST_EVENT, onBust);
+            }
+        };
     }, [refetch]);
 
     return { company, loading, error, refetch };

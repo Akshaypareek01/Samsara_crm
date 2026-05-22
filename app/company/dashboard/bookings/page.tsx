@@ -34,7 +34,12 @@ const BookingsPage: React.FC = () => {
         void loadSummary();
     }, [loadSummary]);
 
-    const bumpList = () => setRefreshTrigger((n) => n + 1);
+    const bumpList = () => {
+        setRefreshTrigger((n) => n + 1);
+        void loadSummary();
+    };
+
+    const canGoNextMonth = monthKey < currentYearMonth();
 
     return (
         <div>
@@ -44,7 +49,13 @@ const BookingsPage: React.FC = () => {
                 error={error}
                 monthKey={monthKey}
                 onPrevMonth={() => setMonthKey((m) => shiftYearMonth(m, -1))}
-                onNextMonth={() => setMonthKey((m) => shiftYearMonth(m, 1))}
+                onNextMonth={() => {
+                    if (canGoNextMonth) {
+                        setMonthKey((m) => shiftYearMonth(m, 1));
+                    }
+                }}
+                nextMonthDisabled={!canGoNextMonth}
+                onRetrySummary={() => void loadSummary()}
                 onRefreshList={bumpList}
             />
             <div id="company-bookings-list" className="grid grid-cols-12 gap-6">

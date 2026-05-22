@@ -282,9 +282,11 @@ class CompanyService {
    * Aggregated dashboard metrics for authenticated company (from bookings).
    * GET /v1/companies/dashboard/overview
    */
-  async getDashboardOverview(): Promise<Record<string, unknown>> {
+  async getDashboardOverview(
+    period?: 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly'
+  ): Promise<Record<string, unknown>> {
     try {
-      return await ApiService.get('/companies/dashboard/overview');
+      return await ApiService.get('/companies/dashboard/overview', period ? { period } : undefined);
     } catch (error) {
       console.error('❌ Get company dashboard overview error:', error);
       throw error;

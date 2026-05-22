@@ -44,7 +44,9 @@ const CompanyDashboard = () => {
     const fetchOverview = useCallback(async () => {
         try {
             setOverviewLoading(true);
-            const data = await CompanyService.getDashboardOverview();
+            const data = await CompanyService.getDashboardOverview(
+                activeFilter as 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly'
+            );
             setOverview(data as Record<string, unknown>);
         } catch (err) {
             console.error("Error fetching dashboard overview:", err);
@@ -52,7 +54,7 @@ const CompanyDashboard = () => {
         } finally {
             setOverviewLoading(false);
         }
-    }, []);
+    }, [activeFilter]);
 
     useEffect(() => {
         void fetchTrainers();

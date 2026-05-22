@@ -36,6 +36,22 @@ import companyService from '@/services/companyService';
 
 const PERIODS: FilterPeriod[] = ['Weekly', 'Monthly', 'Quarterly', 'Yearly'];
 
+/** Human-readable label for the active analytics period. */
+const periodRangeLabel = (period: FilterPeriod): string => {
+    switch (period) {
+        case 'Weekly':
+            return 'Last 7 days';
+        case 'Monthly':
+            return 'Last 30 days';
+        case 'Quarterly':
+            return 'Last 3 months';
+        case 'Yearly':
+            return 'Last 12 months';
+        default:
+            return new Date().toLocaleString(undefined, { month: 'long', year: 'numeric' });
+    }
+};
+
 const StatusBadge = ({ status }: { status: EmployeeWellnessRow['status'] }) => {
     const map: Record<EmployeeWellnessRow['status'], string> = {
         Excellent: 'bg-success/15 text-success',
@@ -82,9 +98,9 @@ const ReportsAnalyticsPage = () => {
     const [performers, setPerformers]   = useState<TopPerformer[]>([]);
     const [engCards, setEngCards]       = useState<EngagementCard[]>([]);
 
-    // When APIs exist, just change the data functions — no UI edits needed
     useEffect(() => {
         getBannerData().then(setBanner);
+        getWellnessTrend(period).then(setTrend);
         getScoreDistribution().then(setDist);
         getScoreDistributionTotal().then(setDistTotal);
         getOverviewStats().then(setOverview);
@@ -92,11 +108,6 @@ const ReportsAnalyticsPage = () => {
         getEmployeeWellnessRows().then(setEmployees);
         getTopPerformers().then(setPerformers);
         getEngagementCards().then(setEngCards);
-    }, []);
-
-    // Re-fetch trend when period changes (API will accept period param)
-    useEffect(() => {
-        getWellnessTrend(period).then(setTrend);
     }, [period]);
 
     // ── Trend toggle labels ────────────────────────────────
@@ -180,10 +191,6 @@ const ReportsAnalyticsPage = () => {
                             </button>
                         ))}
                     </div>
-                    {/* TODO: wire to date-picker API param */}
-                    <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-defaultborder bg-white text-sm whitespace-nowrap">
-                        <i className="bx bx-calendar"></i> Select Date
-                    </button>
                 </div>
             </div>
 
@@ -236,9 +243,10 @@ const ReportsAnalyticsPage = () => {
                     <div className="box-header justify-between items-center">
                         <div>
                             <h6 className="box-title font-bold !mb-0">Score Distribution</h6>
-                            <p className="text-xs text-muted mt-0.5">All {distTotal} employees · March</p>
+                            <p className="text-xs text-muted mt-0.5">
+                                All {distTotal} employees · {periodRangeLabel(period)}
+                            </p>
                         </div>
-                        <span className="badge bg-danger/15 text-danger text-xs font-semibold px-2 py-1">Live</span>
                     </div>
                     <div className="box-body pt-0 flex items-center gap-4">
                         {/* Donut */}

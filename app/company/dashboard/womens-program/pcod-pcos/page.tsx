@@ -3,6 +3,7 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     getPCOSStats,
     getPCOSDoctors,
@@ -59,18 +60,12 @@ const StatusBadge = ({ status }: { status: Doctor['status'] }) => {
 // ─── Page Component ──────────────────────────────────────────
 
 const PCOSPage = () => {
+    const router = useRouter();
     const [stats, setStats]       = useState<StatCard[]>([]);
     const [doctors, setDoctors]   = useState<Doctor[]>([]);
     const [search, setSearch]     = useState('');
     const [specialtyFilter, setSpecialtyFilter]       = useState('All Specialties');
     const [availabilityFilter, setAvailabilityFilter] = useState('All Availability');
-    const [showModal, setShowModal] = useState(false);
-    const [newDoctor, setNewDoctor] = useState({
-        name: '',
-        qualification: '',
-        specialty: 'Gynecologist',
-        nextAvailable: '',
-    });
 
     useEffect(() => {
         getPCOSStats().then(setStats);
@@ -91,48 +86,6 @@ const PCOSPage = () => {
         return matchSearch && matchAvailability && matchSpecialty;
     });
 
-    const handleAddDoctor = () => {
-        if (!newDoctor.name || !newDoctor.qualification || !newDoctor.nextAvailable) return;
-
-        const specialtyStyleMap: Record<string, { bg: string; color: string }> = {
-            'Gynecologist':    { bg: '#fdf2f8', color: '#c026d3' },
-            'Endocrinologist': { bg: '#fef9ec', color: '#d97706' },
-            'Nutritionist':    { bg: '#f0fdf4', color: '#16a34a' },
-            'Dermatologist':   { bg: '#eff6ff', color: '#2563eb' },
-            'Mental Health':   { bg: '#f5f3ff', color: '#7c3aed' },
-        };
-
-        const style = specialtyStyleMap[newDoctor.specialty] ?? { bg: '#f3f4f6', color: '#374151' };
-
-        const initials = newDoctor.name
-            .split(' ')
-            .filter(Boolean)
-            .map((n) => n[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-
-        const doctor: Doctor = {
-            id: String(Date.now()),
-            name: newDoctor.name,
-            qualification: newDoctor.qualification,
-            initials,
-            avatarBg: style.bg,
-            avatarColor: style.color,
-            specialty: newDoctor.specialty,
-            specialtyBg: style.bg,
-            specialtyColor: style.color,
-            nextAvailable: newDoctor.nextAvailable,
-            slots: '—',
-            status: 'Available',
-        };
-
-        // NOTE: Replace with API POST when backend is ready
-        setDoctors((prev) => [...prev, doctor]);
-        setNewDoctor({ name: '', qualification: '', specialty: 'Gynecologist', nextAvailable: '' });
-        setShowModal(false);
-    };
-
     return (
         <Fragment>
             <Seo title="PCOS/PCOD" />
@@ -147,14 +100,11 @@ const PCOSPage = () => {
 
             {/* ── Medical Specialists Table ── */}
             <div className="box mb-0">
-                <div className="box-header flex justify-between items-center">
+                <div className="box-header flex justify-between items-center flex-wrap gap-2">
                     <h6 className="box-title font-bold !mb-0">Medical Specialists</h6>
-                    <button
-                        className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
-                        onClick={() => setShowModal(true)}
-                    >
-                        <i className="ri-add-line"></i> Add New Doctor
-                    </button>
+                    <p className="text-xs text-muted mb-0">
+                        Specialists are trainers from your PCOS-related bookings. Book sessions to add more.
+                    </p>
                 </div>
                 <div className="box-body">
 
@@ -239,10 +189,18 @@ const PCOSPage = () => {
                                         </td>
                                         <td className="py-3 px-4">
                                             <div className="flex items-center gap-3">
-                                                <button className="text-xs font-semibold text-warning hover:underline">
+                                                <button
+                                                    type="button"
+                                                    className="text-xs font-semibold text-warning hover:underline"
+                                                    onClick={() => router.push('/company/dashboard/bookings')}
+                                                >
                                                     Schedule
                                                 </button>
-                                                <button className="text-xs font-semibold text-defaulttextcolor hover:underline">
+                                                <button
+                                                    type="button"
+                                                    className="text-xs font-semibold text-defaulttextcolor hover:underline"
+                                                    onClick={() => router.push('/company/dashboard/trainers')}
+                                                >
                                                     Profile
                                                 </button>
                                             </div>
@@ -261,85 +219,6 @@ const PCOSPage = () => {
                     </div>
                 </div>
             </div>
-
-            {/* ── Add Doctor Modal ── */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white dark:bg-bodybg rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-                        <div className="flex items-center justify-between mb-5">
-                            <h6 className="text-[1rem] font-semibold text-defaulttextcolor">Add New Doctor</h6>
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="text-[#8c9097] hover:text-danger text-xl"
-                            >
-                                <i className="ri-close-line"></i>
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                            <div>
-                                <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    className="ti-form-control w-full"
-                                    placeholder="e.g. Dr. Anjali Mehta"
-                                    value={newDoctor.name}
-                                    onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Qualification</label>
-                                <input
-                                    type="text"
-                                    className="ti-form-control w-full"
-                                    placeholder="e.g. MBBS, MD Obstetrics"
-                                    value={newDoctor.qualification}
-                                    onChange={(e) => setNewDoctor({ ...newDoctor, qualification: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Specialty</label>
-                                <select
-                                    className="ti-form-select w-full"
-                                    value={newDoctor.specialty}
-                                    onChange={(e) => setNewDoctor({ ...newDoctor, specialty: e.target.value })}
-                                >
-                                    {['Gynecologist', 'Endocrinologist', 'Nutritionist', 'Dermatologist', 'Mental Health'].map((s) => (
-                                        <option key={s} value={s}>{s}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[0.8125rem] font-medium text-defaulttextcolor mb-1">Next Available</label>
-                                <input
-                                    type="date"
-                                    className="ti-form-control w-full"
-                                    value={newDoctor.nextAvailable}
-                                    onChange={(e) => setNewDoctor({ ...newDoctor, nextAvailable: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end gap-2 mt-6">
-                            <button
-                                type="button"
-                                className="ti-btn ti-btn-outline-light !text-defaulttextcolor"
-                                onClick={() => setShowModal(false)}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                className="ti-btn !bg-orange-500 !text-white"
-                                onClick={handleAddDoctor}
-                                disabled={!newDoctor.name || !newDoctor.qualification || !newDoctor.nextAvailable}
-                            >
-                                <i className="ri-add-line me-1"></i> Add Doctor
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
         </Fragment>
     );
