@@ -2,11 +2,20 @@
 
 import React, { Fragment, useEffect, useState, useRef } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
-import TrainerService, { Trainer, CreateTrainerRequest, UpdateTrainerRequest, SPECIALIST_OPTIONS, TYPE_OF_TRAINING_OPTIONS, TrainerImage } from '@/services/trainerService';
+import TrainerService, {
+  Trainer,
+  CreateTrainerRequest,
+  UpdateTrainerRequest,
+  SPECIALIST_OPTIONS,
+  TRAINER_CATEGORY_OPTIONS,
+  TYPE_OF_TRAINING_OPTIONS,
+  TrainerImage,
+} from '@/services/trainerService';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import MultiSelect from '@/shared/components/MultiSelect';
+import TrainerQualificationsDisplay from '@/shared/components/trainer/TrainerQualificationsDisplay';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 
 const Trainers = () => {
@@ -22,6 +31,7 @@ const Trainers = () => {
     name: '',
     title: '',
     bio: '',
+    category: '',
     email: '',
     mobile: '',
     specialistIn: [],
@@ -35,6 +45,7 @@ const Trainers = () => {
   const [totalResults, setTotalResults] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSpecialist, setFilterSpecialist] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -48,7 +59,7 @@ const Trainers = () => {
 
   useEffect(() => {
     fetchTrainers();
-  }, [page, searchTerm, filterSpecialist, filterStatus]);
+  }, [page, searchTerm, filterSpecialist, filterCategory, filterStatus]);
 
   const fetchTrainers = async () => {
     try {
@@ -66,6 +77,10 @@ const Trainers = () => {
       
       if (filterSpecialist) {
         params.specialistIn = filterSpecialist;
+      }
+
+      if (filterCategory) {
+        params.category = filterCategory;
       }
       
       if (filterStatus !== '') {
@@ -93,7 +108,16 @@ const Trainers = () => {
       const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
       const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
       
-      if (!formData.name || !formData.title || !formData.bio || !formData.email || !formData.mobile || specialistInArray.length === 0 || typeOfTrainingArray.length === 0) {
+      if (
+        !formData.name ||
+        !formData.title ||
+        !formData.bio ||
+        !formData.category ||
+        !formData.email ||
+        !formData.mobile ||
+        specialistInArray.length === 0 ||
+        typeOfTrainingArray.length === 0
+      ) {
         Swal.fire('Error!', 'Please fill in all required fields', 'error');
         return;
       }
@@ -124,6 +148,7 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          category: formData.category,
           email: formData.email.trim(),
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
@@ -150,6 +175,7 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
+          category: formData.category,
           email: formData.email.trim(),
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
@@ -188,6 +214,7 @@ const Trainers = () => {
       name: '',
       title: '',
       bio: '',
+      category: '',
       email: '',
       mobile: '',
       specialistIn: [],
@@ -209,6 +236,7 @@ const Trainers = () => {
       name: trainer.name || '',
       title: trainer.title || '',
       bio: trainer.bio || '',
+      category: trainer.category || '',
       email: (trainer as any).email || '',
       mobile: (trainer as any).mobile || '',
       specialistIn: Array.isArray(trainer.specialistIn) ? trainer.specialistIn : (trainer.specialistIn ? [trainer.specialistIn] : []),
@@ -405,7 +433,7 @@ const Trainers = () => {
       {/* Filters */}
       <div className="box mb-4">
         <div className="box-body">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             <div>
               <label className="form-label">Search by Name</label>
               <input
@@ -433,6 +461,25 @@ const Trainers = () => {
                 {SPECIALIST_OPTIONS.map((spec) => (
                   <option key={spec} value={spec}>
                     {spec}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Filter by Category</label>
+              <select
+                className="form-control"
+                value={filterCategory}
+                onChange={(e) => {
+                  setFilterCategory(e.target.value);
+                  setPage(1);
+                }}
+                aria-label="Filter trainers by category"
+              >
+                <option value="">All Categories</option>
+                {TRAINER_CATEGORY_OPTIONS.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
@@ -473,6 +520,7 @@ const Trainers = () => {
                     <tr>
                       <th>Name</th>
                       <th>Title</th>
+                      <th>Category</th>
                       <th>Email</th>
                       <th>Mobile</th>
                       <th>Specialist In</th>
@@ -484,7 +532,7 @@ const Trainers = () => {
                   <tbody>
                     {trainers.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="text-center py-4">
+                        <td colSpan={9} className="text-center py-4">
                           No trainers found
                         </td>
                       </tr>
@@ -513,6 +561,11 @@ const Trainers = () => {
                             </div>
                           </td>
                           <td>{trainer.title}</td>
+                          <td>
+                            <span className="badge bg-primary/10 text-primary">
+                              {trainer.category || '-'}
+                            </span>
+                          </td>
                           <td className="max-w-xs truncate">{(trainer as any).email || '-'}</td>
                           <td>{(trainer as any).mobile || '-'}</td>
                           <td>
@@ -666,6 +719,28 @@ const Trainers = () => {
                     }
                     required
                   />
+                </div>
+                <div>
+                  <label className="form-label" htmlFor="admin-trainer-category">
+                    Category *
+                  </label>
+                  <select
+                    id="admin-trainer-category"
+                    className="form-control"
+                    value={formData.category || ''}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, category: e.target.value }))
+                    }
+                    required
+                    aria-required="true"
+                  >
+                    <option value="">Select category</option>
+                    {TRAINER_CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="md:col-span-2">
                   <label className="form-label">Bio * (Max 2000 characters)</label>
@@ -962,6 +1037,10 @@ const Trainers = () => {
               <div className="col-span-12 md:col-span-8">
                 <div className="space-y-4">
                   <div>
+                    <label className="text-muted text-sm">Category</label>
+                    <p className="font-medium">{viewingTrainer.category || '-'}</p>
+                  </div>
+                  <div>
                     <label className="text-muted text-sm">Specialist In</label>
                     <p className="font-medium">
                       {Array.isArray(viewingTrainer.specialistIn) ? (
@@ -1007,6 +1086,10 @@ const Trainers = () => {
                     <label className="text-muted text-sm">Bio</label>
                     <p className="font-medium">{viewingTrainer.bio}</p>
                   </div>
+                  <TrainerQualificationsDisplay
+                    education={viewingTrainer.education}
+                    certification={viewingTrainer.certification}
+                  />
                   {viewingTrainer.images && viewingTrainer.images.length > 0 && (
                     <div>
                       <label className="text-muted text-sm">Additional Images</label>

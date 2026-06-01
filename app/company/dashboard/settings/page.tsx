@@ -1,7 +1,9 @@
 "use client";
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState, useRef } from 'react';
+import axios from 'axios';
+import { Base_url } from '@/Config/BaseUrl';
 import CompanyService, { Company, UpdateCompanyRequest, ContactPerson } from '@/services/companyService';
 import ApiService from '@/services/ApiService';
 import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
@@ -12,6 +14,8 @@ const SettingsPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const logoInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<UpdateCompanyRequest>({
         companyName: '',
         companyLogo: '',
@@ -95,6 +99,71 @@ const SettingsPage = () => {
         } finally {
             setSaving(false);
         }
+    };
+
+    /**
+     * Upload the selected logo file to the storage endpoint and store the
+     * returned public URL in `companyLogo`.
+     * @param file - The image file chosen by the user.
+     */
+    const uploadCompanyLogo = async (file: File) => {
+        try {
+            setUploadingLogo(true);
+
+            const body = new FormData();
+            body.append('file', file);
+
+            const token = localStorage.getItem('token');
+            const response = await axios.post(`${Base_url}/upload`, body, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    ...(token && { Authorization: `Bearer ${token}` }),
+                },
+            });
+
+            if (response.data?.success && response.data?.url) {
+                setFormData((prev) => ({ ...prev, companyLogo: response.data.url }));
+                Swal.fire('Success!', 'Company logo uploaded successfully', 'success');
+            } else {
+                throw new Error('Upload failed: Invalid response');
+            }
+        } catch (err: any) {
+            console.error('Logo upload error:', err);
+            Swal.fire(
+                'Error!',
+                err.response?.data?.message || err.message || 'Failed to upload logo',
+                'error'
+            );
+        } finally {
+            setUploadingLogo(false);
+        }
+    };
+
+    /**
+     * Validate and handle the logo file input change event.
+     * @param e - Change event from the hidden file input.
+     */
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                Swal.fire('Error!', 'Please select an image file', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('Error!', 'File size should be less than 5MB', 'error');
+                return;
+            }
+            uploadCompanyLogo(file);
+        }
+        if (logoInputRef.current) {
+            logoInputRef.current.value = '';
+        }
+    };
+
+    /** Clear the currently selected company logo. */
+    const clearCompanyLogo = () => {
+        setFormData((prev) => ({ ...prev, companyLogo: '' }));
     };
 
     const updateContactPerson = (
@@ -201,26 +270,66 @@ const SettingsPage = () => {
                                     </div>
 
                                     <div>
-                                        <label className="form-label">Company Logo URL</label>
+                                        <label className="form-label">Company Logo</label>
                                         <input
-                                            type="url"
-                                            className="form-control"
-                                            value={formData.companyLogo}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, companyLogo: e.target.value })
-                                            }
+                                            type="file"
+                                            ref={logoInputRef}
+                                            accept="image/*"
+                                            onChange={handleLogoChange}
+                                            className="hidden"
+                                            aria-label="Upload company logo"
                                         />
-                                        {formData.companyLogo && (
-                                            <div className="mt-2">
+                                        {formData.companyLogo ? (
+                                            <div className="relative w-full max-w-xs h-32 rounded-lg overflow-hidden border-2 border-defaultborder group">
                                                 <img
                                                     src={formData.companyLogo}
-                                                    alt="Company Logo"
-                                                    className="w-20 h-20 object-cover rounded"
+                                                    alt="Company logo preview"
+                                                    className="w-full h-full object-contain bg-gray-50 dark:bg-black/20"
                                                     onError={(e) => {
                                                         (e.target as HTMLImageElement).style.display = 'none';
                                                     }}
                                                 />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => logoInputRef.current?.click()}
+                                                        className="ti-btn ti-btn-sm !bg-white !text-defaulttextcolor !font-medium !mb-0"
+                                                        title="Change logo"
+                                                        aria-label="Change company logo"
+                                                    >
+                                                        <i className="ri-refresh-line"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={clearCompanyLogo}
+                                                        className="ti-btn ti-btn-sm !bg-danger !text-white !font-medium !mb-0"
+                                                        title="Remove logo"
+                                                        aria-label="Remove company logo"
+                                                    >
+                                                        <i className="ri-delete-bin-line"></i>
+                                                    </button>
+                                                </div>
                                             </div>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => logoInputRef.current?.click()}
+                                                disabled={uploadingLogo}
+                                                className="w-full max-w-xs h-32 rounded-lg border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60"
+                                            >
+                                                {uploadingLogo ? (
+                                                    <>
+                                                        <span className="spinner-border spinner-border-sm"></span>
+                                                        <span className="text-sm">Uploading...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <i className="ri-image-add-line text-2xl"></i>
+                                                        <span className="text-sm font-medium">Upload Company Logo</span>
+                                                        <span className="text-xs">JPG, PNG, GIF · Max 5MB</span>
+                                                    </>
+                                                )}
+                                            </button>
                                         )}
                                     </div>
 

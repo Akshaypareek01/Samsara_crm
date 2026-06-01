@@ -28,6 +28,7 @@ const CompanyDashboard = () => {
             setLoading(true);
             const response = await TrainerService.getTrainers({
                 status: true,
+                acceptingBookings: true,
                 page: 1,
                 limit: 6,
                 sortBy: "createdAt:desc",

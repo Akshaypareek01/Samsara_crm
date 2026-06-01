@@ -7,6 +7,18 @@ import type {
     MyBookingsSummaryTrainerAvail,
 } from "@/services/bookingService";
 
+import {
+    buildCalendarMeta,
+    parseYearMonth,
+    toIsoDateInMonth,
+} from "@/shared/utils/bookingsCalendarUtils";
+import { formatBookingTime } from "@/shared/utils/bookingUtils";
+import StatusBadge from "@/shared/components/StatusBadge";
+import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
+import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
+
+export { currentYearMonth, shiftYearMonth, buildCalendarMeta, parseYearMonth } from "@/shared/utils/bookingsCalendarUtils";
+
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const QUICK_ACTIONS = [
@@ -14,16 +26,16 @@ const QUICK_ACTIONS = [
         icon: "bx-calendar-check",
         iconBg: "#EEF2FF",
         iconColor: "#6366F1",
-        title: "Today's Schedule",
-        sub: "Scroll to booking list",
-        action: "scroll-list" as const,
+        title: "All bookings",
+        sub: "Open table view",
+        action: "open-table" as const,
     },
     {
         icon: "bx-time-five",
         iconBg: "#FEF9C3",
         iconColor: "#CA8A04",
         title: "Pending approvals",
-        sub: "Admin queue",
+        sub: "Trainer or admin queue",
         action: "none" as const,
     },
     {
@@ -57,63 +69,6 @@ const AVAIL_STYLE: Record<string, string> = {
     "On Leave": "text-muted",
 };
 
-export interface CalendarMeta {
-    year: number;
-    monthIndex: number;
-    daysInMonth: number;
-    startDow: number;
-    todayDay: number | null;
-    monthLabel: string;
-}
-
-/**
- * Build calendar metadata for the bookings grid.
- *
- * @param year - Full year
- * @param monthIndex - 0-based month
- */
-export function buildCalendarMeta(year: number, monthIndex: number): CalendarMeta {
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    const startDow = new Date(year, monthIndex, 1).getDay();
-    const now = new Date();
-    const todayDay =
-        now.getFullYear() === year && now.getMonth() === monthIndex ? now.getDate() : null;
-    const monthLabel = new Date(year, monthIndex, 1).toLocaleString(undefined, {
-        month: "long",
-        year: "numeric",
-    });
-    return { year, monthIndex, daysInMonth, startDow, todayDay, monthLabel };
-}
-
-/**
- * Parse `YYYY-MM` into year and month index.
- *
- * @param ym - Month key
- */
-export function parseYearMonth(ym: string): { year: number; monthIndex: number } {
-    const [y, m] = ym.split("-").map((n) => parseInt(n, 10));
-    return { year: y, monthIndex: m - 1 };
-}
-
-/**
- * Add months to a YYYY-MM key.
- *
- * @param ym - Current month
- * @param delta - Months to add (can be negative)
- */
-export function shiftYearMonth(ym: string, delta: number): string {
-    const { year, monthIndex } = parseYearMonth(ym);
-    const d = new Date(year, monthIndex + delta, 1);
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${d.getFullYear()}-${mm}`;
-}
-
-export function currentYearMonth(): string {
-    const d = new Date();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    return `${d.getFullYear()}-${mm}`;
-}
-
 type Props = {
     summary: MyBookingsSummary | null;
     loading: boolean;
@@ -124,6 +79,8 @@ type Props = {
     nextMonthDisabled?: boolean;
     onRetrySummary?: () => void;
     onRefreshList: () => void;
+    /** Switches parent to table view (e.g. quick action). */
+    onOpenTableView?: () => void;
 };
 
 /**
@@ -139,8 +96,17 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
     nextMonthDisabled = false,
     onRetrySummary,
     onRefreshList,
+    onOpenTableView,
 }) => {
     const [classSearch, setClassSearch] = useState("");
+    const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const {
+        trainerDrawerOpen,
+        trainerDrawerLoading,
+        profileTrainer,
+        openTrainerProfile,
+        closeTrainerProfile,
+    } = useCompanyTrainerProfileDrawer();
 
     const cal = useMemo(() => {
         const { year, monthIndex } = parseYearMonth(monthKey);
@@ -158,17 +124,23 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
     }, [summary, classSearch]);
 
     const calendarDots = summary?.calendarDots || {};
+    const calendarDays = summary?.calendarDays ?? {};
     const highlightedDays = useMemo(
         () => Object.keys(calendarDots).map((k) => Number(k)),
         [calendarDots]
     );
+    const selectedDayBookings = selectedDay != null ? calendarDays[selectedDay] ?? [] : [];
 
     const leadingBlanks = cal.startDow;
     const totalCells = Math.ceil((leadingBlanks + cal.daysInMonth) / 7) * 7;
 
     const totals = summary?.totals;
 
-    const scrollToList = () => {
+    const openTableView = () => {
+        if (onOpenTableView) {
+            onOpenTableView();
+            return;
+        }
         const el = document.getElementById("company-bookings-list");
         el?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
@@ -228,7 +200,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                 <div className="box mb-0">
                     <div className="box-body p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-xs text-muted mb-1">Pending approval</p>
+                            <p className="text-xs text-muted mb-1">Awaiting approval</p>
                             <p className="text-3xl font-bold text-defaulttextcolor">
                                 {loading ? "…" : totals?.waitingList ?? 0}
                             </p>
@@ -266,7 +238,10 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                         <div className="flex items-center gap-3">
                             <button
                                 type="button"
-                                onClick={onPrevMonth}
+                                onClick={() => {
+                                    onPrevMonth();
+                                    setSelectedDay(null);
+                                }}
                                 className="w-7 h-7 rounded-full hover:bg-light flex items-center justify-center text-muted"
                                 aria-label="Previous month"
                             >
@@ -277,7 +252,10 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                             </span>
                             <button
                                 type="button"
-                                onClick={onNextMonth}
+                                onClick={() => {
+                                    onNextMonth();
+                                    setSelectedDay(null);
+                                }}
                                 disabled={nextMonthDisabled}
                                 className="w-7 h-7 rounded-full hover:bg-light flex items-center justify-center text-muted disabled:opacity-40 disabled:cursor-not-allowed"
                                 aria-label="Next month"
@@ -301,19 +279,28 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                 const isToday = cal.todayDay != null && day === cal.todayDay;
                                 const isHighlight = highlightedDays.includes(day);
                                 const dots = calendarDots[day] ?? [];
+                                const dayBookings = isValid ? calendarDays[day] ?? [] : [];
+                                const confirmedTimes = dayBookings.filter((b) => b.status === "confirmed");
+                                const isSelected = selectedDay === day;
 
                                 return (
-                                    <div
+                                    <button
                                         key={idx}
-                                        className={`relative min-h-[52px] rounded-lg p-1.5 flex flex-col ${
+                                        type="button"
+                                        disabled={!isValid}
+                                        onClick={() => isValid && setSelectedDay(day)}
+                                        className={`relative min-h-[64px] rounded-lg p-1.5 flex flex-col text-left ${
                                             !isValid
-                                                ? ""
-                                                : isToday
-                                                  ? "border-2 border-primary"
-                                                  : isHighlight
-                                                    ? "bg-warning/10"
-                                                    : ""
+                                                ? "invisible"
+                                                : isSelected
+                                                  ? "ring-2 ring-primary bg-primary/5"
+                                                  : isToday
+                                                    ? "border-2 border-primary"
+                                                    : isHighlight
+                                                      ? "bg-warning/10 hover:bg-warning/15"
+                                                      : "hover:bg-light"
                                         }`}
+                                        aria-pressed={isSelected}
                                     >
                                         {isValid && (
                                             <>
@@ -324,29 +311,37 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                                 >
                                                     {day}
                                                 </span>
-                                                {dots.length > 0 && (
-                                                    <div className="flex gap-0.5 flex-wrap mt-auto">
-                                                        {dots.map((color, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className="w-1.5 h-1.5 rounded-full"
-                                                                style={{ backgroundColor: color }}
-                                                            />
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                <div className="flex flex-col gap-0.5 mt-1 overflow-hidden">
+                                                    {confirmedTimes.map((b) => (
+                                                        <span
+                                                            key={b.id}
+                                                            className="text-[0.65rem] font-semibold text-success truncate"
+                                                        >
+                                                            {formatBookingTime(b.startTime)}
+                                                        </span>
+                                                    ))}
+                                                    {dots.length > 0 && confirmedTimes.length === 0 && (
+                                                        <div className="flex gap-0.5 flex-wrap mt-auto">
+                                                            {dots.map((color, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className="w-1.5 h-1.5 rounded-full"
+                                                                    style={{ backgroundColor: color }}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </>
                                         )}
-                                    </div>
+                                    </button>
                                 );
                             })}
                         </div>
                         <div className="flex items-center gap-4 flex-wrap mt-4 pt-3 border-t border-defaultborder">
                             {[
-                                { label: "Group Classes", color: "#EF4444" },
-                                { label: "Private Classes", color: "#3B82F6" },
-                                { label: "Workshops", color: "#22C55E" },
-                                { label: "Special Events", color: "#F97316" },
+                                { label: "Confirmed (shows time)", color: "#22C55E" },
+                                { label: "Other sessions", color: "#3B82F6" },
                             ].map((l) => (
                                 <div key={l.label} className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
@@ -354,6 +349,51 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                 </div>
                             ))}
                         </div>
+                        {selectedDay != null && (
+                            <div className="mt-4 pt-4 border-t border-defaultborder">
+                                <h6 className="text-sm font-bold mb-3">
+                                    {new Date(toIsoDateInMonth(monthKey, selectedDay) + "T12:00:00").toLocaleDateString(
+                                        undefined,
+                                        { weekday: "long", month: "long", day: "numeric" }
+                                    )}
+                                </h6>
+                                {selectedDayBookings.length === 0 ? (
+                                    <p className="text-xs text-muted mb-0">No bookings this day.</p>
+                                ) : (
+                                    <ul className="list-none p-0 m-0 flex flex-col gap-2">
+                                        {selectedDayBookings.map((b) => (
+                                            <li
+                                                key={b.id}
+                                                className="rounded-lg border border-defaultborder px-3 py-2 text-sm"
+                                            >
+                                                <div className="flex justify-between gap-2">
+                                                    {b.trainerId ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => void openTrainerProfile(b.trainerId!)}
+                                                            className="font-semibold text-primary hover:underline p-0 bg-transparent border-0 text-left text-sm"
+                                                        >
+                                                            {b.trainerName || "Trainer"}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="font-semibold">{b.trainerName || "Trainer"}</span>
+                                                    )}
+                                                    <StatusBadge status={b.status} />
+                                                </div>
+                                                <p className="text-xs text-muted mb-0 mt-1">
+                                                    {formatBookingTime(b.startTime)} · Payment:{" "}
+                                                    {b.isPaid ? (
+                                                        <span className="text-success font-semibold">Paid</span>
+                                                    ) : (
+                                                        <span className="text-warning font-semibold">Pending</span>
+                                                    )}
+                                                </p>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -368,8 +408,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                     key={qa.title}
                                     type="button"
                                     onClick={() => {
-                                        if (qa.action === "scroll-list") scrollToList();
-                                        if (qa.action === "scroll-list") onRefreshList();
+                                        if (qa.action === "open-table") openTableView();
+                                        if (qa.action === "open-table") onRefreshList();
                                     }}
                                     className="flex items-center gap-3 p-3 rounded-xl border border-defaultborder hover:bg-light transition-colors text-left w-full"
                                 >
@@ -491,7 +531,17 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                                 >
                                                     {row.trainerInitials}
                                                 </div>
-                                                <span className="text-sm text-defaulttextcolor">{row.trainerName}</span>
+                                                {row.trainerId ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void openTrainerProfile(row.trainerId!)}
+                                                        className="text-sm text-primary hover:underline p-0 bg-transparent border-0 text-left"
+                                                    >
+                                                        {row.trainerName}
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-sm text-defaulttextcolor">{row.trainerName}</span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="py-3 px-4 text-sm text-defaulttextcolor">{row.capacity}</td>
@@ -554,11 +604,11 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
 
                 <div className="xl:col-span-7 col-span-12 box mb-0">
                     <div className="box-header flex items-center justify-between">
-                        <h6 className="box-title font-bold !mb-0">Waiting list (pending approval)</h6>
+                        <h6 className="box-title font-bold !mb-0">Waiting list</h6>
                     </div>
                     <div className="box-body flex flex-col gap-5 pt-0">
                         {!loading && (summary?.waitingListGroups?.length || 0) === 0 && (
-                            <p className="text-xs text-muted mb-0">No pending approvals.</p>
+                            <p className="text-xs text-muted mb-0">No bookings awaiting approval.</p>
                         )}
                         {(summary?.waitingListGroups || []).map((group) => (
                             <div key={group.title}>
@@ -579,6 +629,13 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                     </div>
                 </div>
             </div>
+
+            <CompanyTrainerProfileDrawer
+                open={trainerDrawerOpen}
+                trainer={profileTrainer}
+                loading={trainerDrawerLoading}
+                onClose={closeTrainerProfile}
+            />
         </div>
     );
 };

@@ -7,72 +7,104 @@ import store from '@/shared/redux/store';
 import { basePath } from '@/Config/basePath';
 import { useRouter } from 'next/navigation';
 import AdminService from '@/services/adminService';
+import ApiService from '@/services/ApiService';
+
+type AccountType = 'trainer' | 'company' | 'admin';
+
+interface HeaderIdentity {
+  type: AccountType;
+  displayName: string;
+  roleLabel: string;
+  avatarUrl: string;
+  loginPath: string;
+}
+
+/**
+ * Derives the first uppercase character to use as an avatar fallback.
+ * @param name - The display name of the logged-in account.
+ * @returns A single uppercase initial, or 'U' when unavailable.
+ */
+const getInitial = (name: string): string =>
+  name?.trim()?.charAt(0)?.toUpperCase() || 'U';
 
 const Header = ({ local_varaiable, ThemeChanger }: any) => {
   const router = useRouter();
 
-  const handleLogout = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    try {
-      await AdminService.logout();
-      router.push('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still redirect even if logout fails
-      router.push('/');
-    }
-  };
-
-
-
-  //Notifications
-
-  const span1 = <span className="text-warning">ID: #1116773</span>
-  const span2 = <span className="text-success">ID: 7731116</span>
-
-  const notifydata = [
-    { id: 1, class: "Your Order Has Been Shipped", data: "Order No: 123456 Has Shipped To Your Delivery Address", icon: "gift", class2: "", color: "!bg-primary/10", color2: "primary" },
-    { id: 2, class: "Discount Available", data: "Discount Available On Selected Products", icon: "discount-2", class2: "", color: "!bg-secondary/10", color2: "secondary" },
-    { id: 3, class: "Account Has Been Verified", data: "Your Account Has Been Verified Sucessfully", icon: "user-check", class2: "", color: "!bg-pinkmain/10", color2: "pink" },
-    { id: 4, class: "Order Placed", data: "Order Placed Successfully", icon: "circle-check", class2: span1, color: "!bg-warning/10", color2: "warning" },
-    { id: 5, class: "Order Delayed", data: "Order Delayed Unfortunately", icon: "clock", class2: span2, color: "!bg-success/10", color2: "success" },
-  ]
-
-  const [notifications, setNotifications] = useState([...notifydata]);
-
-  const handleNotificationClose = (index: number, event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    if (event) {
-      event.stopPropagation();
-    }
-    const updatedNotifications = [...notifications];
-    updatedNotifications.splice(index, 1);
-    setNotifications(updatedNotifications);
-  };
-
-
-  //full screen
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  };
+  // ── Logged-in identity (company logo / trainer profile / admin) ──
+  const [identity, setIdentity] = useState<HeaderIdentity>({
+    type: 'admin',
+    displayName: 'Admin',
+    roleLabel: 'Administrator',
+    avatarUrl: '',
+    loginPath: '/',
+  });
 
   useEffect(() => {
-    const fullscreenChangeHandler = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+    let cancelled = false;
+
+    const loadIdentity = async () => {
+      try {
+        const user = await ApiService.getUser();
+        const userType =
+          typeof window !== 'undefined' ? localStorage.getItem('userType') : null;
+
+        let next: HeaderIdentity;
+
+        if (userType === 'trainer') {
+          next = {
+            type: 'trainer',
+            displayName: user?.name || 'Trainer',
+            roleLabel: 'Trainer',
+            avatarUrl: user?.profilePhoto?.path || '',
+            loginPath: '/trainer/login',
+          };
+        } else if (user?.companyName || user?.companyLogo || user?.companyId) {
+          next = {
+            type: 'company',
+            displayName: user?.companyName || 'Company',
+            roleLabel: 'Company',
+            avatarUrl: user?.companyLogo || '',
+            loginPath: '/company/login',
+          };
+        } else {
+          next = {
+            type: 'admin',
+            displayName: user?.name || 'Admin',
+            roleLabel: 'Administrator',
+            avatarUrl: '',
+            loginPath: '/',
+          };
+        }
+
+        if (!cancelled) setIdentity(next);
+      } catch (error) {
+        console.error('Header: failed to load identity', error);
+      }
     };
 
-    document.addEventListener("fullscreenchange", fullscreenChangeHandler);
-
+    void loadIdentity();
     return () => {
-      document.removeEventListener("fullscreenchange", fullscreenChangeHandler);
+      cancelled = true;
     };
   }, []);
 
+  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const redirectTo = identity.loginPath;
+    try {
+      await AdminService.logout();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('Auth');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('user');
+      }
+      router.push(redirectTo);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still redirect even if logout fails
+      router.push(redirectTo);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -246,42 +278,6 @@ const Header = ({ local_varaiable, ThemeChanger }: any) => {
 
 
   };
-  //Dark Model
-
-  const ToggleDark = () => {
-
-    ThemeChanger({
-      ...local_varaiable,
-      "class": local_varaiable.class == 'dark' ? 'light' : 'dark',
-      "dataHeaderStyles": local_varaiable.class == 'dark' ? 'light' : 'dark',
-      "dataMenuStyles": local_varaiable.dataNavLayout == 'horizontal' ? local_varaiable.class == 'dark' ? 'light' : 'dark' : "dark"
-
-    });
-    const theme = store.getState();
-
-    if (theme.class != 'dark') {
-
-      ThemeChanger({
-        ...theme,
-        "bodyBg": '',
-        "Light": '',
-        "darkBg": '',
-        "inputBorder": '',
-      });
-      localStorage.setItem("ynexlighttheme", "light");
-      localStorage.removeItem("ynexdarktheme");
-      localStorage.removeItem("ynexMenu");
-      localStorage.removeItem("ynexHeader");
-    }
-    else {
-      localStorage.setItem("ynexdarktheme", "dark");
-      localStorage.removeItem("ynexlighttheme");
-      localStorage.removeItem("ynexMenu");
-      localStorage.removeItem("ynexHeader");
-    }
-
-  };
-
 
   useEffect(() => {
     const navbar = document?.querySelector(".header");
@@ -333,315 +329,43 @@ const Header = ({ local_varaiable, ThemeChanger }: any) => {
                   className="sidemenu-toggle animated-arrow  hor-toggle horizontal-navtoggle inline-flex items-center" href="#!" scroll={false}><span></span></Link>
               </div>
             </div>
-            <div className="header-content-right">
+            <div className="header-content-right flex items-center gap-3">
 
-              <div className="header-element py-[1rem] md:px-[0.65rem] px-2  header-country hs-dropdown ti-dropdown  hidden sm:block [--placement:bottom-left]">
-                <button id="dropdown-flag" type="button"
-                  className="hs-dropdown-toggle ti-dropdown-toggle !p-0 flex-shrink-0  !border-0 !rounded-full !shadow-none">
-                  <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/us_flag.jpg`} alt="flag-img" className="h-[1.25rem] w-[1.25rem] rounded-full" />
-                </button>
-
-                <div className="hs-dropdown-menu ti-dropdown-menu min-w-[10rem] hidden !-mt-3" aria-labelledby="dropdown-flag">
-                  <div className="ti-dropdown-divider divide-y divide-gray-200 dark:divide-white/10">
-                    <div className="py-2 first:pt-0 last:pb-0">
-                      <div className="ti-dropdown-item !p-[0.65rem] ">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] flex items-center w-[1.375rem] rounded-full">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/us_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              English
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ti-dropdown-item !p-[0.65rem]">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] w-[1.375rem] flex items-center rounded-full">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/spain_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              Spanish
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ti-dropdown-item !p-[0.65rem]">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] w-[1.375rem] flex items-center rounded-full">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/french_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              French
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ti-dropdown-item !p-[0.65rem]">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] w-[1.375rem] flex items-center rounded-full">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/germany_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              German
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ti-dropdown-item !p-[0.65rem]">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] w-[1.375rem] flex items-center rounded-full">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/italy_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              Italian
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ti-dropdown-item !p-[0.65rem]">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse w-full">
-                          <div className="h-[1.375rem] w-[1.375rem] flex items-center  rounded-sm">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/flags/russia_flag.jpg`} alt="flag-img"
-                              className="h-[1rem] w-[1rem] rounded-full" />
-                          </div>
-                          <div>
-                            <p className="!text-[0.8125rem] font-medium">
-                              Russian
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="header-element header-theme-mode hidden !items-center sm:block !py-[1rem] md:!px-[0.65rem] px-2" onClick={() => ToggleDark()}>
-                <button aria-label="anchor"
-                  className="hs-dark-mode-active:hidden flex hs-dark-mode group flex-shrink-0 justify-center items-center gap-2  rounded-full font-medium transition-all text-xs dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
-                  data-hs-theme-click-value="dark">
-                  <i className="bx bx-moon header-link-icon"></i>
-                </button>
-                <button aria-label="anchor"
-                  className="hs-dark-mode-active:flex hidden hs-dark-mode group flex-shrink-0 justify-center items-center gap-2  rounded-full font-medium text-defaulttextcolor  transition-all text-xs  dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
-                  data-hs-theme-click-value="light">
-                  <i className="bx bx-sun header-link-icon"></i>
-                </button>
-              </div>
-              <div className="header-element py-[1rem] md:px-[0.65rem] px-2 notifications-dropdown header-notification hs-dropdown ti-dropdown !hidden md:!block [--placement:bottom-right]">
-                <button id="dropdown-notification" type="button"
-                  className="hs-dropdown-toggle relative ti-dropdown-toggle !p-0 !border-0 flex-shrink-0  !rounded-full !shadow-none align-middle text-xs">
-                  <i className="bx bx-bell header-link-icon  text-[1.125rem]"></i>
-                  <span className="flex absolute h-5 w-5 -top-[0.25rem] end-0  -me-[0.6rem]">
-                    <span
-                      className="animate-slow-ping absolute inline-flex -top-[2px] -start-[2px] h-full w-full rounded-full bg-secondary/40 opacity-75"></span>
-                    <span
-                      className="relative inline-flex justify-center items-center rounded-full  h-[14.7px] w-[14px] bg-secondary text-[0.625rem] text-white"
-                      id="notification-icon-badge">{notifications.length}</span>
+              <div className="header-element !items-center flex" aria-label={`${identity.roleLabel} account`}>
+                {identity.avatarUrl ? (
+                  <img
+                    className="inline-block rounded-full border border-defaultborder object-cover"
+                    src={identity.avatarUrl}
+                    width="36"
+                    height="36"
+                    alt={identity.displayName}
+                  />
+                ) : (
+                  <span
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary/10 text-primary font-semibold text-sm"
+                    aria-hidden="true"
+                  >
+                    {getInitial(identity.displayName)}
                   </span>
-                </button>
-                <div className="main-header-dropdown !-mt-3 !p-0 hs-dropdown-menu ti-dropdown-menu bg-white !w-[22rem] border-0 border-defaultborder hidden !m-0"
-                  aria-labelledby="dropdown-notification">
-
-                  <div className="ti-dropdown-header !m-0 !p-4 !bg-transparent flex justify-between items-center">
-                    <p className="mb-0 text-[1.0625rem] text-defaulttextcolor font-semibold ">Notifications</p>
-                    <span className="text-[0.75em] py-[0.25rem/2] px-[0.45rem] font-[600] rounded-sm bg-secondary/10 text-secondary"
-                      id="notifiation-data">{`${notifications.length} Unread`}</span>
-                  </div>
-                  <div className="dropdown-divider"></div>
-                  <ul className="list-none !m-0 !p-0 end-0" id="header-notification-scroll">
-                    {notifications.map((idx, index) => (
-                      <li className="ti-dropdown-item dropdown-item" key={Math.random()}>
-                        <div className="flex items-start">
-                          <div className="pe-2">
-                            <span
-                              className={`inline-flex text-${idx.color2} justify-center items-center !w-[2.5rem] !h-[2.5rem] !leading-[2.5rem] !text-[0.8rem] ${idx.color} !rounded-[50%]`}><i
-                                className={`ti ti-${idx.icon} text-[1.125rem]`}></i></span>
-                          </div>
-                          <div className="grow flex items-center justify-between">
-                            <div>
-                              <p className="mb-0 text-defaulttextcolor dark:text-white text-[0.8125rem] font-semibold"><Link
-                                href="/pages/notifications/">{idx.class} {idx.class2}</Link></p>
-                              <span className="text-[#8c9097] dark:text-white/50 font-normal text-[0.75rem] header-notification-text">{idx.data}</span>
-                            </div>
-                            <div>
-                              <Link aria-label="anchor" href="#!" scroll={false} className="min-w-fit text-[#8c9097] dark:text-white/50 me-1 dropdown-item-close1" onClick={(event) => handleNotificationClose(index, event)}><i
-                                className="ti ti-x text-[1rem]"></i></Link>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className={`p-4 empty-header-item1 border-t mt-2 ${notifications.length === 0 ? 'hidden' : 'block'}`}>
-                    <div className="grid">
-                      <Link href="/pages/notifications/" className="ti-btn ti-btn-primary-full !m-0 w-full p-2">View All</Link>
-                    </div>
-                  </div>
-                  <div className={`p-[3rem] empty-item1 ${notifications.length === 0 ? 'block' : 'hidden'}`}>
-                    <div className="text-center">
-                      <span className="!h-[4rem]  !w-[4rem] avatar !leading-[4rem] !rounded-full !bg-secondary/10 !text-secondary">
-                        <i className="ri-notification-off-line text-[2rem]  "></i>
-                      </span>
-                      <h6 className="font-semibold mt-3 text-defaulttextcolor dark:text-[#8c9097] dark:text-white/50 text-[1rem]">No New Notifications</h6>
-                    </div>
-                  </div>
+                )}
+                <div className="ms-2 md:block hidden leading-tight">
+                  <p className="font-semibold mb-0 text-defaulttextcolor text-[0.85rem]">
+                    {identity.displayName}
+                  </p>
+                  <p className="mb-0 text-[#536485] text-[0.7rem]">{identity.roleLabel}</p>
                 </div>
               </div>
-              <div className="header-element header-apps dark:text-[#8c9097] dark:text-white/50 py-[1rem] md:px-[0.65rem] px-2 hs-dropdown ti-dropdown md:!block !hidden [--placement:bottom-left]">
 
-                <button aria-label="button" id="dropdown-apps" type="button"
-                  className="hs-dropdown-toggle ti-dropdown-toggle !p-0 !border-0 flex-shrink-0  !rounded-full !shadow-none text-xs">
-                  <i className="bx bx-grid-alt header-link-icon text-[1.125rem]"></i>
-                </button>
-
-                <div
-                  className="main-header-dropdown !-mt-3 hs-dropdown-menu ti-dropdown-menu !w-[22rem] border-0 border-defaultborder   hidden"
-                  aria-labelledby="dropdown-apps">
-
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="mb-0 text-defaulttextcolor text-[1.0625rem]  font-semibold">Related Apps</p>
-                    </div>
-                  </div>
-                  <div className="dropdown-divider mb-0"></div>
-                  <div className="ti-dropdown-divider divide-y divide-gray-200 dark:divide-white/10 main-header-shortcuts p-2" id="header-shortcut-scroll">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <div>
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/figma.png`} alt="figma"
-                              className="!h-[1.75rem] !w-[1.75rem] text-2xl avatar text-primary flex justify-center items-center mx-auto" />
-                            <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Figma</div>
-                          </div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/microsoft-powerpoint.png`} alt="miscrosoft"
-                            className="leading-[1.75] text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Power Point</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/microsoft-word.png`} alt="miscrodoftword"
-                            className="leading-none
-                         text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto"/>
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">MS Word</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/calender.png`} alt="calander"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Calendar</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/sketch.png`} alt="apps"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Sketch</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/google-docs.png`} alt="docs"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Docs</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/google.png`} alt="google"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Google</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/translate.png`} alt="translate"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Translate</div>
-                        </Link>
-                      </div>
-                      <div className="">
-                        <Link href="#!" scroll={false} className="p-4 items-center related-app block text-center rounded-sm hover:bg-gray-50 dark:hover:bg-black/20">
-                          <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/apps/google-sheets.png`} alt="sheets"
-                            className="leading-none text-2xl !h-[1.75rem] !w-[1.75rem] align-middle flex justify-center mx-auto" />
-                          <div className="text-[0.75rem] text-defaulttextcolor dark:text-white">Sheets</div>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4 first:pt-0 border-t">
-                    <Link className="w-full ti-btn ti-btn-primary-full p-2 !m-0" href="#!" scroll={false}>
-                      View All
-                    </Link>
-                  </div>
-
-                </div>
-              </div>
-              <div className="header-element header-fullscreen py-[1rem] md:px-[0.65rem] px-2">
+              <div className="header-element !flex !items-center">
                 <button
-                  aria-label="anchor"
-                  onClick={() => toggleFullscreen()}
-                  className="inline-flex flex-shrink-0 justify-center items-center gap-2  !rounded-full font-medium dark:hover:bg-black/20 dark:text-[#8c9097] dark:text-white/50 dark:hover:text-white dark:focus:ring-white/10 dark:focus:ring-offset-white/10"
+                  type="button"
+                  onClick={handleLogout}
+                  className="ti-btn !bg-danger !text-white inline-flex items-center justify-center !p-0 !w-9 !h-9 !rounded-md !leading-none !shadow-none !m-0"
+                  title="Logout"
+                  aria-label="Logout"
                 >
-                  {isFullscreen ? (
-                    <i className="bx bx-exit-fullscreen full-screen-close header-link-icon"></i>
-                  ) : (
-                    <i className="bx bx-fullscreen full-screen-open header-link-icon"></i>
-                  )}
+                  <i className="ri-logout-box-line text-[1.05rem]"></i>
                 </button>
-              </div>
-              <div className="header-element md:!px-[0.65rem] px-2 hs-dropdown !items-center ti-dropdown [--placement:bottom-left]">
-
-                <button id="dropdown-profile" type="button"
-                  className="hs-dropdown-toggle ti-dropdown-toggle !gap-2 !p-0 flex-shrink-0 sm:me-2 me-0 !rounded-full !shadow-none text-xs align-middle !border-0 !shadow-transparent ">
-                  <img className="inline-block rounded-full " src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/faces/9.jpg`} width="32" height="32" alt="Image Description" />
-                </button>
-                <div className="md:block hidden dropdown-profile">
-                  <p className="font-semibold mb-0 leading-none text-[#536485] text-[0.813rem] ">ADMIN</p>
-                </div>
-                <div
-                  className="hs-dropdown-menu ti-dropdown-menu !-mt-3 border-0 w-[11rem] !p-0 border-defaultborder hidden main-header-dropdown  pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end"
-                  aria-labelledby="dropdown-profile">
-
-                  <ul className="text-defaulttextcolor font-medium dark:text-[#8c9097] dark:text-white/50">
-                    <li>
-                      <Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0  !p-[0.65rem]" href="/pages/profile/">
-                        <i className="ti ti-user-circle text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Profile
-                      </Link>
-                    </li>
-                    <li>
-                      <Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0  !p-[0.65rem] " href="/pages/email/mail-app/"><i
-                        className="ti ti-inbox text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Inbox <span
-                          className="!py-1 !px-[0.45rem] !font-semibold !rounded-sm text-success text-[0.75em] bg-success/10 ms-auto">25</span>
-                      </Link>
-                    </li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0 !p-[0.65rem]" href="/pages/todo-list/"><i
-                      className="ti ti-clipboard-check text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Task Manager</Link></li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !gap-x-0 !p-[0.65rem] " href="#!" scroll={false}><i
-                      className="ti ti-wallet text-[1.125rem] me-2 opacity-[0.7 !inline-flex"></i>Bal: $7,12,950</Link></li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !p-[0.65rem] !gap-x-0 !inline-flex" href="/pages/chat/"><i
-                      className="ti ti-headset text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Support</Link></li>
-                    <li><Link className="w-full ti-dropdown-item !text-[0.8125rem] !p-[0.65rem] !gap-x-0 !inline-flex" href="/" onClick={handleLogout}><i
-                      className="ti ti-logout text-[1.125rem] me-2 opacity-[0.7] !inline-flex"></i>Log Out</Link></li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>

@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import trainerService, { Trainer, isTrainerAcceptingBookings } from '@/services/trainerService';
+import { getTrainerBookableTrainingTypes } from './companyTrainerProfileUtils';
 import companyService from '@/services/companyService';
 import bookingService, { CreateBookingRequest } from '@/services/bookingService';
-import { TYPE_OF_TRAINING_OPTIONS } from '@/services/trainerService';
 import Swal from 'sweetalert2';
 
 const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
@@ -39,7 +39,11 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                 setFormData(prev => ({ ...prev, company: companyProfile._id || companyProfile.id || '' }));
 
                 // Get all active trainers
-                const trainersResponse = await trainerService.getTrainers({ status: true, limit: 100 });
+                const trainersResponse = await trainerService.getTrainers({
+                    status: true,
+                    acceptingBookings: true,
+                    limit: 100,
+                });
                 setTrainers(trainersResponse.results);
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -159,20 +163,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
         }
     };
 
-    // Get available training types for selected trainer
-    const getAvailableTrainingTypes = (): string[] => {
-        if (!selectedTrainer) return [];
-
-        const trainerTypes = Array.isArray(selectedTrainer.typeOfTraining)
-            ? selectedTrainer.typeOfTraining
-            : [selectedTrainer.typeOfTraining];
-
-        return TYPE_OF_TRAINING_OPTIONS.filter(type =>
-            trainerTypes.some(tt => tt.toLowerCase().includes(type.toLowerCase()) || type.toLowerCase().includes(tt.toLowerCase()))
-        );
-    };
-
-    const availableTypes = getAvailableTrainingTypes();
+    const availableTypes = getTrainerBookableTrainingTypes(selectedTrainer);
 
     return (
         <div className="box">

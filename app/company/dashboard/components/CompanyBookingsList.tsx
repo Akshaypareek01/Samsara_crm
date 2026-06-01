@@ -1,28 +1,56 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import bookingService, { Booking } from '@/services/bookingService';
-import { clearCompanyInsightsCache } from '@/services/companyInsightsClient';
-import StatusBadge from '@/shared/components/StatusBadge';
-import { formatBookingDate, formatBookingTime, formatDuration, canCancelBooking } from '@/shared/utils/bookingUtils';
-import Swal from 'sweetalert2';
 
-const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTrigger = 0 }) => {
+import React, { useState, useEffect, useCallback } from "react";
+import bookingService, { Booking } from "@/services/bookingService";
+import { clearCompanyInsightsCache } from "@/services/companyInsightsClient";
+import StatusBadge from "@/shared/components/StatusBadge";
+import { canCompanyCancelBooking } from "@/shared/utils/bookingUtils";
+import { getBookingTrainerName } from "@/shared/utils/bookingTrainerUtils";
+import CompanyBookingDetailsDrawer from "./CompanyBookingDetailsDrawer";
+import CompanyTrainerProfileDrawer from "./CompanyTrainerProfileDrawer";
+import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
+import { BookingsTableToolbar, BookingsTableFooter } from "@/shared/components/BookingsTablePagination";
+import Swal from "sweetalert2";
+
+type CompanyBookingsListProps = {
+    refreshTrigger?: number;
+    onBookingChanged?: () => void;
+};
+
+const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
+    refreshTrigger = 0,
+    onBookingChanged,
+}) => {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
-    const [statusFilter, setStatusFilter] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<string>("");
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerLoading, setDrawerLoading] = useState(false);
+    const {
+        trainerDrawerOpen,
+        trainerDrawerLoading,
+        profileTrainer,
+        openTrainerProfile,
+        closeTrainerProfile,
+    } = useCompanyTrainerProfileDrawer();
 
-    const loadBookings = async () => {
+    const loadBookings = useCallback(async () => {
         try {
             setLoading(true);
-            const params: any = {
+            const params: {
+                page: number;
+                limit: number;
+                sortBy: string;
+                status?: string;
+            } = {
                 page: currentPage,
-                limit: 10,
-                sortBy: 'createdAt:desc',
+                limit: pageSize,
+                sortBy: "createdAt:desc",
             };
 
             if (statusFilter) {
@@ -34,98 +62,156 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
             setTotalPages(response.totalPages);
             setTotalResults(response.totalResults);
         } catch (error) {
-            console.error('Error loading bookings:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load bookings. Please try again.',
+            console.error("Error loading bookings:", error);
+            void Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Failed to load bookings. Please try again.",
             });
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, pageSize, statusFilter]);
 
     useEffect(() => {
-        loadBookings();
-    }, [currentPage, statusFilter, refreshTrigger]);
+        void loadBookings();
+    }, [loadBookings, refreshTrigger]);
 
+    /**
+     * Prompts for a cancellation reason and cancels the booking.
+     *
+     * @param bookingId - Booking identifier.
+     */
     const handleCancelBooking = async (bookingId: string) => {
         const result = await Swal.fire({
-            title: 'Cancel Booking?',
-            text: 'Are you sure you want to cancel this booking?',
-            icon: 'warning',
+            title: "Cancel Booking?",
+            text: "Please provide a reason for cancellation.",
+            input: "textarea",
+            inputLabel: "Cancellation reason",
+            inputPlaceholder: "Why are you cancelling this booking?",
+            inputAttributes: {
+                "aria-label": "Cancellation reason",
+            },
+            inputValidator: (value) => {
+                if (!value?.trim()) {
+                    return "Cancellation reason is required";
+                }
+                return undefined;
+            },
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, cancel it',
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, cancel it",
         });
 
-        if (result.isConfirmed) {
+        if (result.isConfirmed && result.value) {
             try {
-                await bookingService.cancelBooking(bookingId);
+                await bookingService.cancelBooking(bookingId, {
+                    cancellationReason: String(result.value).trim(),
+                });
                 clearCompanyInsightsCache();
-                Swal.fire('Cancelled!', 'Your booking has been cancelled.', 'success');
-                loadBookings();
-            } catch (error: any) {
-                Swal.fire('Error', error.message || 'Failed to cancel booking', 'error');
+                void Swal.fire("Cancelled!", "Your booking has been cancelled.", "success");
+                setDrawerOpen(false);
+                setSelectedBooking(null);
+                void loadBookings();
+                onBookingChanged?.();
+            } catch (error: unknown) {
+                const msg = error instanceof Error ? error.message : "Failed to cancel booking";
+                void Swal.fire("Error", msg, "error");
             }
         }
     };
 
-    const viewDetails = (booking: Booking) => {
+    /**
+     * Opens the details drawer and loads the full booking with trainer profile.
+     *
+     * @param booking - List row booking (may be partially populated).
+     */
+    const viewDetails = async (booking: Booking) => {
+        const id = booking._id || booking.id || "";
+        if (!id) return;
+        setDrawerOpen(true);
+        setDrawerLoading(true);
         setSelectedBooking(booking);
-        setShowDetailsModal(true);
-    };
-
-    const getTrainerName = (booking: Booking): string => {
-        return typeof booking.trainer === 'string' ? 'Trainer' : booking.trainer?.name || 'Unknown';
+        try {
+            const full = await bookingService.getBookingById(id);
+            setSelectedBooking(full);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Failed to load booking details";
+            void Swal.fire({ icon: "error", title: "Error", text: msg });
+            setDrawerOpen(false);
+        } finally {
+            setDrawerLoading(false);
+        }
     };
 
     const getTrainerTitle = (booking: Booking): string => {
-        return typeof booking.trainer === 'string' ? '' : booking.trainer?.title || '';
+        if (!booking.trainer || typeof booking.trainer === "string") return "";
+        return booking.trainer?.title || "";
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
+        return new Date(dateString).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
         });
     };
 
     const formatTime = (timeString: string) => {
-        const [hours, minutes] = timeString.split(':');
-        const hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const [hours, minutes] = timeString.split(":");
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
         const displayHour = hour % 12 || 12;
         return `${displayHour}:${minutes} ${ampm}`;
     };
 
+    const closeDrawer = () => {
+        setDrawerOpen(false);
+        setSelectedBooking(null);
+    };
+
     return (
         <div className="box">
+            <div className="box-header flex flex-wrap items-center justify-between gap-2">
+                <h6 className="box-title font-bold !mb-0">All bookings</h6>
+            </div>
             <div className="box-body">
-                {/* Filters */}
-                <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="mb-4">
                     <select
-                        className="form-control"
+                        className="form-control max-w-xs"
                         value={statusFilter}
                         onChange={(e) => {
                             setStatusFilter(e.target.value);
                             setCurrentPage(1);
                         }}
+                        aria-label="Filter bookings by status"
                     >
                         <option value="">All Status</option>
-                        <option value="pending_approval">Pending Approval</option>
-                        <option value="approved">Approved</option>
+                        <option value="pending_approval">Pending Trainer Approval</option>
+                        <option value="approved">Pending Admin Approval</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="completed">Completed</option>
                         <option value="rejected">Rejected</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
-                    <div className="text-sm text-muted flex items-center">
-                        Total: {totalResults} bookings
-                    </div>
                 </div>
+
+                {!loading && (
+                    <BookingsTableToolbar
+                        page={currentPage}
+                        totalPages={totalPages}
+                        totalResults={totalResults}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setCurrentPage(1);
+                        }}
+                        idPrefix="company-bookings"
+                    />
+                )}
 
                 {loading ? (
                     <div className="text-center py-8">
@@ -135,23 +221,24 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
                     </div>
                 ) : bookings.length === 0 ? (
                     <div className="text-center py-8">
-                        <i className="ri-calendar-line text-muted" style={{ fontSize: '48px' }}></i>
+                        <i className="ri-calendar-line text-muted" style={{ fontSize: "48px" }} aria-hidden="true"></i>
                         <p className="mt-3 text-muted">No bookings found</p>
                         <p className="text-sm text-muted">Your bookings will appear here</p>
                     </div>
                 ) : (
-                    <>
-                        <div className="table-responsive">
+                    <div className="table-responsive">
                             <table className="table table-bordered table-hover whitespace-nowrap min-w-full">
                                 <thead>
                                     <tr>
-                                        <th>Trainer</th>
-                                        <th>Date & Time</th>
-                                        <th>Duration</th>
-                                        <th>Training Types</th>
-                                        <th>Status</th>
-                                        <th>Payment</th>
-                                        <th>Actions</th>
+                                        <th scope="col">Trainer</th>
+                                        <th scope="col">Date &amp; Time</th>
+                                        <th scope="col">Duration</th>
+                                        <th scope="col">Training Types</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Payment</th>
+                                        <th scope="col" className="!text-end min-w-[9rem]">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -159,23 +246,39 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
                                         <tr key={booking._id || booking.id}>
                                             <td>
                                                 <div>
-                                                    <span className="font-semibold">{getTrainerName(booking)}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void openTrainerProfile(booking.trainer)}
+                                                        className="font-semibold text-primary hover:underline p-0 bg-transparent border-0 text-left"
+                                                        aria-label={`View profile for ${getBookingTrainerName(booking)}`}
+                                                    >
+                                                        {getBookingTrainerName(booking)}
+                                                    </button>
                                                     {getTrainerTitle(booking) && (
-                                                        <div className="text-sm text-muted">{getTrainerTitle(booking)}</div>
+                                                        <div className="text-sm text-muted">
+                                                            {getTrainerTitle(booking)}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </td>
                                             <td>
                                                 <div className="flex flex-col">
-                                                    <span className="font-semibold">{formatDate(booking.bookingDate)}</span>
-                                                    <span className="text-sm text-muted">{formatTime(booking.startTime)}</span>
+                                                    <span className="font-semibold">
+                                                        {formatDate(booking.bookingDate)}
+                                                    </span>
+                                                    <span className="text-sm text-muted">
+                                                        {formatTime(booking.startTime)}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td>{booking.duration} hrs</td>
                                             <td>
                                                 <div className="flex flex-wrap gap-1">
                                                     {booking.typeOfTraining.slice(0, 2).map((type, idx) => (
-                                                        <span key={idx} className="badge bg-info/10 text-info text-xs">
+                                                        <span
+                                                            key={idx}
+                                                            className="badge bg-info/10 text-info text-xs"
+                                                        >
                                                             {type}
                                                         </span>
                                                     ))}
@@ -196,22 +299,37 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
                                                     <span className="badge bg-warning/10 text-warning">Pending</span>
                                                 )}
                                             </td>
-                                            <td>
-                                                <div className="flex items-center gap-2">
+                                            <td className="!text-end align-middle">
+                                                <div
+                                                    className="inline-flex items-stretch rounded-lg border border-defaultborder dark:border-white/10 overflow-hidden divide-x divide-defaultborder dark:divide-white/10 shrink-0"
+                                                    role="group"
+                                                    aria-label={`Actions for ${getBookingTrainerName(booking)}`}
+                                                >
                                                     <button
-                                                        onClick={() => viewDetails(booking)}
-                                                        className="ti-btn ti-btn-sm ti-btn-info"
-                                                        title="View Details"
+                                                        type="button"
+                                                        onClick={() => void viewDetails(booking)}
+                                                        className="!m-0 !float-none inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold whitespace-nowrap bg-info/10 text-info hover:bg-info/20 border-0 transition-colors min-h-[2.25rem]"
+                                                        title="View details"
                                                     >
-                                                        <i className="ri-eye-line"></i>
+                                                        <i className="ri-eye-line text-sm leading-none" aria-hidden="true"></i>
+                                                        View
                                                     </button>
-                                                    {canCancelBooking(booking.status) && (
+                                                    {canCompanyCancelBooking(booking.status) && (
                                                         <button
-                                                            onClick={() => handleCancelBooking(booking._id || booking.id || '')}
-                                                            className="ti-btn ti-btn-sm ti-btn-danger"
-                                                            title="Cancel Booking"
+                                                            type="button"
+                                                            onClick={() =>
+                                                                void handleCancelBooking(
+                                                                    booking._id || booking.id || ""
+                                                                )
+                                                            }
+                                                            className="!m-0 !float-none inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold whitespace-nowrap bg-danger/10 text-danger hover:bg-danger/20 border-0 transition-colors min-h-[2.25rem]"
+                                                            title="Cancel booking"
                                                         >
-                                                            <i className="ri-close-line"></i>
+                                                            <i
+                                                                className="ri-close-circle-line text-sm leading-none"
+                                                                aria-hidden="true"
+                                                            ></i>
+                                                            Cancel
                                                         </button>
                                                     )}
                                                 </div>
@@ -220,167 +338,44 @@ const CompanyBookingsList: React.FC<{ refreshTrigger?: number }> = ({ refreshTri
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                    </div>
+                )}
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-4">
-                                <button
-                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="ti-btn ti-btn-sm"
-                                >
-                                    Previous
-                                </button>
-                                <span>
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="ti-btn ti-btn-sm"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        )}
-                    </>
+                {!loading && (
+                    <BookingsTableFooter
+                        page={currentPage}
+                        totalPages={totalPages}
+                        totalResults={totalResults}
+                        pageSize={pageSize}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => {
+                            setPageSize(size);
+                            setCurrentPage(1);
+                        }}
+                        idPrefix="company-bookings"
+                    />
                 )}
             </div>
 
-            {/* Details Modal */}
-            {showDetailsModal && selectedBooking && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Booking Details</h3>
-                            <button
-                                onClick={() => setShowDetailsModal(false)}
-                                className="ti-btn ti-btn-sm ti-btn-ghost"
-                            >
-                                <i className="ri-close-line"></i>
-                            </button>
-                        </div>
+            <CompanyBookingDetailsDrawer
+                open={drawerOpen}
+                booking={selectedBooking}
+                loading={drawerLoading}
+                onClose={closeDrawer}
+                onCancel={(id) => void handleCancelBooking(id)}
+                onViewTrainer={
+                    selectedBooking?.trainer
+                        ? () => void openTrainerProfile(selectedBooking.trainer)
+                        : undefined
+                }
+            />
 
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Trainer</label>
-                                    <p className="text-defaulttextcolor">{getTrainerName(selectedBooking)}</p>
-                                    {getTrainerTitle(selectedBooking) && (
-                                        <p className="text-sm text-muted">{getTrainerTitle(selectedBooking)}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Status</label>
-                                    <p className="text-defaulttextcolor">
-                                        <StatusBadge status={selectedBooking.status} />
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Booking Date</label>
-                                    <p className="text-defaulttextcolor">{formatDate(selectedBooking.bookingDate)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Start Time</label>
-                                    <p className="text-defaulttextcolor">{formatTime(selectedBooking.startTime)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Duration</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.duration} hours</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Payment Status</label>
-                                    <p className="text-defaulttextcolor">
-                                        {selectedBooking.paymentStatus?.isPaid ? (
-                                            <span className="badge bg-success/10 text-success">Paid</span>
-                                        ) : (
-                                            <span className="badge bg-warning/10 text-warning">Pending</span>
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-muted">Training Types</label>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {selectedBooking.typeOfTraining.map((type, idx) => (
-                                        <span key={idx} className="badge bg-info/10 text-info">
-                                            {type}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {selectedBooking.notes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Your Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.notes}</p>
-                                </div>
-                            )}
-
-                            {selectedBooking.adminNotes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Admin Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.adminNotes}</p>
-                                </div>
-                            )}
-
-                            {selectedBooking.trainerNotes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Trainer Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.trainerNotes}</p>
-                                </div>
-                            )}
-
-                            {selectedBooking.paymentStatus?.isPaid && (
-                                <div className="border-t pt-4">
-                                    <h4 className="font-semibold mb-3">Payment Information</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {selectedBooking.paymentStatus.paymentMode && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Payment Mode</label>
-                                                <p className="text-defaulttextcolor capitalize">
-                                                    {selectedBooking.paymentStatus.paymentMode.replace('_', ' ')}
-                                                </p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.paymentStatus.paymentType && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Payment Type</label>
-                                                <p className="text-defaulttextcolor capitalize">
-                                                    {selectedBooking.paymentStatus.paymentType}
-                                                </p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.paymentStatus.paymentAmount && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Amount</label>
-                                                <p className="text-defaulttextcolor">₹{selectedBooking.paymentStatus.paymentAmount}</p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.paymentStatus.transactionId && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Transaction ID</label>
-                                                <p className="text-defaulttextcolor">{selectedBooking.paymentStatus.transactionId}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex justify-end mt-6">
-                            <button
-                                onClick={() => setShowDetailsModal(false)}
-                                className="ti-btn ti-btn-secondary"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <CompanyTrainerProfileDrawer
+                open={trainerDrawerOpen}
+                trainer={profileTrainer}
+                loading={trainerDrawerLoading}
+                onClose={closeTrainerProfile}
+            />
         </div>
     );
 };

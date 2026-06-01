@@ -1,16 +1,54 @@
 import ApiService from './ApiService';
+import {
+  TRAINER_CATEGORY_OPTIONS,
+  type TrainerCategory,
+} from '@/constants/trainerCategories';
+
+export { TRAINER_CATEGORY_OPTIONS };
+export type { TrainerCategory };
 
 export interface TrainerImage {
   key: string;
   path: string;
 }
 
-export interface Trainer {
+/** Maximum education entries allowed per trainer profile. */
+export const MAX_TRAINER_EDUCATION_ENTRIES = 5;
+
+/** Maximum certification entries allowed per trainer profile. */
+export const MAX_TRAINER_CERTIFICATION_ENTRIES = 5;
+
+/** Highest academic qualification details */
+export interface TrainerEducation {
+  qualification?: string;
+  university?: string;
+  yearOfCompletion?: number | null;
+}
+
+/** Professional certification / course details */
+export interface TrainerCertification {
+  name?: string;
+  institute?: string;
+  year?: number | null;
+}
+
+/** Personal & professional detail fields shared across trainer payloads */
+export interface TrainerProfileDetails {
+  dateOfBirth?: string | null;
+  city?: string;
+  pinCode?: string;
+  experience?: string;
+  education?: TrainerEducation[];
+  certification?: TrainerCertification[];
+}
+
+export interface Trainer extends TrainerProfileDetails {
   id?: string;
   _id?: string;
   name: string;
   title: string;
   bio: string;
+  category?: TrainerCategory | string;
   email?: string;
   mobile?: string;
   specialistIn: string | string[];
@@ -39,10 +77,11 @@ export function isTrainerAcceptingBookings(
   return trainer.acceptingBookings !== false;
 }
 
-export interface CreateTrainerRequest {
+export interface CreateTrainerRequest extends TrainerProfileDetails {
   name: string;
   title: string;
   bio: string;
+  category: TrainerCategory | string;
   email: string;
   mobile: string;
   specialistIn: string | string[];
@@ -54,10 +93,11 @@ export interface CreateTrainerRequest {
   acceptingBookings?: boolean;
 }
 
-export interface UpdateTrainerRequest {
+export interface UpdateTrainerRequest extends TrainerProfileDetails {
   name?: string;
   title?: string;
   bio?: string;
+  category?: TrainerCategory | string;
   email?: string;
   mobile?: string;
   specialistIn?: string | string[];
@@ -71,6 +111,7 @@ export interface UpdateTrainerRequest {
 
 export interface GetTrainersParams {
   name?: string;
+  category?: string;
   specialistIn?: string;
   typeOfTraining?: string;
   status?: boolean;
@@ -88,64 +129,51 @@ export interface TrainersResponse {
   totalResults: number;
 }
 
+/** Audience the trainer works with (UI label: "Training For") */
 export const SPECIALIST_OPTIONS = [
-  'Employees',
-  'Mid Level Managers',
-  'Leadership',
   'GenZ',
+  'Team Lead',
+  'Manager',
+  'Senior Manager',
+  'Leadership',
 ];
 
+/** Wellness disciplines the trainer offers (UI label: "Specializations") */
 export const TYPE_OF_TRAINING_OPTIONS = [
-  // Employees
-  'Masterclass for Employee Wellbeing',
-  'Emotional Intelligence Skill Workshop',
-  'Mindfulness at Work',
-  'Resilience during Change & Uncertainty',
-  'The Mental Health Toolkit: Daily Self-Care for Working Professionals',
-  'Managing Anxiety at Work: Coping with High-Pressure Moments',
-  'Work-Life Balance and Digital Wellbeing',
-  'Stress Management and Emotional Resilience',
-  'Peer Support & Mental Health Champions Program',
-  'Building Psychological Safety at Work',
-  'Enhancing Collaboration through Emotional Intelligence',
-  // Mid-Level Managers
-  "Myndwell's Emerging Leader Series",
-  'Emerging Leader Skill Assessment',
-  'Weekly Sessions',
-  'Continuous Learning Support',
-  'Personalized One-on-One Sessions',
-  'Post-Intervention Assessment',
-  'Mastering Managerial Effectiveness',
-  'Understanding Stress and Burnout',
-  'Impactful Communication: Fostering Genuine Connections',
-  'Boosting Team Performance & Upholding Organizational Culture',
-  'Cultivating Leadership Excellence in Managers',
-  "Navigating Performance Appraisal Dynamics: A Manager's Guide",
-  'Manager Sensitization Program',
-  'How to Have Difficult Conversations: A Guide for Leaders',
-  'Feedback Mastery: Enhancing Communication and Performance',
-  'Leading with Empathy: Mental Health Leadership Training',
-  'Creating a Mentally Healthy Environment: A Culture of Psychological Safety',
-  'Preventing Burnout: A Leadership Lens',
-  'Emotional Intelligence for Managers',
-  // Leadership
-  'Strategic Leadership in Evolving Workplaces',
-  'Building Inclusive Leadership Practices',
-  'Leading Change with Emotional Intelligence',
-  'Resilient Leadership: Thriving Through Disruption',
-  'Fostering a Culture of Innovation and Growth',
-  'Mentoring and Coaching for High-Performance Teams',
-  'Leadership Agility: Adapting to Uncertainty',
-  'Mental Health Leadership: Supporting Workforce Wellbeing',
-  // GenZ
-  'From Campus to Corporate: The Real-World Starter Pack',
-  'Emotional Intelligence 2.0: Thriving Beyond IQ',
-  'The Resilience Playbook: Fail Fast, Rise Faster',
-  'Unstoppable Confidence: Owning Your Story at Work',
-  'Digital Detox for Digital Natives: Reclaiming Focus & Energy',
-  'Collaborate & Conquer: Cracking Multigenerational Workplaces',
-  'EQ in Action: Empathy as Your Superpower',
-  'Thriving as a Fresher: Adapting to the Corporate World',
+  'Yoga',
+  'Desktop Yoga',
+  'Laughter Yoga',
+  'Meditation',
+  'Breath Work',
+  'Sound Healing',
+  'Yoga Nidra',
+  'EAP Training',
+  'Psychologist',
+];
+
+/**
+ * Builds select options from current choices plus any legacy values already saved on the profile.
+ *
+ * @param baseOptions - Current allowed options for new selections.
+ * @param selected - Values already stored on the trainer record.
+ * @returns Merged option list without duplicates.
+ */
+export function mergeTrainerSelectOptions(
+  baseOptions: readonly string[],
+  selected: string | string[] | undefined
+): string[] {
+  const selectedList = Array.isArray(selected) ? selected : selected ? [selected] : [];
+  const extras = selectedList.filter((value) => value && !baseOptions.includes(value));
+  return [...baseOptions, ...extras];
+}
+
+/** Years-of-experience ranges shown at registration */
+export const EXPERIENCE_OPTIONS = [
+  '3 to 5 years',
+  '5 to 8 years',
+  '8 to 12 years',
+  '12 to 15 years',
+  'Above 15 years',
 ];
 
 class TrainerService {

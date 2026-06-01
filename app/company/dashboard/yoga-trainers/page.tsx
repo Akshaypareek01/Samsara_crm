@@ -2,8 +2,9 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
-import TrainerService, { Trainer, SPECIALIST_OPTIONS, isTrainerAcceptingBookings } from '@/services/trainerService';
-import BookingModal from '../components/BookingModal';
+import TrainerService, { Trainer, SPECIALIST_OPTIONS } from '@/services/trainerService';
+import CompanyBookingDrawer from '../components/CompanyBookingDrawer';
+import CompanyTrainerProfileDrawer from '../components/CompanyTrainerProfileDrawer';
 import { useCompanyTrainerStats } from '@/hooks/useCompanyTrainerStats';
 
 type FilterPeriod = 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
@@ -19,8 +20,9 @@ const TrainersPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
-    const [showProfileModal, setShowProfileModal] = useState(false);
-    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
     const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialist, setFilterSpecialist] = useState('');
@@ -36,6 +38,8 @@ const TrainersPage = () => {
             setError('');
             const params: any = {
                 status: true,
+                acceptingBookings: true,
+                category: 'Yoga Trainer',
                 page: 1,
                 limit: 50,
                 sortBy: 'createdAt:desc',
@@ -53,25 +57,41 @@ const TrainersPage = () => {
         }
     };
 
-    // ── EXISTING handlers (unchanged) ─────────────────────────
-    const handleTrainerClick = (trainer: Trainer) => {
+    const openProfileDrawer = async (trainer: Trainer) => {
+        const id = trainer._id || trainer.id;
         setSelectedTrainer(trainer);
-        setShowProfileModal(true);
+        setProfileDrawerOpen(true);
+        if (!id) return;
+        try {
+            setProfileLoading(true);
+            const full = await TrainerService.getTrainerById(id);
+            setSelectedTrainer(full);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to load trainer profile');
+        } finally {
+            setProfileLoading(false);
+        }
     };
 
-    const handleBookTrainer = (trainer: Trainer) => {
+    const handleTrainerClick = (trainer: Trainer) => {
+        void openProfileDrawer(trainer);
+    };
+
+    const handleCloseProfileDrawer = () => {
+        setProfileDrawerOpen(false);
+        setSelectedTrainer(null);
+    };
+
+    const handleBookSessionFromProfile = (trainer: Trainer) => {
+        setProfileDrawerOpen(false);
+        setSelectedTrainer(null);
         setTrainerToBook(trainer);
-        setShowBookingModal(true);
+        setBookingDrawerOpen(true);
     };
 
     const handleBookingSuccess = () => {
-        setShowBookingModal(false);
+        setBookingDrawerOpen(false);
         setTrainerToBook(null);
-    };
-
-    const handleCloseModal = () => {
-        setShowProfileModal(false);
-        setSelectedTrainer(null);
     };
 
     return (
@@ -299,19 +319,16 @@ const TrainersPage = () => {
                                             )}
                                         </div>
                                         <button
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleBookTrainer(trainer);
+                                                void openProfileDrawer(trainer);
                                             }}
-                                            className="ti-btn ti-btn-primary w-full"
-                                            disabled={!isTrainerAcceptingBookings(trainer)}
-                                            title={
-                                                !isTrainerAcceptingBookings(trainer)
-                                                    ? 'Trainer is not accepting new bookings'
-                                                    : 'Book this trainer'
-                                            }
+                                            className="ti-btn ti-btn-primary !m-0 w-full inline-flex items-center justify-center gap-1.5"
+                                            title="View profile and book a session"
                                         >
-                                            <i className="ri-calendar-check-line me-1"></i>Book Now
+                                            <i className="ri-eye-line" aria-hidden="true"></i>
+                                            View &amp; Book
                                         </button>
                                     </div>
                                 </div>
@@ -321,132 +338,19 @@ const TrainersPage = () => {
                 )}
             </div>
 
-            {/* ══════════════════════════════════════════════════
-                EXISTING — Profile Modal (100% unchanged)
-            ══════════════════════════════════════════════════ */}
-            {showProfileModal && selectedTrainer && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleCloseModal}>
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-semibold">Trainer Profile</h3>
-                            <button onClick={handleCloseModal} className="ti-btn ti-btn-sm ti-btn-ghost">
-                                <i className="ri-close-line"></i>
-                            </button>
-                        </div>
+            <CompanyTrainerProfileDrawer
+                open={profileDrawerOpen}
+                trainer={selectedTrainer}
+                loading={profileLoading}
+                onClose={handleCloseProfileDrawer}
+                onBookSession={handleBookSessionFromProfile}
+            />
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-4">
-                                <div className="text-center">
-                                    {selectedTrainer.profilePhoto?.path ? (
-                                        <img
-                                            src={selectedTrainer.profilePhoto.path}
-                                            alt={selectedTrainer.name}
-                                            className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary/20"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-32 h-32 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-4 border-4 border-primary/20">
-                                            <span className="text-primary font-semibold text-5xl">
-                                                {selectedTrainer.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <h4 className="font-semibold text-xl mb-1">{selectedTrainer.name}</h4>
-                                    <p className="text-muted mb-4">{selectedTrainer.title}</p>
-                                    <button
-                                        onClick={() => handleBookTrainer(selectedTrainer)}
-                                        className="ti-btn ti-btn-primary w-full"
-                                        disabled={!isTrainerAcceptingBookings(selectedTrainer)}
-                                        title={
-                                            !isTrainerAcceptingBookings(selectedTrainer)
-                                                ? 'Trainer is not accepting new bookings'
-                                                : undefined
-                                        }
-                                    >
-                                        <i className="ri-calendar-check-line me-1"></i>Book Trainer
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="col-span-12 md:col-span-8">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Specialist In</label>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {Array.isArray(selectedTrainer.specialistIn) ? (
-                                                selectedTrainer.specialistIn.map((spec, idx) => (
-                                                    <span key={idx} className="badge bg-info/10 text-info">{spec}</span>
-                                                ))
-                                            ) : (
-                                                <span className="badge bg-info/10 text-info">{selectedTrainer.specialistIn}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {selectedTrainer.bio && selectedTrainer.bio !== 'none' && (
-                                        <div>
-                                            <label className="text-muted text-sm font-semibold">About</label>
-                                            <p className="text-defaulttextcolor mt-1">{selectedTrainer.bio}</p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Training Programs Offered</label>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {Array.isArray(selectedTrainer.typeOfTraining) ? (
-                                                selectedTrainer.typeOfTraining.map((training, idx) => (
-                                                    <span key={idx} className="badge bg-primary/10 text-primary">{training}</span>
-                                                ))
-                                            ) : (
-                                                <span className="badge bg-primary/10 text-primary">{selectedTrainer.typeOfTraining}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Status</label>
-                                        <div className="mt-1">
-                                            <span className={`badge ${selectedTrainer.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                                                {selectedTrainer.status !== false ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {selectedTrainer.images && selectedTrainer.images.length > 0 && (
-                                        <div>
-                                            <label className="text-muted text-sm font-semibold">Gallery</label>
-                                            <div className="grid grid-cols-4 gap-2 mt-2">
-                                                {selectedTrainer.images.map((img, idx) => (
-                                                    <img
-                                                        key={idx}
-                                                        src={img.path}
-                                                        alt={`Gallery ${idx + 1}`}
-                                                        className="w-full h-24 object-cover rounded"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════
-                EXISTING — Booking Modal (100% unchanged)
-            ══════════════════════════════════════════════════ */}
-            <BookingModal
+            <CompanyBookingDrawer
                 trainer={trainerToBook}
-                isOpen={showBookingModal}
+                isOpen={bookingDrawerOpen}
                 onClose={() => {
-                    setShowBookingModal(false);
+                    setBookingDrawerOpen(false);
                     setTrainerToBook(null);
                 }}
                 onSuccess={handleBookingSuccess}

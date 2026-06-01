@@ -42,9 +42,16 @@ export function useCompanyTrainerStats(period?: TrainerStatsPeriod): CompanyTrai
             try {
                 setState((s) => ({ ...s, loading: true, error: "" }));
                 const [catalog, active, bookings, overview] = await Promise.all([
-                    TrainerService.getTrainers({ page: 1, limit: 1, sortBy: "createdAt:desc" }),
                     TrainerService.getTrainers({
                         status: true,
+                        acceptingBookings: true,
+                        page: 1,
+                        limit: 1,
+                        sortBy: "createdAt:desc",
+                    }),
+                    TrainerService.getTrainers({
+                        status: true,
+                        acceptingBookings: true,
                         page: 1,
                         limit: 1,
                         sortBy: "createdAt:desc",

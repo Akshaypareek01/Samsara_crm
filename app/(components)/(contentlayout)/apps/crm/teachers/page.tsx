@@ -5,6 +5,7 @@ import Seo from '@/shared/layout-components/seo/seo';
 import UserService, { User, CreateUserRequest } from '@/services/userService';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
+import { TEACHER_CATEGORY_OPTIONS } from '@/constants/trainerCategories';
 
 const Teachers = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -501,9 +502,11 @@ const Teachers = () => {
                     />
                   </div>
                   <div>
-                    <label className="form-label text-xs">Teacher Category</label>
-                    <input
-                      type="text"
+                    <label className="form-label text-xs" htmlFor="teacher-category">
+                      Teacher Category
+                    </label>
+                    <select
+                      id="teacher-category"
                       className="form-control text-sm py-1.5"
                       value={formData.teacherCategory}
                       onChange={(e) =>
@@ -512,8 +515,15 @@ const Teachers = () => {
                           teacherCategory: e.target.value,
                         })
                       }
-                      placeholder="e.g., Yoga Trainer, Fitness Coach"
-                    />
+                      aria-label="Teacher category"
+                    >
+                      <option value="">Select category</option>
+                      {TEACHER_CATEGORY_OPTIONS.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="form-label text-xs">Teaching Experience</label>

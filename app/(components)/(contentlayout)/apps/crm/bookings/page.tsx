@@ -3,9 +3,22 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import bookingService, { Booking, ApproveBookingRequest, RejectBookingRequest } from '@/services/bookingService';
+import CompanyService, { Company } from '@/services/companyService';
+import TrainerService, { Trainer } from '@/services/trainerService';
 import Swal from 'sweetalert2';
 import StatusBadge from '@/shared/components/StatusBadge';
+import { canAdminCancelBooking } from '@/shared/utils/bookingUtils';
 import { hasPermission } from '@/shared/utils/permissionUtils';
+import AdminBookingDetailsDrawer from './AdminBookingDetailsDrawer';
+import AdminCompanyProfileDrawer from './AdminCompanyProfileDrawer';
+import AdminTrainerProfileDrawer from './AdminTrainerProfileDrawer';
+import { BookingsTableToolbar, BookingsTableFooter } from '@/shared/components/BookingsTablePagination';
+import {
+    getBookingCompanyId,
+    getBookingCompanyName,
+    getBookingTrainerId,
+    getBookingTrainerName,
+} from './adminBookingUtils';
 
 const BookingsManagement = () => {
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
@@ -18,8 +31,18 @@ const BookingsManagement = () => {
     // Approval/Rejection modals
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [showRejectionModal, setShowRejectionModal] = useState(false);
-    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
+    const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
+    const [bookingDrawerLoading, setBookingDrawerLoading] = useState(false);
+    const [companyDrawerOpen, setCompanyDrawerOpen] = useState(false);
+    const [companyDrawerLoading, setCompanyDrawerLoading] = useState(false);
+    const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+    const [trainerDrawerOpen, setTrainerDrawerOpen] = useState(false);
+    const [trainerDrawerLoading, setTrainerDrawerLoading] = useState(false);
+    const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+    const [profileStacked, setProfileStacked] = useState(false);
 
     // Approval form data
     const [approvalData, setApprovalData] = useState<ApproveBookingRequest>({
@@ -32,13 +55,19 @@ const BookingsManagement = () => {
 
     // Rejection form data
     const [rejectionReason, setRejectionReason] = useState('');
+    const [cancelRemark, setCancelRemark] = useState('');
 
     // Filters for all bookings
     const [statusFilter, setStatusFilter] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(1);
     const [totalResults, setTotalResults] = useState(0);
+    const [pendingPage, setPendingPage] = useState(1);
+    const [pendingPageSize, setPendingPageSize] = useState(10);
+    const [pendingTotalPages, setPendingTotalPages] = useState(1);
+    const [pendingTotalResults, setPendingTotalResults] = useState(0);
 
     useEffect(() => {
         const userStr = localStorage.getItem('user');
@@ -50,17 +79,19 @@ const BookingsManagement = () => {
         } else {
             fetchAllBookings();
         }
-    }, [activeTab, statusFilter, searchTerm, page]);
+    }, [activeTab, statusFilter, searchTerm, page, pageSize, pendingPage, pendingPageSize]);
 
     const fetchPendingBookings = async () => {
         try {
             setLoading(true);
             const response = await bookingService.getPendingApprovals({
-                page: 1,
-                limit: 50,
+                page: pendingPage,
+                limit: pendingPageSize,
                 sortBy: 'createdAt:desc',
             });
             setPendingBookings(response.results || []);
+            setPendingTotalPages(response.totalPages || 1);
+            setPendingTotalResults(response.totalResults || 0);
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to fetch pending bookings');
@@ -75,7 +106,7 @@ const BookingsManagement = () => {
             setLoading(true);
             const params: any = {
                 page,
-                limit: 10,
+                limit: pageSize,
                 sortBy: 'createdAt:desc',
             };
 
@@ -93,6 +124,75 @@ const BookingsManagement = () => {
             console.error('Error fetching bookings:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    /**
+     * Opens company profile drawer and loads full company record.
+     */
+    const openCompanyProfile = async (booking: Booking, stacked = false) => {
+        const id = getBookingCompanyId(booking);
+        if (!id) return;
+        setProfileStacked(stacked);
+        setCompanyDrawerOpen(true);
+        setCompanyDrawerLoading(true);
+        if (typeof booking.company === 'object' && booking.company) {
+            setSelectedCompany(booking.company as Company);
+        }
+        try {
+            const full = await CompanyService.getCompanyById(id);
+            setSelectedCompany(full);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to load company profile';
+            void Swal.fire({ icon: 'error', title: 'Error', text: msg });
+            setCompanyDrawerOpen(false);
+        } finally {
+            setCompanyDrawerLoading(false);
+        }
+    };
+
+    /**
+     * Opens trainer profile drawer and loads full trainer record.
+     */
+    const openTrainerProfile = async (booking: Booking, stacked = false) => {
+        const id = getBookingTrainerId(booking);
+        if (!id) return;
+        setProfileStacked(stacked);
+        setTrainerDrawerOpen(true);
+        setTrainerDrawerLoading(true);
+        if (typeof booking.trainer === 'object' && booking.trainer) {
+            setSelectedTrainer(booking.trainer as Trainer);
+        }
+        try {
+            const full = await TrainerService.getTrainerById(id);
+            setSelectedTrainer(full);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to load trainer profile';
+            void Swal.fire({ icon: 'error', title: 'Error', text: msg });
+            setTrainerDrawerOpen(false);
+        } finally {
+            setTrainerDrawerLoading(false);
+        }
+    };
+
+    /**
+     * Opens booking details drawer with fresh booking payload.
+     */
+    const handleViewDetails = async (booking: Booking) => {
+        const id = booking._id || booking.id;
+        if (!id) return;
+        setBookingDrawerOpen(true);
+        setBookingDrawerLoading(true);
+        setSelectedBooking(booking);
+        try {
+            const full = await bookingService.getBookingById(id);
+            setSelectedBooking(full);
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to load booking details';
+            void Swal.fire({ icon: 'error', title: 'Error', text: msg });
+            setBookingDrawerOpen(false);
+        } finally {
+            setBookingDrawerLoading(false);
         }
     };
 
@@ -114,9 +214,10 @@ const BookingsManagement = () => {
         setShowRejectionModal(true);
     };
 
-    const handleViewDetails = (booking: Booking) => {
+    const handleCancel = (booking: Booking) => {
         setSelectedBooking(booking);
-        setShowDetailsModal(true);
+        setCancelRemark('');
+        setShowCancelModal(true);
     };
 
     const submitApproval = async (e: React.FormEvent) => {
@@ -131,8 +232,9 @@ const BookingsManagement = () => {
             }
 
             await bookingService.approveBooking(bookingId, approvalData);
-            Swal.fire('Success!', 'Booking approved successfully', 'success');
+            Swal.fire('Success!', 'Booking confirmed successfully', 'success');
             setShowApprovalModal(false);
+            setBookingDrawerOpen(false);
             setSelectedBooking(null);
             fetchPendingBookings();
             if (activeTab === 'all') fetchAllBookings();
@@ -158,6 +260,7 @@ const BookingsManagement = () => {
             await bookingService.rejectBooking(bookingId, { adminNotes: rejectionReason });
             Swal.fire('Success!', 'Booking rejected', 'success');
             setShowRejectionModal(false);
+            setBookingDrawerOpen(false);
             setSelectedBooking(null);
             fetchPendingBookings();
             if (activeTab === 'all') fetchAllBookings();
@@ -166,18 +269,70 @@ const BookingsManagement = () => {
         }
     };
 
-    const getCompanyName = (booking: Booking): string => {
-        if (typeof booking.company === 'object' && booking.company) {
-            return booking.company.companyName || 'Unknown Company';
+    const submitCancel = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedBooking || !cancelRemark.trim()) {
+            Swal.fire('Error!', 'Please provide a cancellation remark', 'warning');
+            return;
         }
-        return 'Unknown Company';
+
+        try {
+            const bookingId = selectedBooking._id || selectedBooking.id;
+            if (!bookingId) {
+                Swal.fire('Error!', 'Booking ID not found', 'error');
+                return;
+            }
+
+            await bookingService.adminCancelBooking(bookingId, { adminNotes: cancelRemark.trim() });
+            Swal.fire('Success!', 'Meeting cancelled successfully', 'success');
+            setShowCancelModal(false);
+            setBookingDrawerOpen(false);
+            setSelectedBooking(null);
+            fetchPendingBookings();
+            if (activeTab === 'all') fetchAllBookings();
+        } catch (err: any) {
+            Swal.fire('Error!', err.message || 'Failed to cancel booking', 'error');
+        }
     };
 
-    const getTrainerName = (booking: Booking): string => {
-        if (typeof booking.trainer === 'object' && booking.trainer) {
-            return booking.trainer.name || 'Unknown Trainer';
+    const getCompanyName = (booking: Booking): string => getBookingCompanyName(booking);
+
+    const getTrainerName = (booking: Booking): string => getBookingTrainerName(booking);
+
+    const canManageBookings = hasPermission(adminUser, 'bookingManagement', 'update');
+
+    const tablePage = activeTab === 'pending' ? pendingPage : page;
+    const tablePageSize = activeTab === 'pending' ? pendingPageSize : pageSize;
+    const tableTotalPages = activeTab === 'pending' ? pendingTotalPages : totalPages;
+    const tableTotalResults = activeTab === 'pending' ? pendingTotalResults : totalResults;
+    const tableIdPrefix = activeTab === 'pending' ? 'admin-pending-bookings' : 'admin-all-bookings';
+
+    const handleTablePageChange = (nextPage: number) => {
+        if (activeTab === 'pending') {
+            setPendingPage(nextPage);
+        } else {
+            setPage(nextPage);
         }
-        return 'Unknown Trainer';
+    };
+
+    const handleTablePageSizeChange = (size: number) => {
+        if (activeTab === 'pending') {
+            setPendingPageSize(size);
+            setPendingPage(1);
+        } else {
+            setPageSize(size);
+            setPage(1);
+        }
+    };
+
+    const tablePaginationProps = {
+        page: tablePage,
+        totalPages: tableTotalPages,
+        totalResults: tableTotalResults,
+        pageSize: tablePageSize,
+        onPageChange: handleTablePageChange,
+        onPageSizeChange: handleTablePageSizeChange,
+        idPrefix: tableIdPrefix,
     };
 
     const formatDate = (dateString: string) => {
@@ -229,7 +384,7 @@ const BookingsManagement = () => {
                                     : 'border-transparent text-muted hover:text-defaulttextcolor'
                                     }`}
                             >
-                                Pending Approvals
+                                Pending Admin Approval
                                 {pendingBookings.length > 0 && (
                                     <span className="ml-2 badge bg-primary/10 text-primary">
                                         {pendingBookings.length}
@@ -250,28 +405,28 @@ const BookingsManagement = () => {
 
                     {/* Filters for All Bookings */}
                     {activeTab === 'all' && (
-                        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="mb-4">
                             <select
-                                className="form-control"
+                                className="form-control max-w-xs"
                                 value={statusFilter}
                                 onChange={(e) => {
                                     setStatusFilter(e.target.value);
                                     setPage(1);
                                 }}
+                                aria-label="Filter bookings by status"
                             >
                                 <option value="">All Status</option>
-                                <option value="pending_approval">Pending Approval</option>
-                                <option value="approved">Approved</option>
+                                <option value="pending_approval">Pending Trainer Approval</option>
+                                <option value="approved">Pending Admin Approval</option>
                                 <option value="confirmed">Confirmed</option>
                                 <option value="completed">Completed</option>
                                 <option value="rejected">Rejected</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
-                            <div className="text-sm text-muted flex items-center">
-                                Total: {totalResults} bookings
-                            </div>
                         </div>
                     )}
+
+                    {!loading && <BookingsTableToolbar {...tablePaginationProps} />}
 
                     {loading ? (
                         <div className="text-center py-8">
@@ -304,11 +459,25 @@ const BookingsManagement = () => {
                                         (activeTab === 'pending' ? pendingBookings : allBookings).map((booking) => (
                                             <tr key={booking._id || booking.id}>
                                                 <td>
-                                                    <span className="font-semibold">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void openCompanyProfile(booking)}
+                                                        className="font-semibold text-primary hover:underline p-0 bg-transparent border-0 text-left"
+                                                        aria-label={`View company profile for ${getCompanyName(booking)}`}
+                                                    >
                                                         {getCompanyName(booking)}
-                                                    </span>
+                                                    </button>
                                                 </td>
-                                                <td>{getTrainerName(booking)}</td>
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void openTrainerProfile(booking)}
+                                                        className="font-semibold text-primary hover:underline p-0 bg-transparent border-0 text-left"
+                                                        aria-label={`View trainer profile for ${getTrainerName(booking)}`}
+                                                    >
+                                                        {getTrainerName(booking)}
+                                                    </button>
+                                                </td>
                                                 <td>
                                                     <div className="flex flex-col">
                                                         <span className="font-semibold">
@@ -340,33 +509,50 @@ const BookingsManagement = () => {
                                                 <td>
                                                     <div className="flex items-center gap-2">
                                                         <button
-                                                            onClick={() => handleViewDetails(booking)}
+                                                            type="button"
+                                                            onClick={() => void handleViewDetails(booking)}
                                                             className="ti-btn ti-btn-sm ti-btn-info"
                                                             title="View Details"
+                                                            aria-label="View booking details"
                                                         >
-                                                            <i className="ri-eye-line"></i>
+                                                            <i className="ri-eye-line" aria-hidden="true"></i>
                                                         </button>
-                                                        {booking.status === 'pending_approval' && (
+                                                        {booking.status === 'approved' && (
                                                             <>
-                                                                {hasPermission(adminUser, 'bookingManagement', 'update') && (
+                                                                {canManageBookings && (
                                                                     <button
+                                                                        type="button"
                                                                         onClick={() => handleApprove(booking)}
                                                                         className="ti-btn ti-btn-sm ti-btn-success"
-                                                                        title="Approve"
+                                                                        title="Confirm booking"
+                                                                        aria-label="Confirm booking"
                                                                     >
-                                                                        <i className="ri-check-line"></i>
+                                                                        <i className="ri-check-line" aria-hidden="true"></i>
                                                                     </button>
                                                                 )}
-                                                                {hasPermission(adminUser, 'bookingManagement', 'update') && (
+                                                                {canManageBookings && (
                                                                     <button
+                                                                        type="button"
                                                                         onClick={() => handleReject(booking)}
                                                                         className="ti-btn ti-btn-sm ti-btn-danger"
                                                                         title="Reject"
+                                                                        aria-label="Reject booking"
                                                                     >
-                                                                        <i className="ri-close-line"></i>
+                                                                        <i className="ri-close-line" aria-hidden="true"></i>
                                                                     </button>
                                                                 )}
                                                             </>
+                                                        )}
+                                                        {canManageBookings && canAdminCancelBooking(booking.status) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleCancel(booking)}
+                                                                className="ti-btn ti-btn-sm ti-btn-warning"
+                                                                title="Cancel meeting"
+                                                                aria-label="Cancel meeting"
+                                                            >
+                                                                <i className="ri-close-circle-line" aria-hidden="true"></i>
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </td>
@@ -378,28 +564,7 @@ const BookingsManagement = () => {
                         </div>
                     )}
 
-                    {/* Pagination for All Bookings */}
-                    {activeTab === 'all' && totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-4">
-                            <button
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="ti-btn ti-btn-sm"
-                            >
-                                Previous
-                            </button>
-                            <span>
-                                Page {page} of {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={page === totalPages}
-                                className="ti-btn ti-btn-sm"
-                            >
-                                Next
-                            </button>
-                        </div>
-                    )}
+                    {!loading && <BookingsTableFooter {...tablePaginationProps} />}
                 </div>
             </div>
 
@@ -503,7 +668,7 @@ const BookingsManagement = () => {
                                     Cancel
                                 </button>
                                 <button type="submit" className="ti-btn ti-btn-success">
-                                    Approve Booking
+                                    Confirm Booking
                                 </button>
                             </div>
                         </form>
@@ -566,132 +731,102 @@ const BookingsManagement = () => {
                 </div>
             )}
 
-            {/* Details Modal */}
-            {showDetailsModal && selectedBooking && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Booking Details</h3>
-                            <button
-                                onClick={() => setShowDetailsModal(false)}
-                                className="ti-btn ti-btn-sm ti-btn-ghost"
-                            >
-                                <i className="ri-close-line"></i>
-                            </button>
+            {showCancelModal && selectedBooking && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]">
+                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 max-w-md w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-4">Cancel Meeting</h3>
+                        <div className="mb-4 p-3 bg-light rounded">
+                            <p className="text-sm mb-1">
+                                <strong>Company:</strong> {getCompanyName(selectedBooking)}
+                            </p>
+                            <p className="text-sm mb-1">
+                                <strong>Trainer:</strong> {getTrainerName(selectedBooking)}
+                            </p>
+                            <p className="text-sm mb-0">
+                                <strong>Date:</strong> {formatDate(selectedBooking.bookingDate)} at {formatTime(selectedBooking.startTime)}
+                            </p>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Company</label>
-                                    <p className="text-defaulttextcolor">{getCompanyName(selectedBooking)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Trainer</label>
-                                    <p className="text-defaulttextcolor">{getTrainerName(selectedBooking)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Booking Date</label>
-                                    <p className="text-defaulttextcolor">{formatDate(selectedBooking.bookingDate)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Start Time</label>
-                                    <p className="text-defaulttextcolor">{formatTime(selectedBooking.startTime)}</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Duration</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.duration} hours</p>
-                                </div>
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Status</label>
-                                    <p className="text-defaulttextcolor">
-                                        <StatusBadge status={selectedBooking.status} />
-                                    </p>
-                                </div>
+                        <form onSubmit={submitCancel}>
+                            <div className="mb-4">
+                                <label className="form-label" htmlFor="admin-cancel-remark">
+                                    Cancellation remark <span className="text-danger">*</span>
+                                </label>
+                                <textarea
+                                    id="admin-cancel-remark"
+                                    className="form-control"
+                                    rows={4}
+                                    value={cancelRemark}
+                                    onChange={(e) => setCancelRemark(e.target.value)}
+                                    placeholder="Reason for cancelling this meeting..."
+                                    required
+                                    aria-required="true"
+                                />
                             </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-muted">Training Types</label>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                    {selectedBooking.typeOfTraining.map((type, idx) => (
-                                        <span key={idx} className="badge bg-info/10 text-info">
-                                            {type}
-                                        </span>
-                                    ))}
-                                </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="ti-btn ti-btn-secondary"
+                                >
+                                    Close
+                                </button>
+                                <button type="submit" className="ti-btn ti-btn-warning">
+                                    Cancel meeting
+                                </button>
                             </div>
-
-                            {selectedBooking.notes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Company Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.notes}</p>
-                                </div>
-                            )}
-
-                            {selectedBooking.paymentStatus && (
-                                <div className="border-t pt-4">
-                                    <h4 className="font-semibold mb-3">Payment Information</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-semibold text-muted">Payment Status</label>
-                                            <p className="text-defaulttextcolor">
-                                                {selectedBooking.paymentStatus.isPaid ? (
-                                                    <span className="badge bg-success/10 text-success">Paid</span>
-                                                ) : (
-                                                    <span className="badge bg-warning/10 text-warning">Unpaid</span>
-                                                )}
-                                            </p>
-                                        </div>
-                                        {selectedBooking.paymentStatus.paymentMode && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Payment Mode</label>
-                                                <p className="text-defaulttextcolor capitalize">
-                                                    {selectedBooking.paymentStatus.paymentMode.replace('_', ' ')}
-                                                </p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.paymentStatus.transactionId && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Transaction ID</label>
-                                                <p className="text-defaulttextcolor">{selectedBooking.paymentStatus.transactionId}</p>
-                                            </div>
-                                        )}
-                                        {selectedBooking.paymentStatus.paymentAmount && (
-                                            <div>
-                                                <label className="text-sm font-semibold text-muted">Amount</label>
-                                                <p className="text-defaulttextcolor">₹{selectedBooking.paymentStatus.paymentAmount}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            {selectedBooking.adminNotes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Admin Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.adminNotes}</p>
-                                </div>
-                            )}
-
-                            {selectedBooking.trainerNotes && (
-                                <div>
-                                    <label className="text-sm font-semibold text-muted">Trainer Notes</label>
-                                    <p className="text-defaulttextcolor">{selectedBooking.trainerNotes}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex justify-end mt-6">
-                            <button
-                                onClick={() => setShowDetailsModal(false)}
-                                className="ti-btn ti-btn-secondary"
-                            >
-                                Close
-                            </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             )}
+
+            <AdminBookingDetailsDrawer
+                open={bookingDrawerOpen}
+                booking={selectedBooking}
+                loading={bookingDrawerLoading}
+                onClose={() => {
+                    setBookingDrawerOpen(false);
+                    setSelectedBooking(null);
+                }}
+                onViewCompany={
+                    selectedBooking
+                        ? () => void openCompanyProfile(selectedBooking, true)
+                        : undefined
+                }
+                onViewTrainer={
+                    selectedBooking
+                        ? () => void openTrainerProfile(selectedBooking, true)
+                        : undefined
+                }
+                onConfirm={canManageBookings ? handleApprove : undefined}
+                onReject={canManageBookings ? handleReject : undefined}
+                onCancel={canManageBookings ? handleCancel : undefined}
+                canManage={canManageBookings}
+            />
+
+            <AdminCompanyProfileDrawer
+                open={companyDrawerOpen}
+                company={selectedCompany}
+                loading={companyDrawerLoading}
+                stacked={profileStacked}
+                onClose={() => {
+                    setCompanyDrawerOpen(false);
+                    setSelectedCompany(null);
+                    setProfileStacked(false);
+                }}
+            />
+
+            <AdminTrainerProfileDrawer
+                open={trainerDrawerOpen}
+                trainer={selectedTrainer}
+                loading={trainerDrawerLoading}
+                stacked={profileStacked}
+                onClose={() => {
+                    setTrainerDrawerOpen(false);
+                    setSelectedTrainer(null);
+                    setProfileStacked(false);
+                }}
+            />
         </Fragment>
     );
 };

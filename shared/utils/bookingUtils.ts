@@ -13,13 +13,13 @@ export const STATUS_COLORS: Record<string, StatusConfig> = {
     pending_approval: {
         bg: '#FEF3C7',
         text: '#92400E',
-        label: 'Pending Approval',
+        label: 'Pending Trainer Approval',
         icon: '⏳',
     },
     approved: {
         bg: '#DBEAFE',
         text: '#1E40AF',
-        label: 'Approved',
+        label: 'Pending Admin Approval',
         icon: '✓',
     },
     confirmed: {
@@ -156,11 +156,18 @@ export function isValidTime(time: string): boolean {
 // ==================== PERMISSION UTILITIES ====================
 
 export function canCancelBooking(status: string): boolean {
-    return ['pending_approval', 'approved', 'confirmed'].includes(status);
+    return ['pending_approval', 'approved'].includes(status);
+}
+
+/**
+ * @deprecated Use {@link canCancelBooking} — same rule for company and trainer.
+ */
+export function canCompanyCancelBooking(status: string): boolean {
+    return canCancelBooking(status);
 }
 
 export function canConfirmBooking(status: string): boolean {
-    return status === 'approved';
+    return status === 'pending_approval';
 }
 
 export function canCompleteBooking(status: string): boolean {
@@ -168,11 +175,16 @@ export function canCompleteBooking(status: string): boolean {
 }
 
 export function canApproveBooking(status: string): boolean {
-    return status === 'pending_approval';
+    return status === 'approved';
+}
+
+/** Admin may cancel any booking except already cancelled or rejected. */
+export function canAdminCancelBooking(status: string): boolean {
+    return !['cancelled', 'rejected'].includes(status);
 }
 
 export function canRejectBooking(status: string): boolean {
-    return status === 'pending_approval';
+    return status === 'approved' || status === 'pending_approval';
 }
 
 // ==================== DISPLAY UTILITIES ====================

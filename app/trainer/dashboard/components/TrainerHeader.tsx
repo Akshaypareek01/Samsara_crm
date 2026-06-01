@@ -39,14 +39,16 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
   }, [loadAvailability]);
 
   useEffect(() => {
-    const onSync = (ev: Event) => {
+    const onBookingSync = (ev: Event) => {
       const ce = ev as CustomEvent<TrainerAcceptingBookingsDetail>;
       if (typeof ce.detail?.acceptingBookings === 'boolean') {
         setAcceptingBookings(ce.detail.acceptingBookings);
       }
     };
-    window.addEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
-    return () => window.removeEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onSync as EventListener);
+    window.addEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onBookingSync as EventListener);
+    return () => {
+      window.removeEventListener(TRAINER_ACCEPTING_BOOKINGS_EVENT, onBookingSync as EventListener);
+    };
   }, []);
 
   /**
@@ -69,10 +71,28 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
     }
   };
 
+  /**
+   * Signs the trainer out after confirmation.
+   *
+   * @param e - Click event from the logout control.
+   */
   const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    const result = await Swal.fire({
+      title: 'Log out?',
+      text: 'Are you sure you want to log out of your trainer account?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, log out',
+      cancelButtonText: 'Cancel',
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
-      // Clear trainer auth tokens
       await ApiService.removeAuthToken();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('refreshToken');
@@ -83,7 +103,6 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
       router.push('/trainer/login');
     } catch (error) {
       console.error('Logout error:', error);
-      // Still redirect even if logout fails
       router.push('/trainer/login');
     }
   };
@@ -148,8 +167,8 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
     <Fragment>
       <div className="app-header">
         <nav className="main-header !h-[3.75rem]" aria-label="Global">
-          <div className="main-header-container ps-[0.725rem] pe-[1rem]">
-            <div className="header-content-left">
+          <div className="main-header-container ps-[0.725rem] pe-[1rem] flex items-center justify-between gap-2">
+            <div className="header-content-left flex items-center flex-shrink-0">
               <div className="header-element">
                 <div className="horizontal-logo">
                   <Link href="/trainer/dashboard" className="header-logo">
@@ -172,53 +191,59 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
                 </Link>
               </div>
             </div>
-            <div className="header-content-right flex flex-wrap items-center gap-2">
+
+            <div className="flex-1" aria-hidden="true" />
+
+            <div className="header-content-right flex items-center justify-end gap-3 flex-shrink-0 ms-auto">
               {!availabilityLoading && trainerActive && (
                 <div
-                  className="header-element py-[1rem] md:px-[0.65rem] px-2 flex items-center gap-2 sm:gap-3 rounded-md border border-defaultborder bg-white/80 dark:bg-bodybg"
+                  className="header-element !flex !items-center gap-2.5 px-3 py-1.5 rounded-md border border-defaultborder bg-white dark:bg-bodybg"
                   title={
                     acceptingBookings
-                      ? 'Companies can book new sessions with you'
-                      : 'Companies cannot create new bookings until you turn this on'
+                      ? 'You are online — companies can book new sessions with you'
+                      : 'You are offline — companies cannot create new bookings until you go online'
                   }
                 >
                   <span
                     id="trainer-header-booking-label"
-                    className="hidden md:inline text-[0.8125rem] font-medium text-defaulttextcolor whitespace-nowrap"
+                    className="text-[0.8125rem] font-medium text-defaulttextcolor whitespace-nowrap leading-none"
                   >
                     New bookings
                   </span>
-                  <div className="form-check form-switch mb-0">
-                    <input
-                      className="form-check-input cursor-pointer"
-                      type="checkbox"
-                      role="switch"
-                      checked={acceptingBookings}
-                      disabled={availabilitySaving}
-                      onChange={(e) => {
-                        void handleHeaderAvailabilityToggle(e.target.checked);
-                      }}
-                      aria-labelledby="trainer-header-booking-label"
-                      aria-label="Accept new bookings from companies"
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={acceptingBookings}
+                    aria-labelledby="trainer-header-booking-label trainer-header-status-label"
+                    disabled={availabilitySaving}
+                    onClick={() => {
+                      void handleHeaderAvailabilityToggle(!acceptingBookings);
+                    }}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-success' : 'bg-gray-300 dark:bg-white/20'}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${acceptingBookings ? 'translate-x-5' : 'translate-x-0'}`}
+                      aria-hidden="true"
                     />
-                  </div>
+                  </button>
                   <span
-                    className={`text-[0.7rem] font-semibold uppercase tracking-wide hidden sm:inline ${acceptingBookings ? 'text-success' : 'text-warning'}`}
+                    id="trainer-header-status-label"
+                    className={`text-[0.7rem] font-semibold uppercase tracking-wide whitespace-nowrap ${acceptingBookings ? 'text-success' : 'text-warning'}`}
                     aria-live="polite"
                   >
-                    {acceptingBookings ? 'Open' : 'Closed'}
+                    {acceptingBookings ? 'Online' : 'Offline'}
                   </span>
                 </div>
               )}
-              <div className="header-element py-[1rem] md:px-[0.65rem] px-2">
+              <div className="header-element !flex !items-center">
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="ti-btn ti-btn ti-btn-primary !bg-primary !text-white !font-medium"
+                  className="ti-btn !bg-danger !text-white inline-flex items-center justify-center !p-0 !w-9 !h-9 !rounded-md !leading-none !shadow-none !m-0"
                   title="Logout"
+                  aria-label="Logout"
                 >
-                  <i className="ri-logout-box-line me-1"></i>
-                  <span className="hidden sm:inline">Logout</span>
+                  <i className="ri-logout-box-line text-[1.05rem]"></i>
                 </button>
               </div>
             </div>

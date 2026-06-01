@@ -2,13 +2,38 @@
 import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import TrainerService, { Trainer, SPECIALIST_OPTIONS, isTrainerAcceptingBookings } from '@/services/trainerService';
-import BookingModal from '../components/BookingModal';
+import TrainerService, { Trainer, SPECIALIST_OPTIONS, TRAINER_CATEGORY_OPTIONS, TYPE_OF_TRAINING_OPTIONS } from '@/services/trainerService';
+import CompanyBookingDrawer from '../components/CompanyBookingDrawer';
+import CompanyTrainerProfileDrawer from '../components/CompanyTrainerProfileDrawer';
 
 import { useCompanyTrainerStats } from '@/hooks/useCompanyTrainerStats';
 
 type FilterPeriod = 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
 const PERIODS: FilterPeriod[] = ['Weekly', 'Monthly', 'Quarterly', 'Yearly'];
+
+/**
+ * Builds a compact list of page tokens with ellipsis for pagination.
+ * Always shows first/last page and a window around the current page.
+ * @param current - the active page (1-indexed)
+ * @param total - total number of pages
+ * @returns array of page numbers and '...' separators
+ */
+const getPageNumbers = (current: number, total: number): (number | '...')[] => {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const pages: (number | '...')[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    if (start > 2) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push('...');
+
+    pages.push(total);
+    return pages;
+};
 
 const TrainersPage = () => {
     const [activePeriod, setActivePeriod] = useState<FilterPeriod>('Weekly');
@@ -19,17 +44,32 @@ const TrainersPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
-    const [showProfileModal, setShowProfileModal] = useState(false);
-    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
     const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const [searchInput, setSearchInput] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialist, setFilterSpecialist] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterTraining, setFilterTraining] = useState('');
+    const [sortBy, setSortBy] = useState('createdAt:desc');
+
+    // ── Pagination state ──────────────────────────────────────
+    const PAGE_LIMIT = 12;
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
 
     useEffect(() => {
         const timer = setTimeout(() => setSearchTerm(searchInput), 300);
         return () => clearTimeout(timer);
     }, [searchInput]);
+
+    // Reset to first page whenever a filter changes
+    useEffect(() => {
+        setPage(1);
+    }, [searchTerm, filterSpecialist, filterCategory, filterTraining, sortBy]);
 
     const fetchTrainers = useCallback(async () => {
         try {
@@ -37,46 +77,97 @@ const TrainersPage = () => {
             setError('');
             const params: any = {
                 status: true,
-                page: 1,
-                limit: 50,
-                sortBy: 'createdAt:desc',
+                acceptingBookings: true,
+                page,
+                limit: PAGE_LIMIT,
+                sortBy,
             };
             if (searchTerm) params.name = searchTerm;
             if (filterSpecialist) params.specialistIn = filterSpecialist;
+            if (filterCategory) params.category = filterCategory;
+            if (filterTraining) params.typeOfTraining = filterTraining;
 
             const response = await TrainerService.getTrainers(params);
             setTrainers(response.results || []);
+            setTotalPages(response.totalPages || 1);
+            setTotalResults(response.totalResults || 0);
         } catch (err: any) {
             setError(err.message || 'Failed to fetch trainers');
             console.error('Error fetching trainers:', err);
         } finally {
             setLoading(false);
         }
-    }, [searchTerm, filterSpecialist]);
+    }, [searchTerm, filterSpecialist, filterCategory, filterTraining, sortBy, page]);
+
+    /**
+     * Resets every search/filter control back to its default state.
+     */
+    const handleClearFilters = () => {
+        setSearchInput('');
+        setSearchTerm('');
+        setFilterCategory('');
+        setFilterSpecialist('');
+        setFilterTraining('');
+        setSortBy('createdAt:desc');
+    };
+
+    const hasActiveFilters =
+        !!searchInput ||
+        !!filterCategory ||
+        !!filterSpecialist ||
+        !!filterTraining ||
+        sortBy !== 'createdAt:desc';
 
     useEffect(() => {
         void fetchTrainers();
     }, [fetchTrainers]);
 
-    // ── EXISTING handlers (unchanged) ─────────────────────────
-    const handleTrainerClick = (trainer: Trainer) => {
+    /**
+     * Opens profile drawer and loads full trainer record from API.
+     *
+     * @param trainer - Trainer from list card.
+     */
+    const openProfileDrawer = async (trainer: Trainer) => {
+        const id = trainer._id || trainer.id;
         setSelectedTrainer(trainer);
-        setShowProfileModal(true);
+        setProfileDrawerOpen(true);
+        if (!id) return;
+        try {
+            setProfileLoading(true);
+            const full = await TrainerService.getTrainerById(id);
+            setSelectedTrainer(full);
+        } catch (err: unknown) {
+            console.error("Error loading trainer profile:", err);
+            setError(err instanceof Error ? err.message : "Failed to load trainer profile");
+        } finally {
+            setProfileLoading(false);
+        }
     };
 
-    const handleBookTrainer = (trainer: Trainer) => {
+    const handleTrainerClick = (trainer: Trainer) => {
+        void openProfileDrawer(trainer);
+    };
+
+    const handleCloseProfileDrawer = () => {
+        setProfileDrawerOpen(false);
+        setSelectedTrainer(null);
+    };
+
+    /**
+     * Closes profile drawer and opens booking drawer for the same trainer.
+     *
+     * @param trainer - Trainer to book.
+     */
+    const handleBookSessionFromProfile = (trainer: Trainer) => {
+        setProfileDrawerOpen(false);
+        setSelectedTrainer(null);
         setTrainerToBook(trainer);
-        setShowBookingModal(true);
+        setBookingDrawerOpen(true);
     };
 
     const handleBookingSuccess = () => {
-        setShowBookingModal(false);
+        setBookingDrawerOpen(false);
         setTrainerToBook(null);
-    };
-
-    const handleCloseModal = () => {
-        setShowProfileModal(false);
-        setSelectedTrainer(null);
     };
 
     return (
@@ -214,29 +305,50 @@ const TrainersPage = () => {
             <h6 className="font-semibold text-base text-defaulttextcolor mb-3">Search Trainers</h6>
 
             {/* ══════════════════════════════════════════════════
-                EXISTING — Filters (unchanged, just restyled label)
+                Filters — all available trainer query options
             ══════════════════════════════════════════════════ */}
             <div className="box mb-4">
                 <div className="box-body">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         <div>
-                            <label className="form-label">Search by Name</label>
+                            <label className="form-label" htmlFor="trainer-search">Search by Name</label>
                             <input
+                                id="trainer-search"
                                 type="text"
                                 className="form-control"
                                 placeholder="Search by name or specialty..."
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
+                                aria-label="Search trainers by name or specialty"
                             />
                         </div>
                         <div>
-                            <label className="form-label">All Expertise</label>
+                            <label className="form-label" htmlFor="trainer-category">Category</label>
                             <select
+                                id="trainer-category"
+                                className="form-control"
+                                value={filterCategory}
+                                onChange={(e) => setFilterCategory(e.target.value)}
+                                aria-label="Filter trainers by category"
+                            >
+                                <option value="">All Categories</option>
+                                {TRAINER_CATEGORY_OPTIONS.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="form-label" htmlFor="trainer-specialist">Specialist In</label>
+                            <select
+                                id="trainer-specialist"
                                 className="form-control"
                                 value={filterSpecialist}
                                 onChange={(e) => setFilterSpecialist(e.target.value)}
+                                aria-label="Filter trainers by specialist in"
                             >
-                                <option value="">All Expertise</option>
+                                <option value="">All Specialties</option>
                                 {SPECIALIST_OPTIONS.map((spec) => (
                                     <option key={spec} value={spec}>
                                         {spec}
@@ -244,6 +356,56 @@ const TrainersPage = () => {
                                 ))}
                             </select>
                         </div>
+                        <div>
+                            <label className="form-label" htmlFor="trainer-training">Training Program</label>
+                            <select
+                                id="trainer-training"
+                                className="form-control"
+                                value={filterTraining}
+                                onChange={(e) => setFilterTraining(e.target.value)}
+                                aria-label="Filter trainers by training program"
+                            >
+                                <option value="">All Programs</option>
+                                {TYPE_OF_TRAINING_OPTIONS.map((training) => (
+                                    <option key={training} value={training}>
+                                        {training}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="form-label" htmlFor="trainer-sort">Sort By</label>
+                            <select
+                                id="trainer-sort"
+                                className="form-control"
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value)}
+                                aria-label="Sort trainers"
+                            >
+                                <option value="createdAt:desc">Newest First</option>
+                                <option value="createdAt:asc">Oldest First</option>
+                                <option value="name:asc">Name (A–Z)</option>
+                                <option value="name:desc">Name (Z–A)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between flex-wrap gap-3 mt-4">
+                        <p className="text-sm text-muted mb-0">
+                            {loading
+                                ? 'Loading…'
+                                : `${totalResults} trainer${totalResults === 1 ? '' : 's'} found`}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={handleClearFilters}
+                            disabled={!hasActiveFilters}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary/10 disabled:hover:text-primary"
+                            aria-label="Clear all filters"
+                        >
+                            <i className="ri-refresh-line text-base"></i>
+                            <span>Clear Filters</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -306,19 +468,16 @@ const TrainersPage = () => {
                                             )}
                                         </div>
                                         <button
+                                            type="button"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleBookTrainer(trainer);
+                                                void openProfileDrawer(trainer);
                                             }}
-                                            className="ti-btn ti-btn-primary w-full"
-                                            disabled={!isTrainerAcceptingBookings(trainer)}
-                                            title={
-                                                !isTrainerAcceptingBookings(trainer)
-                                                    ? 'Trainer is not accepting new bookings'
-                                                    : 'Book this trainer'
-                                            }
+                                            className="ti-btn ti-btn-primary !m-0 w-full inline-flex items-center justify-center gap-1.5"
+                                            title="View profile and book a session"
                                         >
-                                            <i className="ri-calendar-check-line me-1"></i>Book Now
+                                            <i className="ri-eye-line" aria-hidden="true"></i>
+                                            View &amp; Book
                                         </button>
                                     </div>
                                 </div>
@@ -329,131 +488,84 @@ const TrainersPage = () => {
             </div>
 
             {/* ══════════════════════════════════════════════════
-                EXISTING — Profile Modal (100% unchanged)
+                Pagination controls
             ══════════════════════════════════════════════════ */}
-            {showProfileModal && selectedTrainer && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={handleCloseModal}>
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-semibold">Trainer Profile</h3>
-                            <button onClick={handleCloseModal} className="ti-btn ti-btn-sm ti-btn-ghost">
-                                <i className="ri-close-line"></i>
+            {!loading && totalResults > 0 && (
+                <nav
+                    className="flex items-center justify-between flex-wrap gap-3 mt-6"
+                    aria-label="Trainers pagination"
+                >
+                    <p className="text-sm text-muted mb-0">
+                        Showing{' '}
+                        <span className="font-semibold text-defaulttextcolor">
+                            {(page - 1) * PAGE_LIMIT + 1}–{Math.min(page * PAGE_LIMIT, totalResults)}
+                        </span>{' '}
+                        of <span className="font-semibold text-defaulttextcolor">{totalResults}</span> trainers
+                    </p>
+
+                    <ul className="flex items-center gap-1 mb-0">
+                        <li>
+                            <button
+                                type="button"
+                                className="ti-btn ti-btn-sm ti-btn-light"
+                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                disabled={page <= 1}
+                                aria-label="Previous page"
+                            >
+                                <i className="ri-arrow-left-s-line"></i>
                             </button>
-                        </div>
+                        </li>
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-4">
-                                <div className="text-center">
-                                    {selectedTrainer.profilePhoto?.path ? (
-                                        <img
-                                            src={selectedTrainer.profilePhoto.path}
-                                            alt={selectedTrainer.name}
-                                            className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-primary/20"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-32 h-32 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-4 border-4 border-primary/20">
-                                            <span className="text-primary font-semibold text-5xl">
-                                                {selectedTrainer.name.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <h4 className="font-semibold text-xl mb-1">{selectedTrainer.name}</h4>
-                                    <p className="text-muted mb-4">{selectedTrainer.title}</p>
+                        {getPageNumbers(page, totalPages).map((item, idx) =>
+                            item === '...' ? (
+                                <li key={`ellipsis-${idx}`} className="px-2 text-muted select-none">
+                                    …
+                                </li>
+                            ) : (
+                                <li key={item}>
                                     <button
-                                        onClick={() => handleBookTrainer(selectedTrainer)}
-                                        className="ti-btn ti-btn-primary w-full"
-                                        disabled={!isTrainerAcceptingBookings(selectedTrainer)}
-                                        title={
-                                            !isTrainerAcceptingBookings(selectedTrainer)
-                                                ? 'Trainer is not accepting new bookings'
-                                                : undefined
-                                        }
+                                        type="button"
+                                        className={`ti-btn ti-btn-sm ${
+                                            item === page ? 'ti-btn-primary' : 'ti-btn-light'
+                                        }`}
+                                        onClick={() => setPage(item as number)}
+                                        aria-label={`Go to page ${item}`}
+                                        aria-current={item === page ? 'page' : undefined}
                                     >
-                                        <i className="ri-calendar-check-line me-1"></i>Book Trainer
+                                        {item}
                                     </button>
-                                </div>
-                            </div>
+                                </li>
+                            )
+                        )}
 
-                            <div className="col-span-12 md:col-span-8">
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Specialist In</label>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {Array.isArray(selectedTrainer.specialistIn) ? (
-                                                selectedTrainer.specialistIn.map((spec, idx) => (
-                                                    <span key={idx} className="badge bg-info/10 text-info">{spec}</span>
-                                                ))
-                                            ) : (
-                                                <span className="badge bg-info/10 text-info">{selectedTrainer.specialistIn}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {selectedTrainer.bio && selectedTrainer.bio !== 'none' && (
-                                        <div>
-                                            <label className="text-muted text-sm font-semibold">About</label>
-                                            <p className="text-defaulttextcolor mt-1">{selectedTrainer.bio}</p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Training Programs Offered</label>
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {Array.isArray(selectedTrainer.typeOfTraining) ? (
-                                                selectedTrainer.typeOfTraining.map((training, idx) => (
-                                                    <span key={idx} className="badge bg-primary/10 text-primary">{training}</span>
-                                                ))
-                                            ) : (
-                                                <span className="badge bg-primary/10 text-primary">{selectedTrainer.typeOfTraining}</span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-muted text-sm font-semibold">Status</label>
-                                        <div className="mt-1">
-                                            <span className={`badge ${selectedTrainer.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
-                                                {selectedTrainer.status !== false ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {selectedTrainer.images && selectedTrainer.images.length > 0 && (
-                                        <div>
-                                            <label className="text-muted text-sm font-semibold">Gallery</label>
-                                            <div className="grid grid-cols-4 gap-2 mt-2">
-                                                {selectedTrainer.images.map((img, idx) => (
-                                                    <img
-                                                        key={idx}
-                                                        src={img.path}
-                                                        alt={`Gallery ${idx + 1}`}
-                                                        className="w-full h-24 object-cover rounded"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                        <li>
+                            <button
+                                type="button"
+                                className="ti-btn ti-btn-sm ti-btn-light"
+                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={page >= totalPages}
+                                aria-label="Next page"
+                            >
+                                <i className="ri-arrow-right-s-line"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
             )}
 
-            {/* ══════════════════════════════════════════════════
-                EXISTING — Booking Modal (100% unchanged)
-            ══════════════════════════════════════════════════ */}
-            <BookingModal
+            <CompanyTrainerProfileDrawer
+                open={profileDrawerOpen}
+                trainer={selectedTrainer}
+                loading={profileLoading}
+                onClose={handleCloseProfileDrawer}
+                onBookSession={handleBookSessionFromProfile}
+            />
+
+            <CompanyBookingDrawer
                 trainer={trainerToBook}
-                isOpen={showBookingModal}
+                isOpen={bookingDrawerOpen}
                 onClose={() => {
-                    setShowBookingModal(false);
+                    setBookingDrawerOpen(false);
                     setTrainerToBook(null);
                 }}
                 onSuccess={handleBookingSuccess}

@@ -185,7 +185,7 @@ class ApiService {
         case 401:
           throw new Error('Unauthorized access. Please login again.');
         case 403:
-          throw new Error('Access forbidden. You don\'t have permission for this action.');
+          throw new Error(data.message || 'Access forbidden. You don\'t have permission for this action.');
         case 404:
           throw new Error('Resource not found.');
         case 422:

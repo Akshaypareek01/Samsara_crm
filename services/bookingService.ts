@@ -2,6 +2,14 @@ import ApiService from './ApiService';
 
 // ==================== INTERFACES ====================
 
+export type BookingStatus =
+    | 'pending_approval'
+    | 'approved'
+    | 'confirmed'
+    | 'completed'
+    | 'rejected'
+    | 'cancelled';
+
 export interface Booking {
     id?: string;
     _id?: string;
@@ -14,7 +22,8 @@ export interface Booking {
     notes?: string; // Company notes
     trainerNotes?: string;
     adminNotes?: string;
-    status: 'pending_approval' | 'approved' | 'confirmed' | 'completed' | 'rejected' | 'cancelled';
+    cancellationReason?: string;
+    status: BookingStatus;
     paymentStatus?: {
         isPaid: boolean;
         paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
@@ -52,8 +61,16 @@ export interface RejectBookingRequest {
 }
 
 export interface UpdateStatusRequest {
-    status: 'confirmed' | 'completed';
+    status: 'approved' | 'completed';
     trainerNotes?: string;
+}
+
+export interface CancelBookingRequest {
+    cancellationReason?: string;
+}
+
+export interface AdminCancelBookingRequest {
+    adminNotes: string;
 }
 
 export interface GetBookingsParams {
@@ -97,6 +114,8 @@ export interface MyBookingsSummaryClassRow {
     trainerInitials: string;
     trainerBg: string;
     trainerName: string;
+    trainerId?: string;
+    bookingId?: string;
     capacity: number;
     booked: number;
     waitingList: number;
@@ -117,11 +136,25 @@ export interface MyBookingsSummaryWaitingGroup {
     people: string[];
 }
 
+/** Booking snippet for a calendar day (summary API). */
+export interface MyBookingsSummaryDayBooking {
+    id: string;
+    trainerId?: string;
+    status: BookingStatus;
+    startTime: string;
+    companyName?: string;
+    trainerName?: string;
+    isPaid: boolean;
+    duration: number;
+    typeOfTraining: string[];
+}
+
 /** Response from GET /v1/bookings/my-bookings/summary */
 export interface MyBookingsSummary {
     month: string;
     totals: MyBookingsSummaryTotals;
     calendarDots: Record<number, string[]>;
+    calendarDays: Record<number, MyBookingsSummaryDayBooking[]>;
     recentActivities: MyBookingsSummaryActivity[];
     classSchedule: MyBookingsSummaryClassRow[];
     trainerAvailability: MyBookingsSummaryTrainerAvail[];
@@ -199,10 +232,16 @@ class BookingService {
             Object.keys(dots).forEach((k) => {
                 calendarDots[Number(k)] = dots[k];
             });
+            const daysRaw = response.calendarDays || {};
+            const calendarDays: Record<number, MyBookingsSummaryDayBooking[]> = {};
+            Object.keys(daysRaw).forEach((k) => {
+                calendarDays[Number(k)] = daysRaw[k];
+            });
             return {
                 month: response.month,
                 totals: response.totals,
                 calendarDots,
+                calendarDays,
                 recentActivities: response.recentActivities || [],
                 classSchedule: response.classSchedule || [],
                 trainerAvailability: response.trainerAvailability || [],
@@ -362,12 +401,12 @@ class BookingService {
     /**
      * Cancel booking (Company or Trainer)
      * PATCH /v1/bookings/:id/cancel
-     * Can only cancel if status is pending_approval, approved, or confirmed
+     * Can only cancel if status is pending_approval or approved (not after admin confirmation)
      */
-    async cancelBooking(bookingId: string): Promise<Booking> {
+    async cancelBooking(bookingId: string, payload: CancelBookingRequest = {}): Promise<Booking> {
         try {
             console.log('🚫 Cancelling booking:', bookingId);
-            const response = await ApiService.patch(`/bookings/${bookingId}/cancel`, {});
+            const response = await ApiService.patch(`/bookings/${bookingId}/cancel`, payload);
 
             // Normalize id field
             if (response.id && !response._id) {
@@ -376,6 +415,25 @@ class BookingService {
             return response;
         } catch (error) {
             console.error('❌ Cancel booking error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Admin cancel booking with required remark
+     * PATCH /v1/bookings/:id/admin-cancel
+     */
+    async adminCancelBooking(bookingId: string, payload: AdminCancelBookingRequest): Promise<Booking> {
+        try {
+            console.log('🚫 Admin cancelling booking:', bookingId);
+            const response = await ApiService.patch(`/bookings/${bookingId}/admin-cancel`, payload);
+
+            if (response.id && !response._id) {
+                return { ...response, _id: response.id };
+            }
+            return response;
+        } catch (error) {
+            console.error('❌ Admin cancel booking error:', error);
             throw error;
         }
     }
