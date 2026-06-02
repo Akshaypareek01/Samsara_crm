@@ -113,6 +113,15 @@ export const MenuItems: any = [
         permission: "membershipManagement",
       },
       {
+        path: "/apps/crm/add-membership",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Add Membership",
+        permission: "membershipManagement",
+      },
+      {
         path: "/apps/crm/coupons",
         type: "link",
         active: false,

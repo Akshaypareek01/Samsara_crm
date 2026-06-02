@@ -132,7 +132,17 @@ class MembershipPlanService {
   async getActiveMembershipPlans(): Promise<MembershipPlan[]> {
     try {
       const response = await ApiService.get('/membership-plans/active');
-      return Array.isArray(response) ? response : response.data || [];
+
+      if (Array.isArray(response)) {
+        return response;
+      }
+      if (Array.isArray(response?.results)) {
+        return response.results;
+      }
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+      return [];
     } catch (error) {
       console.error('❌ Get active membership plans error:', error);
       throw error;

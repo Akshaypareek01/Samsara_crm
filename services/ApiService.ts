@@ -167,43 +167,59 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error("Request error:", error);
-      this.handleError(error);
-      throw error;
+      throw this.toRequestError(error);
     }
   }
 
-  // Handle different types of errors
+  /**
+   * Normalize axios/API failures into an Error with the server message when available.
+   */
+  toRequestError(error: unknown): Error {
+    if (error instanceof Error && !(error as { response?: unknown }).response) {
+      return error;
+    }
+    return this.buildErrorFromAxios(error);
+  }
+
+  // Handle different types of errors (throws)
   private handleError(error: any): void {
-    if (error.response) {
-      // Server responded with error status
-      const { status, data } = error.response;
-      console.error(`HTTP Error ${status}:`, data);
-      
+    throw this.buildErrorFromAxios(error);
+  }
+
+  private buildErrorFromAxios(error: any): Error {
+    const payload = error?.response?.data;
+    const serverMessage =
+      (typeof payload === 'string' ? payload : null) ||
+      payload?.message ||
+      payload?.error ||
+      (Array.isArray(payload?.errors) ? payload.errors.join(', ') : null);
+
+    if (error?.response) {
+      const { status } = error.response;
+      console.error(`HTTP Error ${status}:`, payload);
+
       switch (status) {
         case 400:
-          throw new Error(data.message || 'Bad request. Please check your input.');
+          return new Error(serverMessage || 'Bad request. Please check your input.');
         case 401:
-          throw new Error('Unauthorized access. Please login again.');
+          return new Error('Unauthorized access. Please login again.');
         case 403:
-          throw new Error(data.message || 'Access forbidden. You don\'t have permission for this action.');
+          return new Error(serverMessage || "Access forbidden. You don't have permission for this action.");
         case 404:
-          throw new Error('Resource not found.');
+          return new Error(serverMessage || 'Resource not found.');
         case 422:
-          throw new Error(data.message || 'Validation error. Please check your input.');
+          return new Error(serverMessage || 'Validation error. Please check your input.');
         case 500:
-          throw new Error('Server error. Please try again later.');
+          return new Error(serverMessage || 'Server error. Please try again later.');
         default:
-          throw new Error(data.message || `Request failed with status ${status}`);
+          return new Error(serverMessage || `Request failed with status ${status}`);
       }
-    } else if (error.request) {
-      // Network error
-      console.error('Network Error:', error.request);
-      throw new Error('Network error. Please check your internet connection.');
-    } else {
-      // Other error
-      console.error('Request Error:', error.message);
-      throw new Error(error.message || 'An unexpected error occurred.');
     }
+    if (error?.request) {
+      console.error('Network Error:', error.request);
+      return new Error('Network error. Please check your internet connection.');
+    }
+    return new Error(error?.message || 'An unexpected error occurred.');
   }
 
   // GET request
