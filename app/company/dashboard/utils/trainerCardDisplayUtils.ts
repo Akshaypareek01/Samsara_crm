@@ -44,11 +44,11 @@ export function trainerCategoryLabel(trainer: Trainer): string | null {
 }
 
 /**
- * Location line from city and country fields.
+ * Location line from the trainer city field.
  *
  * @param trainer - Trainer record from the API.
  */
 export function trainerLocationLine(trainer: Trainer): string | null {
-  const parts = [trainer.city, trainer.country].filter(Boolean);
-  return parts.length > 0 ? parts.join(', ') : null;
+  const city = trainer.city?.trim();
+  return city || null;
 }
