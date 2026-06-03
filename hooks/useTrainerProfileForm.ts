@@ -9,7 +9,6 @@ import TrainerService, {
   UpdateTrainerRequest,
   TrainerImage,
 } from '@/services/trainerService';
-import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
 import {
   filterFilledCertificationEntries,
   filterFilledEducationEntries,
@@ -48,11 +47,11 @@ export function useTrainerProfileForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingGallerySlot, setUploadingGallerySlot] = useState<number | null>(null);
   const [acceptingBookingsSaving, setAcceptingBookingsSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateTrainerRequest>(emptyForm);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const patchDetails = useCallback((patch: Partial<UpdateTrainerRequest>) => {
     setFormData((prev) => ({ ...prev, ...patch }));
@@ -104,10 +103,10 @@ export function useTrainerProfileForm() {
     void fetchProfile();
   }, [fetchProfile]);
 
-  const handleFileUpload = async (file: File, isProfilePhoto: boolean) => {
+  const handleFileUpload = async (file: File, isProfilePhoto: boolean, slotIndex?: number) => {
     try {
       if (isProfilePhoto) setUploadingProfilePhoto(true);
-      else setUploadingImage(true);
+      else if (slotIndex !== undefined) setUploadingGallerySlot(slotIndex);
 
       const body = new FormData();
       body.append('file', file);
@@ -131,8 +130,12 @@ export function useTrainerProfileForm() {
       if (isProfilePhoto) {
         setFormData((prev) => ({ ...prev, profilePhoto: imageData }));
         Swal.fire('Success!', 'Profile photo uploaded successfully', 'success');
-      } else {
-        setFormData((prev) => ({ ...prev, images: [...(prev.images || []), imageData] }));
+      } else if (slotIndex !== undefined) {
+        setFormData((prev) => {
+          const next = [...(prev.images || [])];
+          next[slotIndex] = imageData;
+          return { ...prev, images: next };
+        });
         Swal.fire('Success!', 'Image uploaded successfully', 'success');
       }
     } catch (uploadErr: unknown) {
@@ -144,7 +147,7 @@ export function useTrainerProfileForm() {
       );
     } finally {
       if (isProfilePhoto) setUploadingProfilePhoto(false);
-      else setUploadingImage(false);
+      else setUploadingGallerySlot(null);
     }
   };
 
@@ -163,18 +166,9 @@ export function useTrainerProfileForm() {
     if (profilePhotoInputRef.current) profilePhotoInputRef.current.value = '';
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if ((formData.images?.length || 0) >= MAX_TRAINER_GALLERY_IMAGES) {
-      Swal.fire(
-        'Limit reached',
-        `You can upload a maximum of ${MAX_TRAINER_GALLERY_IMAGES} gallery images`,
-        'info'
-      );
-      if (imageInputRef.current) imageInputRef.current.value = '';
-      return;
-    }
     if (!file.type.startsWith('image/')) {
       Swal.fire('Error!', 'Please select an image file', 'error');
       return;
@@ -183,14 +177,15 @@ export function useTrainerProfileForm() {
       Swal.fire('Error!', 'File size should be less than 5MB', 'error');
       return;
     }
-    void handleFileUpload(file, false);
-    if (imageInputRef.current) imageInputRef.current.value = '';
+    void handleFileUpload(file, false, slotIndex);
+    const input = galleryInputRefs.current[slotIndex];
+    if (input) input.value = '';
   };
 
   const removeImage = (index: number) => {
     setFormData((prev) => {
       const newImages = [...(prev.images || [])];
-      newImages.splice(index, 1);
+      delete newImages[index];
       return { ...prev, images: newImages };
     });
   };
@@ -253,7 +248,8 @@ export function useTrainerProfileForm() {
         education: filledEducation,
         certification: filledCertification,
       };
-      if (formData.images?.length) updateData.images = formData.images;
+      const filledImages = formData.images?.filter((img): img is TrainerImage => Boolean(img));
+      if (filledImages?.length) updateData.images = filledImages;
       if (formData.profilePhoto) updateData.profilePhoto = formData.profilePhoto;
 
       const updatedTrainer = await TrainerService.updateMyProfile(updateData);
@@ -302,12 +298,12 @@ export function useTrainerProfileForm() {
     setFormData,
     patchDetails,
     uploadingProfilePhoto,
-    uploadingImage,
+    uploadingGallerySlot,
     acceptingBookingsSaving,
     profilePhotoInputRef,
-    imageInputRef,
+    galleryInputRefs,
     handleProfilePhotoChange,
-    handleImageChange,
+    handleGallerySlotChange,
     removeImage,
     clearProfilePhoto,
     handleSubmit,

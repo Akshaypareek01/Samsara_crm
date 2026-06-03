@@ -7,13 +7,31 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import { Base_url } from '@/Config/BaseUrl';
 import CompanyService, { CreateCompanyRequest, ContactPerson } from '@/services/companyService';
+import CompanyRegisterFormFields from '@/shared/components/company/CompanyRegisterFormFields';
+import TrainerFormFieldError from '@/shared/components/trainer/TrainerFormFieldError';
+import {
+    COMPANY_REGISTRATION_FIELD_IDS,
+    CompanyRegistrationField,
+    mapBackendErrorToCompanyField,
+    normalizeCompanyDomain,
+    validateCompanyRegistration,
+} from '@/shared/utils/companyRegistrationValidation';
+import '@/shared/styles/trainer-form.css';
+
+const HERO_FEATURES = [
+    { icon: 'ri-team-line', title: 'Book wellness trainers', desc: 'Access certified yoga, sound healing and mental wellbeing experts.' },
+    { icon: 'ri-calendar-check-line', title: 'Manage sessions easily', desc: 'Schedule and track corporate wellness programs in one place.' },
+    { icon: 'ri-line-chart-line', title: 'Measure impact', desc: 'Build a healthier workforce with structured wellness initiatives.' },
+];
 
 const CompanyRegister = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<CompanyRegistrationField, string>>>({});
     const logoInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<CreateCompanyRequest>({
         companyName: '',
@@ -41,24 +59,57 @@ const CompanyRegister = () => {
         status: true,
     });
 
+    /** Remove a field error after the user edits that input. */
+    const clearFieldError = (field: CompanyRegistrationField) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
+
+    /** Build input class names with optional validation error styling. */
+    const fieldClass = (field: CompanyRegistrationField, extra = '') => {
+        const hasError = Boolean(fieldErrors[field]);
+        return `form-control trainer-form-control${extra}${hasError ? ' trainer-form-control-error' : ''}`;
+    };
+
+    /** Scroll to the first invalid field and focus it when possible. */
+    const scrollToField = (field?: CompanyRegistrationField) => {
+        if (!field) return;
+        const el = document.getElementById(COMPANY_REGISTRATION_FIELD_IDS[field]);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+            el.focus();
+        }
+    };
+
+    /**
+     * Update a contact person field in form state.
+     *
+     * @param personNumber - Primary (1) or secondary (2) contact.
+     * @param field - Contact field key to update.
+     * @param value - New field value.
+     */
     const updateContactPerson = (
         personNumber: 1 | 2,
         field: keyof ContactPerson,
         value: string
     ) => {
         const contactPersonKey = personNumber === 1 ? 'contactPerson1' : 'contactPerson2';
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [contactPersonKey]: {
-                ...formData[contactPersonKey],
+                ...prev[contactPersonKey],
                 [field]: value,
             },
-        });
+        }));
     };
 
     /**
-     * Upload the selected logo file to the storage endpoint and store the
-     * returned public URL in `companyLogo`.
+     * Upload the selected logo file to the storage endpoint.
+     *
      * @param file - The image file chosen by the user.
      */
     const uploadCompanyLogo = async (file: File) => {
@@ -78,15 +129,17 @@ const CompanyRegister = () => {
 
             if (response.data?.success && response.data?.url) {
                 setFormData((prev) => ({ ...prev, companyLogo: response.data.url }));
+                clearFieldError('companyLogo');
                 Swal.fire('Success!', 'Company logo uploaded successfully', 'success');
             } else {
                 throw new Error('Upload failed: Invalid response');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
             console.error('Logo upload error:', err);
             Swal.fire(
                 'Error!',
-                err.response?.data?.message || err.message || 'Failed to upload logo',
+                axiosErr.response?.data?.message || axiosErr.message || 'Failed to upload logo',
                 'error'
             );
         } finally {
@@ -96,6 +149,7 @@ const CompanyRegister = () => {
 
     /**
      * Validate and handle the logo file input change event.
+     *
      * @param e - Change event from the hidden file input.
      */
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,7 +163,7 @@ const CompanyRegister = () => {
                 Swal.fire('Error!', 'File size should be less than 5MB', 'error');
                 return;
             }
-            uploadCompanyLogo(file);
+            void uploadCompanyLogo(file);
         }
         if (logoInputRef.current) {
             logoInputRef.current.value = '';
@@ -126,24 +180,73 @@ const CompanyRegister = () => {
         setLoading(true);
         setError('');
         setSuccess(false);
+        setFieldErrors({});
+
+        const validation = validateCompanyRegistration(formData, agreedToTerms);
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
+            setError(validation.firstError || 'Please fix the errors below');
+            setLoading(false);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Please check your form',
+                text: validation.firstError || 'Some required fields are missing or invalid.',
+                confirmButtonColor: '#845ADF',
+            });
+            scrollToField(validation.firstField);
+            return;
+        }
 
         try {
-            // Attempt to create company
-            // Note: This may require admin auth, but we'll try anyway
-            const company = await CompanyService.createCompany(formData);
-            
+            const submitData: CreateCompanyRequest = {
+                companyName: (formData.companyName || '').trim(),
+                companyLogo: formData.companyLogo,
+                email: (formData.email || '').trim(),
+                domain: normalizeCompanyDomain(formData.domain || ''),
+                numberOfEmployees: formData.numberOfEmployees,
+                gstNumber: (formData.gstNumber || '').trim().toUpperCase(),
+                address: (formData.address || '').trim(),
+                city: (formData.city || '').trim(),
+                pincode: (formData.pincode || '').trim(),
+                country: (formData.country || '').trim(),
+                contactPerson1: {
+                    name: (formData.contactPerson1?.name || '').trim(),
+                    email: (formData.contactPerson1?.email || '').trim(),
+                    mobileNumber: (formData.contactPerson1?.mobileNumber || '').replace(/\D/g, ''),
+                    designation: (formData.contactPerson1?.designation || '').trim(),
+                },
+                contactPerson2: {
+                    name: (formData.contactPerson2?.name || '').trim(),
+                    email: (formData.contactPerson2?.email || '').trim(),
+                    mobileNumber: (formData.contactPerson2?.mobileNumber || '').replace(/\D/g, ''),
+                    designation: (formData.contactPerson2?.designation || '').trim(),
+                },
+                status: formData.status,
+            };
+
+            await CompanyService.createCompany(submitData);
             setSuccess(true);
-            // Show success message and redirect to login after 3 seconds
             setTimeout(() => {
                 router.push('/company/login');
             }, 3000);
-        } catch (err: any) {
-            // If registration fails due to auth, show appropriate message
-            if (err.message?.includes('401') || err.message?.includes('403') || err.message?.includes('Unauthorized')) {
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to register company. Please try again or contact support.';
+            if (message.includes('401') || message.includes('403') || message.includes('Unauthorized')) {
                 setError('Registration requires admin approval. Your request has been noted. Please contact support or wait for admin approval.');
-                setSuccess(true); // Show success message for pending approval
+                setSuccess(true);
             } else {
-                setError(err.message || 'Failed to register company. Please try again or contact support.');
+                setError(message);
+                const backendField = mapBackendErrorToCompanyField(message);
+                if (backendField) {
+                    setFieldErrors({ [backendField]: message.split(',')[0].trim() });
+                    scrollToField(backendField);
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Registration failed',
+                    text: message,
+                    confirmButtonColor: '#845ADF',
+                });
             }
         } finally {
             setLoading(false);
@@ -154,33 +257,23 @@ const CompanyRegister = () => {
         return (
             <Fragment>
                 <Seo title={"Company Registration"} />
-                <div className="container">
-                    <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor">
-                        <div className="grid grid-cols-12">
-                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
-                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-8 col-span-12">
-                                <div className="my-[2.5rem] flex justify-center mb-6">
-                                    <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
-                                </div>
-                                <div className="box">
-                                    <div className="box-body !p-[3rem]">
-                                        <div className="text-center">
-                                            <div className="mb-4">
-                                                <i className="ri-checkbox-circle-line text-success text-6xl"></i>
-                                            </div>
-                                            <h3 className="h5 font-semibold mb-2">Registration Successful!</h3>
-                                            <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal">
-                                                Your company has been registered successfully. You will be redirected to the login page shortly.
-                                            </p>
-                                            <Link href="/company/login" className="ti-btn ti-btn-primary">
-                                                Go to Login
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
+                <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg">
+                    <div className="w-full max-w-md text-center bg-white dark:bg-bodybg rounded-2xl shadow-2xl border border-defaultborder/50 p-8 sm:p-10">
+                        <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-success/10 flex items-center justify-center">
+                            <i className="ri-checkbox-circle-fill text-success text-5xl" aria-hidden="true"></i>
                         </div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-defaulttextcolor mb-2">
+                            Registration Successful!
+                        </h3>
+                        <p className="text-[#8c9097] dark:text-white/50 text-sm sm:text-base mb-6">
+                            Your company has been registered. You will be redirected to the login page shortly.
+                        </p>
+                        <Link
+                            href="/company/login"
+                            className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium w-full !py-2.5 inline-flex items-center justify-center gap-2"
+                        >
+                            <i className="ri-login-circle-line" aria-hidden="true"></i> Go to Login
+                        </Link>
                     </div>
                 </div>
             </Fragment>
@@ -190,360 +283,161 @@ const CompanyRegister = () => {
     return (
         <Fragment>
             <Seo title={"Company Registration"} />
-            <div className="container">
-                <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor">
-                    <div className="grid grid-cols-12">
-                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1"></div>
-                        <div className="xxl:col-span-8 xl:col-span-8 lg:col-span-8 md:col-span-10 sm:col-span-10 col-span-12">
-                            <div className="my-[2.5rem] flex justify-center mb-6">
-                                <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
+            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
+                <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
+                    <aside className="hidden lg:flex lg:col-span-5 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70">
+                        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true"></div>
+                        <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5" aria-hidden="true"></div>
+
+                        <div className="relative z-10">
+                            <div className="inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-10 shadow-lg leading-none">
+                                <img
+                                    src="/assets/images/logo.jpeg"
+                                    alt="Samsara"
+                                    className="h-24 xl:h-28 w-auto max-w-[220px] object-contain block"
+                                />
                             </div>
-                            <div className="box">
-                                <div className="box-body !p-[3rem]">
-                                    <p className="h5 font-semibold mb-2 text-center">Company Registration</p>
-                                    <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal text-center">
-                                        Fill in your company details to create an account
-                                    </p>
+                            <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-4">
+                                Bring wellness to your organization
+                            </h1>
+                            <p className="text-white/80 text-sm leading-relaxed mb-9">
+                                Register your company on Samsara to book certified trainers and run
+                                corporate wellness programs for your teams.
+                            </p>
 
-                                    {error && (
-                                        <div className={`alert mb-4 text-center text-sm p-3 rounded ${
-                                            success 
-                                                ? 'alert-warning bg-warning/10 text-warning border-warning/20' 
-                                                : 'alert-danger bg-danger/10 text-danger border-danger/20'
-                                        }`}>
-                                            {error}
+                            <ul className="space-y-5">
+                                {HERO_FEATURES.map((feature) => (
+                                    <li key={feature.title} className="flex items-start gap-3">
+                                        <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <i className={`${feature.icon} text-xl`} aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <p className="font-semibold text-sm">{feature.title}</p>
+                                            <p className="text-white/70 text-xs">{feature.desc}</p>
                                         </div>
-                                    )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
 
-                                    <form onSubmit={handleSubmit}>
-                                        <div className="space-y-4">
-                                            {/* Company Basic Information */}
-                                            <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Company Information</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="form-label">Company Name *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.companyName}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, companyName: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Email *</label>
-                                                        <input
-                                                            type="email"
-                                                            className="form-control"
-                                                            value={formData.email}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, email: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Domain *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.domain}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, domain: e.target.value })
-                                                            }
-                                                            placeholder="example.com"
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Company Logo *</label>
-                                                        <input
-                                                            type="file"
-                                                            ref={logoInputRef}
-                                                            accept="image/*"
-                                                            onChange={handleLogoChange}
-                                                            className="hidden"
-                                                            aria-label="Upload company logo"
-                                                        />
-                                                        {formData.companyLogo ? (
-                                                            <div className="relative w-full h-32 rounded-lg overflow-hidden border-2 border-defaultborder group">
-                                                                <img
-                                                                    src={formData.companyLogo}
-                                                                    alt="Company logo preview"
-                                                                    className="w-full h-full object-contain bg-gray-50 dark:bg-black/20"
-                                                                    onError={(e) => {
-                                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                                    }}
-                                                                />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => logoInputRef.current?.click()}
-                                                                        className="ti-btn ti-btn-sm !bg-white !text-defaulttextcolor !font-medium !mb-0"
-                                                                        title="Change logo"
-                                                                        aria-label="Change company logo"
-                                                                    >
-                                                                        <i className="ri-refresh-line"></i>
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={clearCompanyLogo}
-                                                                        className="ti-btn ti-btn-sm !bg-danger !text-white !font-medium !mb-0"
-                                                                        title="Remove logo"
-                                                                        aria-label="Remove company logo"
-                                                                    >
-                                                                        <i className="ri-delete-bin-line"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => logoInputRef.current?.click()}
-                                                                disabled={uploadingLogo}
-                                                                className="w-full h-32 rounded-lg border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60"
-                                                            >
-                                                                {uploadingLogo ? (
-                                                                    <>
-                                                                        <span className="spinner-border spinner-border-sm"></span>
-                                                                        <span className="text-sm">Uploading...</span>
-                                                                    </>
-                                                                ) : (
-                                                                    <>
-                                                                        <i className="ri-image-add-line text-2xl"></i>
-                                                                        <span className="text-sm font-medium">Upload Company Logo</span>
-                                                                        <span className="text-xs">JPG, PNG, GIF · Max 5MB</span>
-                                                                    </>
-                                                                )}
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Number of Employees *</label>
-                                                        <input
-                                                            type="number"
-                                                            className="form-control"
-                                                            value={formData.numberOfEmployees || ''}
-                                                            onChange={(e) =>
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    numberOfEmployees: e.target.value
-                                                                        ? parseInt(e.target.value)
-                                                                        : undefined,
-                                                                })
-                                                            }
-                                                            required
-                                                            min="1"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">GST Number *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.gstNumber}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, gstNumber: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                        <p className="relative z-10 text-white/60 text-xs mt-10">
+                            Already have an account?{' '}
+                            <Link href="/company/login" className="text-white font-semibold underline underline-offset-2">
+                                Sign in
+                            </Link>
+                        </p>
+                    </aside>
 
-                                            {/* Address Information */}
-                                            <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Address Information</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="md:col-span-2">
-                                                        <label className="form-label">Address *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.address}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, address: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">City *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.city}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, city: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Pincode *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.pincode}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, pincode: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Country *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.country}
-                                                            onChange={(e) =>
-                                                                setFormData({ ...formData, country: e.target.value })
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                    <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 max-h-screen overflow-y-auto">
+                        <div className="mb-6">
+                            <img
+                                src="/assets/images/logo.jpeg"
+                                alt="Samsara"
+                                className="h-20 sm:h-24 w-auto mb-4 lg:hidden"
+                            />
+                            <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Company Registration</h2>
+                            <p className="text-[#8c9097] dark:text-white/50 text-sm mt-1">
+                                Fill in your company details to create an account.
+                            </p>
+                        </div>
 
-                                            {/* Contact Person 1 */}
-                                            <div className="border-b pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Primary Contact Person *</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="form-label">Name *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.contactPerson1?.name || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(1, 'name', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Email *</label>
-                                                        <input
-                                                            type="email"
-                                                            className="form-control"
-                                                            value={formData.contactPerson1?.email || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(1, 'email', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Mobile Number *</label>
-                                                        <input
-                                                            type="tel"
-                                                            className="form-control"
-                                                            value={formData.contactPerson1?.mobileNumber || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(1, 'mobileNumber', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Designation *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.contactPerson1?.designation || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(1, 'designation', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Contact Person 2 */}
-                                            <div className="pb-4 mb-4">
-                                                <h4 className="font-semibold mb-4">Secondary Contact Person *</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="form-label">Name *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.contactPerson2?.name || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(2, 'name', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Email *</label>
-                                                        <input
-                                                            type="email"
-                                                            className="form-control"
-                                                            value={formData.contactPerson2?.email || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(2, 'email', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Mobile Number *</label>
-                                                        <input
-                                                            type="tel"
-                                                            className="form-control"
-                                                            value={formData.contactPerson2?.mobileNumber || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(2, 'mobileNumber', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-label">Designation *</label>
-                                                        <input
-                                                            type="text"
-                                                            className="form-control"
-                                                            value={formData.contactPerson2?.designation || ''}
-                                                            onChange={(e) =>
-                                                                updateContactPerson(2, 'designation', e.target.value)
-                                                            }
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-12 gap-y-4 mt-6">
-                                            <div className="xl:col-span-12 col-span-12">
-                                                <button
-                                                    type="submit"
-                                                    className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-medium"
-                                                    disabled={loading}
-                                                >
-                                                    {loading ? 'Registering...' : 'Register Company'}
-                                                </button>
-                                            </div>
-                                            <div className="xl:col-span-12 col-span-12 text-center">
-                                                <p className="text-muted text-sm">
-                                                    Already have an account?{' '}
-                                                    <Link href="/company/login" className="text-primary font-semibold">
-                                                        Sign In
-                                                    </Link>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </form>
+                        {error && (
+                            <div
+                                role="alert"
+                                className={`trainer-form-error-summary mb-5 ${
+                                    success ? 'bg-warning/10 text-warning border-warning/20' : ''
+                                }`}
+                            >
+                                <div className="flex items-start gap-2">
+                                    <i
+                                        className={`${success ? 'ri-error-warning-line' : 'ri-close-circle-line'} text-base mt-0.5`}
+                                        aria-hidden="true"
+                                    ></i>
+                                    <div>
+                                        <strong>{success ? 'Notice' : 'Please fix the following'}</strong>
+                                        <p className="mb-0 mt-1">{error}</p>
+                                        {!success && Object.keys(fieldErrors).length > 1 && (
+                                            <ul>
+                                                {Object.entries(fieldErrors).map(([field, msg]) => (
+                                                    <li key={field}>{msg}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="xxl:col-span-2 xl:col-span-2 lg:col-span-2 md:col-span-1 sm:col-span-1"></div>
+                        )}
+
+                        <form onSubmit={handleSubmit}>
+                            <CompanyRegisterFormFields
+                                formData={formData}
+                                setFormData={setFormData}
+                                updateContactPerson={updateContactPerson}
+                                logoInputRef={logoInputRef}
+                                uploadingLogo={uploadingLogo}
+                                onLogoChange={handleLogoChange}
+                                onClearLogo={clearCompanyLogo}
+                                fieldErrors={fieldErrors}
+                                fieldClass={fieldClass}
+                                clearFieldError={clearFieldError}
+                            />
+
+                            <div className="trainer-form-terms-wrap mt-4" id="company-reg-terms">
+                                <div
+                                    className={`trainer-form-terms-row${fieldErrors.agreedToTerms ? ' trainer-form-control-error' : ''}`}
+                                >
+                                    <input
+                                        id="company-reg-terms-checkbox"
+                                        type="checkbox"
+                                        checked={agreedToTerms}
+                                        onChange={(e) => {
+                                            clearFieldError('agreedToTerms');
+                                            setAgreedToTerms(e.target.checked);
+                                        }}
+                                        aria-label="Agree to terms and conditions"
+                                        aria-invalid={Boolean(fieldErrors.agreedToTerms)}
+                                        aria-describedby={fieldErrors.agreedToTerms ? 'company-reg-terms-error' : 'company-reg-terms-text'}
+                                    />
+                                    <div id="company-reg-terms-text" className="trainer-form-terms-text">
+                                        <label htmlFor="company-reg-terms-checkbox" className="trainer-form-terms-label">
+                                            I agree to the{' '}
+                                            <a href="#" onClick={(e) => e.preventDefault()}>Terms &amp; Conditions</a>
+                                            {' '}and{' '}
+                                            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
+                                            {' '}I confirm that all information provided is accurate and I consent to my
+                                            company profile being listed on the platform for wellness program outreach.
+                                        </label>
+                                    </div>
+                                </div>
+                                <TrainerFormFieldError message={fieldErrors.agreedToTerms} fieldId="company-reg-terms" />
+                            </div>
+
+                            <div className="pt-4 mt-2">
+                                <button
+                                    type="submit"
+                                    className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status"></span>
+                                            Registering...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="ri-building-line" aria-hidden="true"></i>
+                                            Register Company
+                                        </>
+                                    )}
+                                </button>
+                                <p className="text-center text-xs text-muted mt-3 lg:hidden">
+                                    Already have an account?{' '}
+                                    <Link href="/company/login" className="text-primary font-semibold">
+                                        Sign in
+                                    </Link>
+                                </p>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -552,4 +446,3 @@ const CompanyRegister = () => {
 };
 
 export default CompanyRegister;
-

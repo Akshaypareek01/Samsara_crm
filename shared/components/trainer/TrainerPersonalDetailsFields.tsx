@@ -1,6 +1,8 @@
 "use client";
 import React from 'react';
 import { EXPERIENCE_OPTIONS, TrainerProfileDetails } from '@/services/trainerService';
+import { getTrainerDobMaxDate, validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
+import '@/shared/styles/trainer-form.css';
 
 interface TrainerPersonalDetailsFieldsProps {
   /** Current values for the personal-detail fields. */
@@ -24,30 +26,37 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
   onChange,
   requiredFields = false,
 }) => {
-  const star = requiredFields ? <span className="text-danger">*</span> : null;
+  const star = requiredFields ? <span className="trainer-form-req"> *</span> : null;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <label className="form-label" htmlFor="trainer-dob">
+        <label className="trainer-form-label" htmlFor="trainer-dob">
           Date of Birth {star}
         </label>
         <input
           id="trainer-dob"
           type="date"
-          className="form-control border-2 focus:border-primary"
+          className="form-control trainer-form-control"
           value={values.dateOfBirth ? String(values.dateOfBirth).slice(0, 10) : ''}
-          onChange={(e) => onChange({ dateOfBirth: e.target.value || null })}
+          max={getTrainerDobMaxDate()}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value && validateTrainerDateOfBirth(value)) {
+              return;
+            }
+            onChange({ dateOfBirth: value || null });
+          }}
           required={requiredFields}
         />
       </div>
       <div>
-        <label className="form-label" htmlFor="trainer-experience">
+        <label className="trainer-form-label" htmlFor="trainer-experience">
           Years of Experience {star}
         </label>
         <select
           id="trainer-experience"
-          className="form-control border-2 focus:border-primary"
+          className="form-control trainer-form-control trainer-form-select"
           value={values.experience || ''}
           onChange={(e) => onChange({ experience: e.target.value })}
           required={requiredFields}
@@ -61,13 +70,13 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
         </select>
       </div>
       <div>
-        <label className="form-label" htmlFor="trainer-city">
+        <label className="trainer-form-label" htmlFor="trainer-city">
           City {star}
         </label>
         <input
           id="trainer-city"
           type="text"
-          className="form-control border-2 focus:border-primary"
+          className="form-control trainer-form-control"
           value={values.city || ''}
           onChange={(e) => onChange({ city: e.target.value })}
           placeholder="Your city"
@@ -75,14 +84,14 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
         />
       </div>
       <div>
-        <label className="form-label" htmlFor="trainer-pincode">
+        <label className="trainer-form-label" htmlFor="trainer-pincode">
           PIN Code {star}
         </label>
         <input
           id="trainer-pincode"
           type="text"
           inputMode="numeric"
-          className="form-control border-2 focus:border-primary"
+          className="form-control trainer-form-control"
           value={values.pinCode || ''}
           onChange={(e) => {
             const digits = e.target.value.replace(/\D/g, '').slice(0, 6);

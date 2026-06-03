@@ -1,0 +1,77 @@
+.trainer-form-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #845adf;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 1.6rem 0 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trainer-form-section-title:first-child {
+  margin-top: 0;
+}
+
+.trainer-form-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, #e4dfff, transparent);
+}
+
+.trainer-form-section-title i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.trainer-form-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f0ecff;
+}
+
+.trainer-form-step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(132, 90, 223, 0.45);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.trainer-form-step-item.active {
+  color: #845adf;
+}
+
+.trainer-form-step-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(132, 90, 223, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.trainer-form-step-item.active .trainer-form-step-dot {
+  background: #845adf;
+  color: #fff;
+  border-color: #845adf;
+}
+
+@media (min-width: 640px) {
+  .trainer-form-steps {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+}

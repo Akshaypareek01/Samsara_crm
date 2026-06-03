@@ -27,12 +27,12 @@ const TrainerProfile = () => {
         setFormData,
         patchDetails,
         uploadingProfilePhoto,
-        uploadingImage,
+        uploadingGallerySlot,
         acceptingBookingsSaving,
         profilePhotoInputRef,
-        imageInputRef,
+        galleryInputRefs,
         handleProfilePhotoChange,
-        handleImageChange,
+        handleGallerySlotChange,
         removeImage,
         clearProfilePhoto,
         handleSubmit,
@@ -289,11 +289,11 @@ const TrainerProfile = () => {
                                     profilePhoto={formData.profilePhoto}
                                     images={formData.images}
                                     profilePhotoInputRef={profilePhotoInputRef}
-                                    imageInputRef={imageInputRef}
+                                    galleryInputRefs={galleryInputRefs}
                                     uploadingProfilePhoto={uploadingProfilePhoto}
-                                    uploadingImage={uploadingImage}
+                                    uploadingGallerySlot={uploadingGallerySlot}
                                     onProfilePhotoChange={handleProfilePhotoChange}
-                                    onGalleryImageChange={handleImageChange}
+                                    onGallerySlotChange={handleGallerySlotChange}
                                     onClearProfilePhoto={clearProfilePhoto}
                                     onRemoveGalleryImage={removeImage}
                                 />

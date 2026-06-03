@@ -11,6 +11,8 @@ import {
   createEmptyCertificationEntry,
   createEmptyEducationEntry,
 } from '@/shared/utils/trainerQualificationUtils';
+import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
+import '@/shared/styles/trainer-form.css';
 
 interface TrainerQualificationFieldsProps {
   /** Current education entries. */
@@ -87,9 +89,11 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
     <div className="space-y-6">
       {/* Education */}
       <section aria-labelledby="trainer-education-heading">
+        <TrainerFormSectionTitle title="Education" iconClass="ri-graduation-cap-line" />
+        <div className="trainer-form-sub-card">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h4 id="trainer-education-heading" className="text-sm font-semibold text-defaulttextcolor mb-0">
-            Education
+          <h4 id="trainer-education-heading" className="sr-only">
+            Education entries
           </h4>
           <button
             type="button"
@@ -116,7 +120,7 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
             {educationEntries.map((entry, index) => (
               <fieldset
                 key={`education-${index}`}
-                className="rounded-lg border border-defaultborder p-4"
+                className="rounded-lg border border-[#ede8ff] bg-[#faf9ff] p-4"
               >
                 <legend className="px-1 text-sm font-semibold text-defaulttextcolor">
                   Education {index + 1}
@@ -134,40 +138,40 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="form-label" htmlFor={`edu-qualification-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`edu-qualification-${index}`}>
                       Qualification
                     </label>
                     <input
                       id={`edu-qualification-${index}`}
                       type="text"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.qualification || ''}
                       onChange={(e) => patchEducationAt(index, { qualification: e.target.value })}
                       placeholder="e.g. B.Sc, M.A, PhD"
                     />
                   </div>
                   <div>
-                    <label className="form-label" htmlFor={`edu-university-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`edu-university-${index}`}>
                       University / Institution
                     </label>
                     <input
                       id={`edu-university-${index}`}
                       type="text"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.university || ''}
                       onChange={(e) => patchEducationAt(index, { university: e.target.value })}
                       placeholder="University name"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="form-label" htmlFor={`edu-year-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`edu-year-${index}`}>
                       Year of Completion
                     </label>
                     <input
                       id={`edu-year-${index}`}
                       type="text"
                       inputMode="numeric"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.yearOfCompletion ?? ''}
                       onChange={(e) =>
                         patchEducationAt(index, { yearOfCompletion: toYear(e.target.value) })
@@ -181,13 +185,16 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
             ))}
           </div>
         )}
+        </div>
       </section>
 
       {/* Certification */}
       <section aria-labelledby="trainer-certification-heading">
+        <TrainerFormSectionTitle title="Certifications & Courses" iconClass="ri-award-line" />
+        <div className="trainer-form-sub-card">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h4 id="trainer-certification-heading" className="text-sm font-semibold text-defaulttextcolor mb-0">
-            Certifications &amp; Courses
+          <h4 id="trainer-certification-heading" className="sr-only">
+            Certification entries
           </h4>
           <button
             type="button"
@@ -216,7 +223,7 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
             {certificationEntries.map((entry, index) => (
               <fieldset
                 key={`certification-${index}`}
-                className="rounded-lg border border-defaultborder p-4"
+                className="rounded-lg border border-[#ede8ff] bg-[#faf9ff] p-4"
               >
                 <legend className="px-1 text-sm font-semibold text-defaulttextcolor">
                   Certification {index + 1}
@@ -234,40 +241,40 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="form-label" htmlFor={`cert-name-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`cert-name-${index}`}>
                       Certification / Qualification
                     </label>
                     <input
                       id={`cert-name-${index}`}
                       type="text"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.name || ''}
                       onChange={(e) => patchCertificationAt(index, { name: e.target.value })}
                       placeholder="e.g. RYT 200, CBT Level 2"
                     />
                   </div>
                   <div>
-                    <label className="form-label" htmlFor={`cert-institute-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`cert-institute-${index}`}>
                       Institute / Awarding Body
                     </label>
                     <input
                       id={`cert-institute-${index}`}
                       type="text"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.institute || ''}
                       onChange={(e) => patchCertificationAt(index, { institute: e.target.value })}
                       placeholder="Institute name"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="form-label" htmlFor={`cert-year-${index}`}>
+                    <label className="trainer-form-label" htmlFor={`cert-year-${index}`}>
                       Year
                     </label>
                     <input
                       id={`cert-year-${index}`}
                       type="text"
                       inputMode="numeric"
-                      className="form-control border-2 focus:border-primary"
+                      className="form-control trainer-form-control"
                       value={entry.year ?? ''}
                       onChange={(e) => patchCertificationAt(index, { year: toYear(e.target.value) })}
                       placeholder="e.g. 2022"
@@ -279,6 +286,7 @@ const TrainerQualificationFields: React.FC<TrainerQualificationFieldsProps> = ({
             ))}
           </div>
         )}
+        </div>
       </section>
     </div>
   );

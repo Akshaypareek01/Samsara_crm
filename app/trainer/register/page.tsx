@@ -6,21 +6,29 @@ import TrainerService, {
   SPECIALIST_OPTIONS,
   TRAINER_CATEGORY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
+  EXPERIENCE_OPTIONS,
   TrainerImage,
 } from '@/services/trainerService';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import Swal from 'sweetalert2';
-import MultiSelect from '@/shared/components/MultiSelect';
-import TrainerPersonalDetailsFields from '@/shared/components/trainer/TrainerPersonalDetailsFields';
+import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
 import TrainerQualificationFields from '@/shared/components/trainer/TrainerQualificationFields';
+import TrainerPhotosFields from '@/shared/components/trainer/TrainerPhotosFields';
+import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
+import '@/shared/styles/trainer-form.css';
 import {
   filterFilledCertificationEntries,
   filterFilledEducationEntries,
 } from '@/shared/utils/trainerQualificationUtils';
-
-/** Maximum number of gallery (additional) images a trainer may upload. */
-const MAX_GALLERY_IMAGES = 3;
+import TrainerFormFieldError from '@/shared/components/trainer/TrainerFormFieldError';
+import {
+  mapBackendErrorToField,
+  TRAINER_REGISTRATION_FIELD_IDS,
+  TrainerRegistrationField,
+  validateTrainerRegistration,
+} from '@/shared/utils/trainerRegistrationValidation';
+import { getTrainerDobMaxDate, validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
 
 const TrainerRegister = () => {
     const [loading, setLoading] = useState(false);
@@ -28,9 +36,10 @@ const TrainerRegister = () => {
     const [success, setSuccess] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
-    const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingGallerySlot, setUploadingGallerySlot] = useState<number | null>(null);
     const profilePhotoInputRef = useRef<HTMLInputElement>(null);
-    const imageInputRef = useRef<HTMLInputElement>(null);
+    const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<Partial<Record<TrainerRegistrationField, string>>>({});
     
     const [formData, setFormData] = useState<CreateTrainerRequest>({
         name: '',
@@ -56,7 +65,33 @@ const TrainerRegister = () => {
     const patchDetails = (patch: Partial<CreateTrainerRequest>) =>
         setFormData((prev) => ({ ...prev, ...patch }));
 
-    const handleFileUpload = async (file: File, isProfilePhoto: boolean = false) => {
+    /** Remove a field error after the user edits that input. */
+    const clearFieldError = (field: TrainerRegistrationField) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
+
+    /** Build input/select class names with optional validation error styling. */
+    const fieldClass = (field: TrainerRegistrationField, extra = '') => {
+        const hasError = Boolean(fieldErrors[field]);
+        return `form-control trainer-form-control${extra}${hasError ? ' trainer-form-control-error' : ''}`;
+    };
+
+    /** Scroll to the first invalid field and focus it when possible. */
+    const scrollToField = (field?: TrainerRegistrationField) => {
+        if (!field) return;
+        const el = document.getElementById(TRAINER_REGISTRATION_FIELD_IDS[field]);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+            el.focus();
+        }
+    };
+
+    const handleFileUpload = async (file: File, isProfilePhoto: boolean = false, slotIndex?: number) => {
         if (!file) {
             return;
         }
@@ -64,8 +99,8 @@ const TrainerRegister = () => {
         try {
             if (isProfilePhoto) {
                 setUploadingProfilePhoto(true);
-            } else {
-                setUploadingImage(true);
+            } else if (slotIndex !== undefined) {
+                setUploadingGallerySlot(slotIndex);
             }
 
             const formData = new FormData();
@@ -95,11 +130,12 @@ const TrainerRegister = () => {
                         profilePhoto: imageData,
                     }));
                     Swal.fire('Success!', 'Profile photo uploaded successfully', 'success');
-                } else {
-                    setFormData((prev) => ({
-                        ...prev,
-                        images: [...(prev.images || []), imageData],
-                    }));
+                } else if (slotIndex !== undefined) {
+                    setFormData((prev) => {
+                        const next = [...(prev.images || [])];
+                        next[slotIndex] = imageData;
+                        return { ...prev, images: next };
+                    });
                     Swal.fire('Success!', 'Image uploaded successfully', 'success');
                 }
             } else {
@@ -112,7 +148,7 @@ const TrainerRegister = () => {
             if (isProfilePhoto) {
                 setUploadingProfilePhoto(false);
             } else {
-                setUploadingImage(false);
+                setUploadingGallerySlot(null);
             }
         }
     };
@@ -135,16 +171,9 @@ const TrainerRegister = () => {
         }
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if ((formData.images?.length || 0) >= MAX_GALLERY_IMAGES) {
-                Swal.fire('Limit reached', `You can upload a maximum of ${MAX_GALLERY_IMAGES} gallery images`, 'info');
-                if (imageInputRef.current) {
-                    imageInputRef.current.value = '';
-                }
-                return;
-            }
             if (!file.type.startsWith('image/')) {
                 Swal.fire('Error!', 'Please select an image file', 'error');
                 return;
@@ -153,17 +182,16 @@ const TrainerRegister = () => {
                 Swal.fire('Error!', 'File size should be less than 5MB', 'error');
                 return;
             }
-            handleFileUpload(file, false);
+            handleFileUpload(file, false, slotIndex);
         }
-        if (imageInputRef.current) {
-            imageInputRef.current.value = '';
-        }
+        const input = galleryInputRefs.current[slotIndex];
+        if (input) input.value = '';
     };
 
     const removeImage = (index: number) => {
         setFormData((prev) => {
             const newImages = [...(prev.images || [])];
-            newImages.splice(index, 1);
+            delete newImages[index];
             return { ...prev, images: newImages };
         });
     };
@@ -177,62 +205,20 @@ const TrainerRegister = () => {
         setLoading(true);
         setError('');
         setSuccess(false);
+        setFieldErrors({});
 
-        // Validate required fields
-        const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
-        const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
-        
-        if (
-            !formData.name ||
-            !formData.title ||
-            !formData.bio ||
-            !formData.category ||
-            !formData.email ||
-            !formData.mobile ||
-            !formData.dateOfBirth ||
-            !formData.city ||
-            !formData.pinCode ||
-            !formData.experience ||
-            specialistInArray.length === 0 ||
-            typeOfTrainingArray.length === 0
-        ) {
-            setError('Please fill in all required fields');
+        const validation = validateTrainerRegistration(formData, agreedToTerms);
+        if (!validation.isValid) {
+            setFieldErrors(validation.errors);
+            setError(validation.firstError || 'Please fix the errors below');
             setLoading(false);
-            return;
-        }
-
-        if (!agreedToTerms) {
-            setError('Please accept the Terms & Conditions to continue');
-            setLoading(false);
-            return;
-        }
-
-        if (!/^[0-9]{6}$/.test(formData.pinCode || '')) {
-            setError('Please enter a valid 6-digit PIN code');
-            setLoading(false);
-            return;
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            setError('Please enter a valid email address');
-            setLoading(false);
-            return;
-        }
-
-        // Validate mobile format (basic validation - 10 digits)
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!mobileRegex.test(formData.mobile.replace(/\D/g, ''))) {
-            setError('Please enter a valid 10-digit mobile number');
-            setLoading(false);
-            return;
-        }
-
-        // Validate bio length
-        if (formData.bio.length > 2000) {
-            setError('Bio must be less than 2000 characters');
-            setLoading(false);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Please check your form',
+                text: validation.firstError || 'Some required fields are missing or invalid.',
+                confirmButtonColor: '#845ADF',
+            });
+            scrollToField(validation.firstField);
             return;
         }
 
@@ -243,7 +229,7 @@ const TrainerRegister = () => {
                 bio: formData.bio.trim(),
                 category: formData.category,
                 email: formData.email.trim(),
-                mobile: formData.mobile.replace(/\D/g, ''), // Remove non-digits
+                mobile: formData.mobile.replace(/\D/g, ''),
                 specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
                 typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
                 dateOfBirth: formData.dateOfBirth,
@@ -265,7 +251,7 @@ const TrainerRegister = () => {
 
             // Only include images if they exist
             if (formData.images && formData.images.length > 0) {
-                submitData.images = formData.images;
+                submitData.images = formData.images.filter((img): img is TrainerImage => Boolean(img));
             }
 
             // Only include profilePhoto if it exists
@@ -277,11 +263,23 @@ const TrainerRegister = () => {
             
             setSuccess(true);
         } catch (err: any) {
-            if (err.message?.includes('401') || err.message?.includes('403') || err.message?.includes('Unauthorized')) {
+            const message = err.message || 'Failed to register trainer. Please try again or contact support.';
+            if (message.includes('401') || message.includes('403') || message.includes('Unauthorized')) {
                 setError('Registration requires admin approval. Your request has been noted. Please contact support or wait for admin approval.');
                 setSuccess(true);
             } else {
-                setError(err.message || 'Failed to register trainer. Please try again or contact support.');
+                setError(message);
+                const backendField = mapBackendErrorToField(message);
+                if (backendField) {
+                    setFieldErrors({ [backendField]: message.split(',')[0].trim() });
+                    scrollToField(backendField);
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Registration failed',
+                    text: message,
+                    confirmButtonColor: '#845ADF',
+                });
             }
         } finally {
             setLoading(false);
@@ -328,7 +326,7 @@ const TrainerRegister = () => {
                         <div className="relative z-10">
                             <div className="inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-10 shadow-lg leading-none">
                                 <img
-                                    src="/assets/images/logosm.png"
+                                    src="/assets/images/logo.jpeg"
                                     alt="Samsara"
                                     className="h-24 xl:h-28 w-auto max-w-[220px] object-contain block"
                                 />
@@ -337,15 +335,15 @@ const TrainerRegister = () => {
                                 Share your wellness expertise with the world
                             </h1>
                             <p className="text-white/80 text-sm leading-relaxed mb-9">
-                                Join Samsara as a certified trainer and connect with individuals and
-                                organizations seeking guidance in yoga, sound healing, and mental wellbeing.
+                                Join Samsara Wellness as a certified trainer and connect with
+                                organizations seeking guidance in wellness.
                             </p>
 
                             <ul className="space-y-5">
                                 {[
-                                    { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by users and corporate clients.' },
+                                    { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by corporate clients.' },
                                     { icon: 'ri-calendar-check-line', title: 'Effortless scheduling', desc: 'Manage all your bookings from one dashboard.' },
-                                    { icon: 'ri-line-chart-line', title: 'Grow your practice', desc: 'Build your profile and track your impact.' },
+                                    
                                 ].map((feature) => (
                                     <li key={feature.title} className="flex items-start gap-3">
                                         <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
@@ -372,7 +370,7 @@ const TrainerRegister = () => {
                     <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 max-h-screen overflow-y-auto">
                         <div className="mb-6">
                             <img
-                                src="/assets/images/logosm.png"
+                                src="/assets/images/logo.jpeg"
                                 alt="Samsara"
                                 className="h-20 sm:h-24 w-auto mb-4 lg:hidden"
                             />
@@ -385,182 +383,246 @@ const TrainerRegister = () => {
                         {error && (
                             <div
                                 role="alert"
-                                className={`flex items-start gap-2 mb-5 text-sm p-3 rounded-lg border ${
-                                    success
-                                        ? 'bg-warning/10 text-warning border-warning/20'
-                                        : 'bg-danger/10 text-danger border-danger/20'
+                                className={`trainer-form-error-summary ${
+                                    success ? 'bg-warning/10 text-warning border-warning/20' : ''
                                 }`}
                             >
-                                <i className={`${success ? 'ri-error-warning-line' : 'ri-close-circle-line'} text-base mt-0.5`} aria-hidden="true"></i>
-                                <span>{error}</span>
+                                <div className="flex items-start gap-2">
+                                    <i className={`${success ? 'ri-error-warning-line' : 'ri-close-circle-line'} text-base mt-0.5`} aria-hidden="true"></i>
+                                    <div>
+                                        <strong>{success ? 'Notice' : 'Please fix the following'}</strong>
+                                        <p className="mb-0 mt-1">{error}</p>
+                                        {!success && Object.keys(fieldErrors).length > 1 && (
+                                            <ul>
+                                                {Object.entries(fieldErrors).map(([field, msg]) => (
+                                                    <li key={field}>{msg}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-7">
-                            {/* Section 1 — Basic Information */}
+                        <form onSubmit={handleSubmit} className="space-y-2">
+                            {/* Trainer Type — first section per HTML mock */}
                             <section>
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">1</span>
-                                    <h3 className="font-semibold text-base text-defaulttextcolor">Basic Information</h3>
+                                <TrainerFormSectionTitle title="Trainer Type" iconClass="ri-id-card-line" />
+                                <div>
+                                    <label className="trainer-form-label" htmlFor="trainer-category">
+                                        Trainer Category <span className="trainer-form-req">*</span>
+                                    </label>
+                                    <select
+                                        id="trainer-category"
+                                        className={`${fieldClass('category')} trainer-form-select`}
+                                        value={formData.category}
+                                        onChange={(e) => {
+                                            clearFieldError('category');
+                                            setFormData((prev) => ({ ...prev, category: e.target.value }));
+                                        }}
+                                        required
+                                        aria-required="true"
+                                        aria-invalid={Boolean(fieldErrors.category)}
+                                        aria-describedby={fieldErrors.category ? 'trainer-category-error' : undefined}
+                                    >
+                                        <option value="">— Select trainer type —</option>
+                                        {TRAINER_CATEGORY_OPTIONS.map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                    <TrainerFormFieldError message={fieldErrors.category} fieldId="trainer-category" />
                                 </div>
+                            </section>
+
+                            {/* Personal Details */}
+                            <section>
+                                <TrainerFormSectionTitle title="Personal Details" iconClass="ri-user-line" />
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="form-label" htmlFor="reg-name">Full Name <span className="text-danger">*</span></label>
-                                        <div className="relative">
-                                            <i className="ri-user-line absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-                                            <input
-                                                id="reg-name"
-                                                type="text"
-                                                className="form-control border-2 focus:border-primary !ps-10"
-                                                value={formData.name}
-                                                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                                                placeholder="Jane Doe"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="form-label" htmlFor="reg-title">Professional Title <span className="text-danger">*</span></label>
-                                        <div className="relative">
-                                            <i className="ri-award-line absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-                                            <input
-                                                id="reg-title"
-                                                type="text"
-                                                className="form-control border-2 focus:border-primary !ps-10"
-                                                value={formData.title}
-                                                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                                                placeholder="e.g., Certified Yoga Instructor"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="form-label" htmlFor="trainer-category">Category <span className="text-danger">*</span></label>
-                                        <div className="relative">
-                                            <i className="ri-price-tag-3-line absolute left-3 top-1/2 -translate-y-1/2 text-muted z-10" aria-hidden="true"></i>
-                                            <select
-                                                id="trainer-category"
-                                                className="form-control border-2 focus:border-primary !ps-10"
-                                                value={formData.category}
-                                                onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-                                                required
-                                                aria-required="true"
-                                            >
-                                                <option value="">Select your category</option>
-                                                {TRAINER_CATEGORY_OPTIONS.map((cat) => (
-                                                    <option key={cat} value={cat}>{cat}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="form-label" htmlFor="reg-email">Email <span className="text-danger">*</span></label>
-                                        <div className="relative">
-                                            <i className="ri-mail-line absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-                                            <input
-                                                id="reg-email"
-                                                type="email"
-                                                className="form-control border-2 focus:border-primary !ps-10"
-                                                value={formData.email}
-                                                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                                                placeholder="your.email@example.com"
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="form-label" htmlFor="reg-mobile">Mobile Number <span className="text-danger">*</span></label>
-                                        <div className="relative">
-                                            <i className="ri-phone-line absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true"></i>
-                                            <input
-                                                id="reg-mobile"
-                                                type="tel"
-                                                className="form-control border-2 focus:border-primary !ps-10"
-                                                value={formData.mobile}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.replace(/\D/g, '');
-                                                    if (value.length <= 10) {
-                                                        setFormData((prev) => ({ ...prev, mobile: value }));
-                                                    }
-                                                }}
-                                                placeholder="1234567890"
-                                                maxLength={10}
-                                                required
-                                            />
-                                        </div>
-                                        <small className="text-muted">10 digits only</small>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <TrainerPersonalDetailsFields
-                                            values={{
-                                                dateOfBirth: formData.dateOfBirth,
-                                                city: formData.city,
-                                                pinCode: formData.pinCode,
-                                                experience: formData.experience,
+                                        <label className="trainer-form-label" htmlFor="reg-name">
+                                            Full Name <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="reg-name"
+                                            type="text"
+                                            className={fieldClass('name')}
+                                            value={formData.name}
+                                            onChange={(e) => {
+                                                clearFieldError('name');
+                                                setFormData((prev) => ({ ...prev, name: e.target.value }));
                                             }}
-                                            onChange={patchDetails}
-                                            requiredFields
+                                            placeholder="Jane Doe"
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.name)}
+                                            aria-describedby={fieldErrors.name ? 'reg-name-error' : undefined}
                                         />
+                                        <TrainerFormFieldError message={fieldErrors.name} fieldId="reg-name" />
+                                    </div>
+                                    <div>
+                                        <label className="trainer-form-label" htmlFor="reg-title">
+                                            Professional Title <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="reg-title"
+                                            type="text"
+                                            className={fieldClass('title')}
+                                            value={formData.title}
+                                            onChange={(e) => {
+                                                clearFieldError('title');
+                                                setFormData((prev) => ({ ...prev, title: e.target.value }));
+                                            }}
+                                            placeholder="e.g., Certified Yoga Instructor"
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.title)}
+                                            aria-describedby={fieldErrors.title ? 'reg-title-error' : undefined}
+                                        />
+                                        <TrainerFormFieldError message={fieldErrors.title} fieldId="reg-title" />
+                                    </div>
+                                    <div>
+                                        <label className="trainer-form-label" htmlFor="trainer-dob">
+                                            Date of Birth <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="trainer-dob"
+                                            type="date"
+                                            className={fieldClass('dateOfBirth')}
+                                            value={formData.dateOfBirth ? String(formData.dateOfBirth).slice(0, 10) : ''}
+                                            max={getTrainerDobMaxDate()}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                const dobError = value ? validateTrainerDateOfBirth(value) : undefined;
+                                                if (dobError && value) {
+                                                    setFieldErrors((prev) => ({ ...prev, dateOfBirth: dobError }));
+                                                    return;
+                                                }
+                                                clearFieldError('dateOfBirth');
+                                                patchDetails({ dateOfBirth: value || null });
+                                            }}
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.dateOfBirth)}
+                                            aria-describedby={fieldErrors.dateOfBirth ? 'trainer-dob-error' : undefined}
+                                        />
+                                        <TrainerFormFieldError message={fieldErrors.dateOfBirth} fieldId="trainer-dob" />
+                                    </div>
+                                    <div>
+                                        <label className="trainer-form-label" htmlFor="reg-mobile">
+                                            Mobile Number <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="reg-mobile"
+                                            type="tel"
+                                            className={fieldClass('mobile')}
+                                            value={formData.mobile}
+                                            onChange={(e) => {
+                                                clearFieldError('mobile');
+                                                const value = e.target.value.replace(/\D/g, '');
+                                                if (value.length <= 10) {
+                                                    setFormData((prev) => ({ ...prev, mobile: value }));
+                                                }
+                                            }}
+                                            placeholder="1234567890"
+                                            maxLength={10}
+                                            inputMode="numeric"
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.mobile)}
+                                            aria-describedby={fieldErrors.mobile ? 'reg-mobile-error' : undefined}
+                                        />
+                                        <TrainerFormFieldError message={fieldErrors.mobile} fieldId="reg-mobile" />
+                                        {!fieldErrors.mobile && (
+                                            <small className="text-muted text-xs mt-1 block">10 digits only</small>
+                                        )}
                                     </div>
                                     <div className="sm:col-span-2">
-                                        <label className="form-label" htmlFor="reg-bio">Bio <span className="text-danger">*</span></label>
-                                        <textarea
-                                            id="reg-bio"
-                                            className="form-control border-2 focus:border-primary"
-                                            rows={4}
-                                            value={formData.bio}
-                                            onChange={(e) => setFormData((prev) => ({ ...prev, bio: e.target.value }))}
-                                            maxLength={2000}
-                                            placeholder="Tell clients about your experience, approach, and what makes your sessions special..."
+                                        <label className="trainer-form-label" htmlFor="reg-email">
+                                            Email ID <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="reg-email"
+                                            type="email"
+                                            className={fieldClass('email')}
+                                            value={formData.email}
+                                            onChange={(e) => {
+                                                clearFieldError('email');
+                                                setFormData((prev) => ({ ...prev, email: e.target.value }));
+                                            }}
+                                            placeholder="you@email.com"
                                             required
+                                            aria-invalid={Boolean(fieldErrors.email)}
+                                            aria-describedby={fieldErrors.email ? 'reg-email-error' : undefined}
                                         />
-                                        <div className="flex justify-end">
-                                            <small className={`text-xs ${(formData.bio || '').length > 1900 ? 'text-warning' : 'text-muted'}`}>
-                                                {(formData.bio || '').length}/2000 characters
-                                            </small>
-                                        </div>
+                                        <TrainerFormFieldError message={fieldErrors.email} fieldId="reg-email" />
+                                    </div>
+                                    <div>
+                                        <label className="trainer-form-label" htmlFor="trainer-city">
+                                            City <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="trainer-city"
+                                            type="text"
+                                            className={fieldClass('city')}
+                                            value={formData.city || ''}
+                                            onChange={(e) => {
+                                                clearFieldError('city');
+                                                patchDetails({ city: e.target.value });
+                                            }}
+                                            placeholder="Your city"
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.city)}
+                                            aria-describedby={fieldErrors.city ? 'trainer-city-error' : undefined}
+                                        />
+                                        <TrainerFormFieldError message={fieldErrors.city} fieldId="trainer-city" />
+                                    </div>
+                                    <div>
+                                        <label className="trainer-form-label" htmlFor="trainer-pincode">
+                                            PIN Code <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <input
+                                            id="trainer-pincode"
+                                            type="text"
+                                            inputMode="numeric"
+                                            className={fieldClass('pinCode')}
+                                            value={formData.pinCode || ''}
+                                            onChange={(e) => {
+                                                clearFieldError('pinCode');
+                                                const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                                patchDetails({ pinCode: digits });
+                                            }}
+                                            placeholder="6-digit PIN"
+                                            maxLength={6}
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.pinCode)}
+                                            aria-describedby={fieldErrors.pinCode ? 'trainer-pincode-error' : undefined}
+                                        />
+                                        <TrainerFormFieldError message={fieldErrors.pinCode} fieldId="trainer-pincode" />
+                                    </div>
+                                    <div className="sm:col-span-2">
+                                        <label className="trainer-form-label" htmlFor="trainer-experience">
+                                            Years of Experience <span className="trainer-form-req">*</span>
+                                        </label>
+                                        <select
+                                            id="trainer-experience"
+                                            className={`${fieldClass('experience')} trainer-form-select`}
+                                            value={formData.experience || ''}
+                                            onChange={(e) => {
+                                                clearFieldError('experience');
+                                                patchDetails({ experience: e.target.value });
+                                            }}
+                                            required
+                                            aria-invalid={Boolean(fieldErrors.experience)}
+                                            aria-describedby={fieldErrors.experience ? 'trainer-experience-error' : undefined}
+                                        >
+                                            <option value="">— Select experience range —</option>
+                                            {EXPERIENCE_OPTIONS.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                        <TrainerFormFieldError message={fieldErrors.experience} fieldId="trainer-experience" />
                                     </div>
                                 </div>
                             </section>
 
-                            {/* Section 2 — Training Information */}
-                            <section className="pt-6 border-t border-defaultborder/60">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">2</span>
-                                    <h3 className="font-semibold text-base text-defaulttextcolor">Training Information</h3>
-                                </div>
-                                <div className="space-y-4">
-                                    <MultiSelect
-                                        label="Training For"
-                                        options={SPECIALIST_OPTIONS}
-                                        value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
-                                        onChange={(selected) => setFormData((prev) => ({ ...prev, specialistIn: selected }))}
-                                        placeholder="Select audience..."
-                                        required
-                                        maxHeight="200px"
-                                        showTags={true}
-                                    />
-                                    <MultiSelect
-                                        label="Specializations"
-                                        options={TYPE_OF_TRAINING_OPTIONS}
-                                        value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
-                                        onChange={(selected) => setFormData((prev) => ({ ...prev, typeOfTraining: selected }))}
-                                        placeholder="Select specializations..."
-                                        required
-                                        maxHeight="300px"
-                                        showTags={true}
-                                    />
-                                </div>
-                            </section>
-
-                            {/* Section 2b — Education & Certifications */}
-                            <section className="pt-6 border-t border-defaultborder/60">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">3</span>
-                                    <h3 className="font-semibold text-base text-defaulttextcolor">
-                                        Education &amp; Certifications <span className="text-muted text-xs font-normal">(optional)</span>
-                                    </h3>
-                                </div>
+                            {/* Education & Certifications */}
+                            <section>
                                 <TrainerQualificationFields
                                     education={formData.education}
                                     certification={formData.certification}
@@ -568,148 +630,111 @@ const TrainerRegister = () => {
                                 />
                             </section>
 
-                            {/* Section 3 — Photos */}
-                            <section className="pt-6 border-t border-defaultborder/60">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">4</span>
-                                    <h3 className="font-semibold text-base text-defaulttextcolor">
-                                        Photos <span className="text-muted text-xs font-normal">(optional)</span>
-                                    </h3>
-                                </div>
-
-                                <input type="file" ref={profilePhotoInputRef} accept="image/*" onChange={handleProfilePhotoChange} className="hidden" />
-                                <input type="file" ref={imageInputRef} accept="image/*" onChange={handleImageChange} className="hidden" />
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Profile photo */}
-                                    <div>
-                                        <label className="form-label">Profile Photo</label>
-                                        {formData.profilePhoto?.path ? (
-                                            <div className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-defaultborder group">
-                                                <img
-                                                    src={formData.profilePhoto.path}
-                                                    alt="Profile preview"
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => profilePhotoInputRef.current?.click()}
-                                                        className="ti-btn ti-btn-sm !bg-white !text-defaulttextcolor !font-medium"
-                                                        title="Change photo"
-                                                    >
-                                                        <i className="ri-refresh-line"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={clearProfilePhoto}
-                                                        className="ti-btn ti-btn-sm !bg-danger !text-white !font-medium"
-                                                        title="Remove photo"
-                                                    >
-                                                        <i className="ri-delete-bin-line"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => profilePhotoInputRef.current?.click()}
-                                                disabled={uploadingProfilePhoto}
-                                                className="w-full h-40 rounded-xl border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60"
-                                            >
-                                                {uploadingProfilePhoto ? (
-                                                    <><span className="spinner-border spinner-border-sm"></span><span className="text-sm">Uploading...</span></>
-                                                ) : (
-                                                    <>
-                                                        <i className="ri-image-add-line text-3xl"></i>
-                                                        <span className="text-sm font-medium">Upload Profile Photo</span>
-                                                        <span className="text-xs">JPG, PNG, GIF · Max 5MB</span>
-                                                    </>
-                                                )}
-                                            </button>
-                                        )}
-                                    </div>
-
-                                    {/* Additional images uploader */}
-                                    <div>
-                                        <label className="form-label">
-                                            Additional Images{' '}
-                                            <span className="text-muted text-xs font-normal">
-                                                ({formData.images?.length || 0}/{MAX_GALLERY_IMAGES})
-                                            </span>
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => imageInputRef.current?.click()}
-                                            disabled={uploadingImage || (formData.images?.length || 0) >= MAX_GALLERY_IMAGES}
-                                            className="w-full h-40 rounded-xl border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                        >
-                                            {uploadingImage ? (
-                                                <><span className="spinner-border spinner-border-sm"></span><span className="text-sm">Uploading...</span></>
-                                            ) : (formData.images?.length || 0) >= MAX_GALLERY_IMAGES ? (
-                                                <>
-                                                    <i className="ri-checkbox-circle-line text-3xl"></i>
-                                                    <span className="text-sm font-medium">Maximum {MAX_GALLERY_IMAGES} images added</span>
-                                                    <span className="text-xs">Remove one to add another</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <i className="ri-add-circle-line text-3xl"></i>
-                                                    <span className="text-sm font-medium">Add Gallery Image</span>
-                                                    <span className="text-xs">Up to {MAX_GALLERY_IMAGES} · JPG, PNG, GIF · Max 5MB each</span>
-                                                </>
-                                            )}
-                                        </button>
+                            {/* Professional Bio */}
+                            <section>
+                                <TrainerFormSectionTitle title="Professional Bio" iconClass="ri-file-text-line" />
+                                <div>
+                                    <label className="trainer-form-label" htmlFor="reg-bio">
+                                        About You <span className="trainer-form-req">*</span>
+                                    </label>
+                                    <textarea
+                                        id="reg-bio"
+                                        className={`${fieldClass('bio')} trainer-form-textarea`}
+                                        rows={4}
+                                        value={formData.bio}
+                                        onChange={(e) => {
+                                            clearFieldError('bio');
+                                            setFormData((prev) => ({ ...prev, bio: e.target.value }));
+                                        }}
+                                        maxLength={2000}
+                                        placeholder="Describe your expertise, philosophy, and experience... (max 2000 characters)"
+                                        required
+                                        aria-invalid={Boolean(fieldErrors.bio)}
+                                        aria-describedby={fieldErrors.bio ? 'reg-bio-error' : undefined}
+                                    />
+                                    <TrainerFormFieldError message={fieldErrors.bio} fieldId="reg-bio" />
+                                    <div className="trainer-form-char-count">
+                                        {(formData.bio || '').length} / 2000
                                     </div>
                                 </div>
+                            </section>
 
-                                {/* Gallery thumbnails */}
-                                {formData.images && formData.images.length > 0 && (
-                                    <div className="mt-4">
-                                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                                            {formData.images.map((img, idx) => (
-                                                <div key={idx} className="relative group aspect-square">
-                                                    <img
-                                                        src={img.path}
-                                                        alt={`Gallery ${idx + 1}`}
-                                                        className="w-full h-full object-cover rounded-lg border border-defaultborder"
-                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeImage(idx)}
-                                                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-danger text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                                                        title="Remove image"
-                                                    >
-                                                        <i className="ri-close-line text-sm"></i>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <small className="text-muted text-xs mt-2 block">
-                                            {formData.images.length} of {MAX_GALLERY_IMAGES} image(s) added
-                                        </small>
-                                    </div>
-                                )}
+                            {/* Training Focus */}
+                            <section>
+                                <TrainerFormSectionTitle title="Training Focus" iconClass="ri-focus-3-line" />
+                                <div className="space-y-4">
+                                    <TrainerChipSelect
+                                        label="Training For"
+                                        fieldId="reg-specialist-in"
+                                        options={SPECIALIST_OPTIONS}
+                                        value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
+                                        onChange={(selected) => {
+                                            clearFieldError('specialistIn');
+                                            setFormData((prev) => ({ ...prev, specialistIn: selected }));
+                                        }}
+                                        required
+                                        error={fieldErrors.specialistIn}
+                                    />
+                                    <TrainerChipSelect
+                                        label="Specializations"
+                                        fieldId="reg-type-of-training"
+                                        options={TYPE_OF_TRAINING_OPTIONS}
+                                        value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
+                                        onChange={(selected) => {
+                                            clearFieldError('typeOfTraining');
+                                            setFormData((prev) => ({ ...prev, typeOfTraining: selected }));
+                                        }}
+                                        required
+                                        error={fieldErrors.typeOfTraining}
+                                    />
+                                </div>
+                            </section>
+
+                            {/* Photos */}
+                            <section>
+                                <TrainerPhotosFields
+                                    profilePhoto={formData.profilePhoto}
+                                    images={formData.images}
+                                    profilePhotoInputRef={profilePhotoInputRef}
+                                    galleryInputRefs={galleryInputRefs}
+                                    uploadingProfilePhoto={uploadingProfilePhoto}
+                                    uploadingGallerySlot={uploadingGallerySlot}
+                                    onProfilePhotoChange={handleProfilePhotoChange}
+                                    onGallerySlotChange={handleGallerySlotChange}
+                                    onClearProfilePhoto={clearProfilePhoto}
+                                    onRemoveGalleryImage={removeImage}
+                                />
                             </section>
 
                             {/* Terms */}
-                            <div className="flex items-start gap-3 p-4 rounded-xl border border-defaultborder bg-primary/5">
-                                <input
-                                    id="reg-terms"
-                                    type="checkbox"
-                                    className="form-check-input mt-0.5"
-                                    checked={agreedToTerms}
-                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                    aria-label="Agree to terms and conditions"
-                                />
-                                <label htmlFor="reg-terms" className="text-sm text-defaulttextcolor/80 leading-relaxed">
-                                    I agree to the{' '}
-                                    <a href="#" className="text-primary font-semibold">Terms &amp; Conditions</a> and{' '}
-                                    <a href="#" className="text-primary font-semibold">Privacy Policy</a>, and confirm that
-                                    all information provided is accurate.
-                                </label>
+                            <div className="trainer-form-terms-wrap" id="reg-terms">
+                                <div
+                                    className={`trainer-form-terms-row${fieldErrors.agreedToTerms ? ' trainer-form-control-error' : ''}`}
+                                >
+                                    <input
+                                        id="reg-terms-checkbox"
+                                        type="checkbox"
+                                        checked={agreedToTerms}
+                                        onChange={(e) => {
+                                            clearFieldError('agreedToTerms');
+                                            setAgreedToTerms(e.target.checked);
+                                        }}
+                                        aria-label="Agree to terms and conditions"
+                                        aria-invalid={Boolean(fieldErrors.agreedToTerms)}
+                                        aria-describedby={fieldErrors.agreedToTerms ? 'reg-terms-error' : 'reg-terms-text'}
+                                    />
+                                    <div id="reg-terms-text" className="trainer-form-terms-text">
+                                        <label htmlFor="reg-terms-checkbox" className="trainer-form-terms-label">
+                                            I agree to the{' '}
+                                            <a href="#" onClick={(e) => e.preventDefault()}>Terms &amp; Conditions</a>
+                                            {' '}and{' '}
+                                            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
+                                            {' '}I confirm that all information provided is accurate and I consent to my
+                                            profile being listed on the platform for organizational outreach.
+                                        </label>
+                                    </div>
+                                </div>
+                                <TrainerFormFieldError message={fieldErrors.agreedToTerms} fieldId="reg-terms" />
                             </div>
 
                             {/* Submit */}

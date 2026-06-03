@@ -1,6 +1,8 @@
 "use client";
 import React, { RefObject } from 'react';
 import type { TrainerImage } from '@/services/trainerService';
+import '@/shared/styles/trainer-form.css';
+import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
 
 /** Maximum gallery images allowed on trainer profile / registration. */
 export const MAX_TRAINER_GALLERY_IMAGES = 3;
@@ -9,17 +11,18 @@ interface TrainerPhotosFieldsProps {
   profilePhoto: TrainerImage | null | undefined;
   images: TrainerImage[] | undefined;
   profilePhotoInputRef: RefObject<HTMLInputElement | null>;
-  imageInputRef: RefObject<HTMLInputElement | null>;
+  galleryInputRefs: RefObject<(HTMLInputElement | null)[]>;
   uploadingProfilePhoto: boolean;
-  uploadingImage: boolean;
+  uploadingGallerySlot: number | null;
   onProfilePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onGalleryImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onGallerySlotChange: (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearProfilePhoto: () => void;
   onRemoveGalleryImage: (index: number) => void;
 }
 
 /**
  * Profile photo and training gallery upload UI shared by registration and profile edit.
+ * Matches trainer_registration_form_v2.html layout (circle profile + 3-slot gallery grid).
  *
  * @param props - Image state, refs and upload handlers.
  * @returns Hidden file inputs plus profile and gallery upload controls.
@@ -28,19 +31,19 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
   profilePhoto,
   images,
   profilePhotoInputRef,
-  imageInputRef,
+  galleryInputRefs,
   uploadingProfilePhoto,
-  uploadingImage,
+  uploadingGallerySlot,
   onProfilePhotoChange,
-  onGalleryImageChange,
+  onGallerySlotChange,
   onClearProfilePhoto,
   onRemoveGalleryImage,
 }) => {
-  const galleryCount = images?.length || 0;
-  const galleryFull = galleryCount >= MAX_TRAINER_GALLERY_IMAGES;
+  const galleryCount = (images || []).filter((img) => Boolean(img)).length;
+  const gallerySlots = Array.from({ length: MAX_TRAINER_GALLERY_IMAGES }, (_, i) => images?.[i]);
 
   return (
-    <>
+    <div className="space-y-6">
       <input
         type="file"
         ref={profilePhotoInputRef as RefObject<HTMLInputElement>}
@@ -49,142 +52,112 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
         className="hidden"
         aria-hidden="true"
       />
-      <input
-        type="file"
-        ref={imageInputRef as RefObject<HTMLInputElement>}
-        accept="image/*"
-        onChange={onGalleryImageChange}
-        className="hidden"
-        aria-hidden="true"
-      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="form-label">Profile Photo</label>
-          {profilePhoto?.path ? (
-            <div className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-defaultborder group">
-              <img
-                src={profilePhoto.path}
-                alt="Profile preview"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => profilePhotoInputRef.current?.click()}
-                  className="ti-btn ti-btn-sm !bg-white !text-defaulttextcolor !font-medium"
-                  title="Change photo"
-                  aria-label="Change profile photo"
-                >
-                  <i className="ri-refresh-line" aria-hidden="true"></i>
-                </button>
-                <button
-                  type="button"
-                  onClick={onClearProfilePhoto}
-                  className="ti-btn ti-btn-sm !bg-danger !text-white !font-medium"
-                  title="Remove photo"
-                  aria-label="Remove profile photo"
-                >
-                  <i className="ri-delete-bin-line" aria-hidden="true"></i>
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => profilePhotoInputRef.current?.click()}
-              disabled={uploadingProfilePhoto}
-              className="w-full h-40 rounded-xl border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60"
-            >
-              {uploadingProfilePhoto ? (
-                <>
-                  <span className="spinner-border spinner-border-sm" role="status"></span>
-                  <span className="text-sm">Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <i className="ri-image-add-line text-3xl" aria-hidden="true"></i>
-                  <span className="text-sm font-medium">Upload Profile Photo</span>
-                  <span className="text-xs">JPG, PNG, GIF · Max 5MB</span>
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        <div>
-          <label className="form-label">
-            Training Gallery Photos{' '}
-            <span className="text-muted text-xs font-normal">
-              ({galleryCount}/{MAX_TRAINER_GALLERY_IMAGES})
-            </span>
-          </label>
+      {/* Profile photo */}
+      <div>
+        <TrainerFormSectionTitle title="Profile Photo" iconClass="ri-account-circle-line" />
+        <div className="trainer-form-profile-row">
           <button
             type="button"
-            onClick={() => imageInputRef.current?.click()}
-            disabled={uploadingImage || galleryFull}
-            className="w-full h-40 rounded-xl border-2 border-dashed border-defaultborder hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center gap-1.5 text-muted hover:text-primary transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="trainer-form-profile-circle"
+            onClick={() => profilePhotoInputRef.current?.click()}
+            disabled={uploadingProfilePhoto}
+            aria-label="Upload profile photo"
           >
-            {uploadingImage ? (
-              <>
-                <span className="spinner-border spinner-border-sm" role="status"></span>
-                <span className="text-sm">Uploading...</span>
-              </>
-            ) : galleryFull ? (
-              <>
-                <i className="ri-checkbox-circle-line text-3xl" aria-hidden="true"></i>
-                <span className="text-sm font-medium">
-                  Maximum {MAX_TRAINER_GALLERY_IMAGES} images added
-                </span>
-                <span className="text-xs">Remove one to add another</span>
-              </>
+            {profilePhoto?.path ? (
+              <img src={profilePhoto.path} alt="Profile preview" />
+            ) : uploadingProfilePhoto ? (
+              <span className="spinner-border spinner-border-sm text-primary" role="status" />
             ) : (
-              <>
-                <i className="ri-add-circle-line text-3xl" aria-hidden="true"></i>
-                <span className="text-sm font-medium">Add Gallery Image</span>
-                <span className="text-xs">
-                  Up to {MAX_TRAINER_GALLERY_IMAGES} · JPG, PNG, GIF · Max 5MB each
-                </span>
-              </>
+              <i className="ri-user-line text-[28px] text-[#c9bef8]" aria-hidden="true" />
             )}
           </button>
+          <div className="trainer-form-profile-info flex-1 min-w-0">
+            <strong>Upload your profile photo</strong>
+            <p>
+              Click the circle to upload. Use a clear, professional headshot. JPG or PNG, min
+              300×300px recommended.
+            </p>
+            {profilePhoto?.path && (
+              <button
+                type="button"
+                onClick={onClearProfilePhoto}
+                className="text-xs text-danger font-semibold mt-1 hover:underline"
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {images && images.length > 0 && (
-        <div className="mt-4">
-          <div className="grid grid-cols-3 gap-3">
-            {images.map((img, idx) => (
-              <div key={idx} className="relative group aspect-[4/3]">
-                <img
-                  src={img.path}
-                  alt={`Gallery ${idx + 1}`}
-                  className="w-full h-full object-cover rounded-lg border border-defaultborder"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
+      {/* Gallery */}
+      <div>
+        <TrainerFormSectionTitle title="Training Gallery Photos" iconClass="ri-image-line" />
+        <p className="text-xs text-muted mb-2">
+          {galleryCount} of {MAX_TRAINER_GALLERY_IMAGES} uploaded
+        </p>
+        <div className="trainer-form-gallery-grid">
+          {gallerySlots.map((slotImage, index) => {
+            const uploading = uploadingGallerySlot === index;
+            return (
+              <div key={`gallery-slot-${index}`} className="relative">
+                <input
+                  type="file"
+                  ref={(el) => {
+                    if (galleryInputRefs.current) {
+                      galleryInputRefs.current[index] = el;
+                    }
                   }}
+                  accept="image/*"
+                  onChange={(e) => onGallerySlotChange(index, e)}
+                  className="hidden"
+                  aria-hidden="true"
                 />
-                <button
-                  type="button"
-                  onClick={() => onRemoveGalleryImage(idx)}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-danger text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                  title="Remove image"
-                  aria-label={`Remove gallery image ${idx + 1}`}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="trainer-form-gallery-box w-full"
+                  onClick={() => !uploading && galleryInputRefs.current?.[index]?.click()}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !uploading) {
+                      e.preventDefault();
+                      galleryInputRefs.current?.[index]?.click();
+                    }
+                  }}
+                  aria-label={`Upload gallery photo ${index + 1}`}
+                  aria-disabled={uploading}
                 >
-                  <i className="ri-close-line text-sm" aria-hidden="true"></i>
-                </button>
+                  {slotImage?.path ? (
+                    <>
+                      <img src={slotImage.path} alt={`Gallery ${index + 1}`} />
+                      <button
+                        type="button"
+                        className="trainer-form-gallery-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveGalleryImage(index);
+                        }}
+                        aria-label={`Remove gallery photo ${index + 1}`}
+                      >
+                        <i className="ri-close-line text-sm" aria-hidden="true" />
+                      </button>
+                    </>
+                  ) : uploading ? (
+                    <span className="spinner-border spinner-border-sm text-primary" role="status" />
+                  ) : (
+                    <>
+                      <i className="ri-camera-line g-icon" aria-hidden="true" />
+                      <span className="g-label">Photo {index + 1}</span>
+                    </>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-          <small className="text-muted text-xs mt-2 block">
-            {galleryCount} of {MAX_TRAINER_GALLERY_IMAGES} image(s) added
-          </small>
+            );
+          })}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

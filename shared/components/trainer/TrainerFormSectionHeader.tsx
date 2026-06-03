@@ -23,7 +23,7 @@ const TrainerFormSectionHeader: React.FC<TrainerFormSectionHeaderProps> = ({
 }) => (
   <div className="flex items-center gap-2 mb-4">
     <span
-      className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold"
+      className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold"
       aria-hidden="true"
     >
       {number}

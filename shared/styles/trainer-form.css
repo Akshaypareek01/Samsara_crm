@@ -1,0 +1,314 @@
+/* Trainer registration / profile form — matches trainer_registration_form_v2.html */
+
+.trainer-form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a5572;
+  letter-spacing: 0.02em;
+  margin-bottom: 5px;
+}
+
+.trainer-form-label .trainer-form-req {
+  color: #845adf;
+}
+
+.trainer-form-control,
+.trainer-form-control.form-control {
+  border: 1.5px solid #e4dfff !important;
+  border-radius: 10px !important;
+  padding: 9px 13px !important;
+  font-size: 14px !important;
+  color: #1a1033;
+  background: #fff !important;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  width: 100%;
+  line-height: 1.5;
+  box-shadow: none !important;
+}
+
+.trainer-form-control:focus,
+.trainer-form-control.form-control:focus {
+  border-color: #845adf !important;
+  box-shadow: 0 0 0 3px rgba(132, 90, 223, 0.1) !important;
+}
+
+.trainer-form-select,
+.trainer-form-select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23845ADF' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px !important;
+  cursor: pointer;
+}
+
+.trainer-form-textarea,
+.trainer-form-textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+.trainer-form-char-count {
+  font-size: 11px;
+  color: #aaa;
+  text-align: right;
+  margin-top: 4px;
+}
+
+.trainer-form-sub-card {
+  background: #faf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 12px;
+  padding: 1.1rem 1.2rem;
+}
+
+.trainer-form-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.trainer-form-chip {
+  border: 1.5px solid #e4dfff;
+  border-radius: 30px;
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fff;
+  user-select: none;
+}
+
+.trainer-form-chip:hover {
+  border-color: #845adf;
+  color: #845adf;
+  background: #f4f0ff;
+}
+
+.trainer-form-chip.selected {
+  border-color: #845adf;
+  background: #845adf;
+  color: #fff;
+}
+
+.trainer-form-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #faf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem;
+}
+
+.trainer-form-profile-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px dashed #c9bef8;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.trainer-form-profile-circle:hover {
+  border-color: #845adf;
+  background: #f4f0ff;
+}
+
+.trainer-form-profile-circle img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.trainer-form-profile-info strong {
+  color: #845adf;
+  font-size: 13px;
+}
+
+.trainer-form-profile-info p {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.trainer-form-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.trainer-form-gallery-box {
+  aspect-ratio: 4 / 3;
+  border: 2px dashed #c9bef8;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #faf9ff;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.trainer-form-gallery-box:hover {
+  border-color: #845adf;
+  background: #f4f0ff;
+}
+
+.trainer-form-gallery-box img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.trainer-form-gallery-box .g-icon {
+  font-size: 20px;
+  color: #c9bef8;
+  margin-bottom: 4px;
+}
+
+.trainer-form-gallery-box .g-label {
+  font-size: 11px;
+  color: #bbb;
+  text-align: center;
+}
+
+.trainer-form-gallery-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(226, 75, 74, 0.92);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s;
+  z-index: 2;
+}
+
+.trainer-form-gallery-box:hover .trainer-form-gallery-remove {
+  opacity: 1;
+}
+
+.trainer-form-terms-wrap {
+  margin-top: 0.5rem;
+}
+
+.trainer-form-terms-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 1.1rem 1.2rem;
+  background: #faf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 12px;
+}
+
+.trainer-form-terms-row input[type='checkbox'] {
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  border: 1.5px solid #c9bef8;
+  accent-color: #845adf;
+  margin-top: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.trainer-form-terms-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.65;
+}
+
+.trainer-form-terms-label {
+  display: block;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 400;
+  color: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.trainer-form-terms-text a {
+  color: #845adf;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.trainer-form-terms-text a:hover {
+  text-decoration: underline;
+}
+
+.trainer-form-control-error,
+.trainer-form-control-error.form-control {
+  border-color: #e24b4a !important;
+  box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.08) !important;
+}
+
+.trainer-form-field-error {
+  font-size: 11px;
+  color: #e24b4a;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.trainer-form-error-summary {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+  color: #b42318;
+  font-size: 13px;
+}
+
+.trainer-form-error-summary ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.trainer-form-error-summary li {
+  margin-bottom: 0.2rem;
+}
+
+.trainer-form-terms-row.trainer-form-control-error {
+  border-color: #e24b4a !important;
+}
