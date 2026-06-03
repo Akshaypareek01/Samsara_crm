@@ -266,6 +266,7 @@ class CompanyService {
         await ApiService.setAuthToken(response.tokens.access.token);
         if (typeof window !== 'undefined') {
           localStorage.setItem('Auth', 'true');
+          localStorage.setItem('userType', 'company');
           if (response.tokens.refresh?.token) {
             localStorage.setItem('refreshToken', response.tokens.refresh.token);
           }

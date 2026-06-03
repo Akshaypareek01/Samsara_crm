@@ -51,6 +51,7 @@ class AdminService {
         // Set auth status
         if (typeof window !== 'undefined') {
           localStorage.setItem('Auth', 'true');
+          localStorage.setItem('userType', 'admin');
           // Optionally save refresh token
           if (response.tokens?.refresh?.token) {
             localStorage.setItem('refreshToken', response.tokens.refresh.token);

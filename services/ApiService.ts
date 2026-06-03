@@ -46,14 +46,17 @@ class ApiService {
           try {
             await this.removeAuthToken();
             console.log('Unauthorized access. Please login again.');
-            if (
-              typeof window !== 'undefined' &&
-              window.location.pathname.startsWith('/company/dashboard')
-            ) {
-              const next = encodeURIComponent(
-                window.location.pathname + window.location.search
-              );
-              window.location.assign(`/company/login?next=${next}`);
+            if (typeof window !== 'undefined') {
+              const path = window.location.pathname;
+              if (path.startsWith('/company/dashboard')) {
+                const next = encodeURIComponent(path + window.location.search);
+                window.location.assign(`/company/login?next=${next}`);
+              } else if (
+                path.startsWith('/dashboards') ||
+                path.startsWith('/apps/crm')
+              ) {
+                window.location.assign('/admin/login');
+              }
             }
           } catch (tokenError) {
             console.error('Error removing auth token:', tokenError);
@@ -107,6 +110,7 @@ class ApiService {
       localStorage.removeItem('user');
       localStorage.removeItem('Auth');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userType');
     } catch (error) {
       console.error('Error removing auth token:', error);
       throw new Error('Failed to remove authentication token');

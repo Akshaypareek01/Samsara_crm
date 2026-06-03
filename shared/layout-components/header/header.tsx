@@ -36,7 +36,7 @@ const Header = ({ local_varaiable, ThemeChanger }: any) => {
     displayName: 'Admin',
     roleLabel: 'Administrator',
     avatarUrl: '',
-    loginPath: '/',
+    loginPath: '/admin/login',
   });
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const Header = ({ local_varaiable, ThemeChanger }: any) => {
             displayName: user?.name || 'Admin',
             roleLabel: 'Administrator',
             avatarUrl: '',
-            loginPath: '/',
+            loginPath: '/admin/login',
           };
         }
 

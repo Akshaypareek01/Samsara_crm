@@ -4,6 +4,12 @@ import AdminService from '@/services/adminService';
 import { usePathname, useRouter } from 'next/navigation';
 import { hasPermission, getPermissionForPath, findFirstAuthorizedPath } from '@/shared/utils/permissionUtils';
 import { MenuItems } from '@/shared/layout-components/sidebar/nav';
+import {
+  ADMIN_LOGIN_PATH,
+  COMPANY_HOME_PATH,
+  getStoredSessionKind,
+  TRAINER_HOME_PATH,
+} from '@/shared/utils/sessionType';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,11 +23,21 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const sessionKind = getStoredSessionKind();
+        if (sessionKind === 'company') {
+          router.replace(COMPANY_HOME_PATH);
+          return;
+        }
+        if (sessionKind === 'trainer') {
+          router.replace(TRAINER_HOME_PATH);
+          return;
+        }
+
         const authStatus = await AdminService.isAuthenticated();
         setIsAuthenticated(authStatus);
 
         if (!authStatus) {
-          router.push('/');
+          router.replace(ADMIN_LOGIN_PATH);
           return;
         }
 
@@ -41,7 +57,7 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
       } catch (error) {
         console.error('Auth check error:', error);
         setIsAuthenticated(false);
-        router.push('/');
+        router.replace(ADMIN_LOGIN_PATH);
       }
     };
 
