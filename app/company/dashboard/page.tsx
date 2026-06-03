@@ -1,229 +1,118 @@
 "use client";
 
-import Pageheader from "@/shared/layout-components/page-header/pageheader";
-import Seo from "@/shared/layout-components/seo/seo";
-import React, { Fragment, useCallback, useEffect, useState } from "react";
-import TrainerService, { Trainer, isTrainerAcceptingBookings } from "@/services/trainerService";
-import CompanyService from "@/services/companyService";
-import { useRouter } from "next/navigation";
-import BookingModal from "./components/BookingModal";
-import {
-    CompanyDashboardMainAnalytics,
-    CompanyDashboardRightRail,
-} from "./components/CompanyDashboardDataPanels";
+import Seo from '@/shared/layout-components/seo/seo';
+import React, { Fragment, useCallback, useState } from 'react';
+import TrainerService, { Trainer } from '@/services/trainerService';
+import { useCompanySession } from '@/hooks/useCompanySession';
+import { useCompanyHomeTrainers } from '@/hooks/useCompanyHomeTrainers';
+import { HOME_TRAINER_CATEGORIES } from './constants/homeTrainerCategories';
+import CompanyHomeWelcomeBanner from './components/home/CompanyHomeWelcomeBanner';
+import CompanyHomeCategorySection from './components/home/CompanyHomeCategorySection';
+import CompanyHomeCtaBanner from './components/home/CompanyHomeCtaBanner';
+import './components/company-trainer-card.css';
+import CompanyTrainerProfileDrawer from './components/CompanyTrainerProfileDrawer';
+import CompanyBookingDrawer from './components/CompanyBookingDrawer';
 
+/**
+ * Company home dashboard — welcome banner and trainers grouped by category.
+ */
 const CompanyDashboard = () => {
-    const [trainers, setTrainers] = useState<Trainer[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalTrainers, setTotalTrainers] = useState(0);
-    const [showBookingModal, setShowBookingModal] = useState(false);
-    const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
-    const [activeFilter, setActiveFilter] = useState("Weekly");
-    const [overview, setOverview] = useState<Record<string, unknown> | null>(null);
-    const [overviewLoading, setOverviewLoading] = useState(true);
-    const router = useRouter();
+  const { company } = useCompanySession();
+  const { byCategory, loading, error } = useCompanyHomeTrainers();
 
-    const fetchTrainers = useCallback(async () => {
-        try {
-            setLoading(true);
-            const response = await TrainerService.getTrainers({
-                status: true,
-                acceptingBookings: true,
-                page: 1,
-                limit: 6,
-                sortBy: "createdAt:desc",
-            });
-            setTrainers(response.results || []);
-            setTotalTrainers(response.totalResults || 0);
-        } catch (err) {
-            console.error("Error fetching trainers:", err);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
+  const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
 
-    const fetchOverview = useCallback(async () => {
-        try {
-            setOverviewLoading(true);
-            const data = await CompanyService.getDashboardOverview(
-                activeFilter as 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly'
-            );
-            setOverview(data as Record<string, unknown>);
-        } catch (err) {
-            console.error("Error fetching dashboard overview:", err);
-            setOverview(null);
-        } finally {
-            setOverviewLoading(false);
-        }
-    }, [activeFilter]);
+  const welcomeName =
+    company?.contactPerson1?.name?.split(' ')[0] ||
+    company?.companyName?.split(' ')[0] ||
+    'there';
 
-    useEffect(() => {
-        void fetchTrainers();
-    }, [fetchTrainers]);
+  /**
+   * Opens the profile drawer and loads the full trainer record.
+   *
+   * @param trainer - Trainer from a category card.
+   */
+  const openProfileDrawer = useCallback(async (trainer: Trainer) => {
+    const id = trainer._id || trainer.id;
+    setSelectedTrainer(trainer);
+    setProfileDrawerOpen(true);
+    if (!id) return;
+    try {
+      setProfileLoading(true);
+      const full = await TrainerService.getTrainerById(id);
+      setSelectedTrainer(full);
+    } catch (err: unknown) {
+      console.error('Error loading trainer profile:', err);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        void fetchOverview();
-    }, [fetchOverview]);
+  const handleBookSessionFromProfile = (trainer: Trainer) => {
+    setProfileDrawerOpen(false);
+    setSelectedTrainer(null);
+    setTrainerToBook(trainer);
+    setBookingDrawerOpen(true);
+  };
 
-    const handleTrainerClick = () => {
-        router.push("/company/dashboard/trainers");
-    };
+  const handleBookingSuccess = () => {
+    setBookingDrawerOpen(false);
+    setTrainerToBook(null);
+  };
 
-    const handleBookTrainer = (trainer: Trainer, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setTrainerToBook(trainer);
-        setShowBookingModal(true);
-    };
+  return (
+    <Fragment>
+      <Seo title="Dashboard" />
 
-    const handleBookingSuccess = () => {
-        setShowBookingModal(false);
-        setTrainerToBook(null);
-        void fetchOverview();
-        void fetchTrainers();
-    };
+      <div className="company-home-page flex flex-col gap-8 pb-6">
+        <CompanyHomeWelcomeBanner userName={welcomeName} />
 
-    return (
-        <Fragment>
-            <Seo title={"Company Dashboard"} />
-            <Pageheader currentpage="Dashboard" activepage="Company" mainpage="Dashboard" />
+        {error && (
+          <div className="alert alert-warning mb-0" role="alert">
+            {error}
+          </div>
+        )}
 
-            <div className="grid grid-cols-12 gap-6">
-                <div className="xl:col-span-9 col-span-12 flex flex-col gap-6">
-                    <CompanyDashboardMainAnalytics
-                        overview={overview}
-                        loading={overviewLoading}
-                        activeFilter={activeFilter}
-                        onFilterChange={setActiveFilter}
-                    />
+        {HOME_TRAINER_CATEGORIES.map(({ category, title }) => (
+          <CompanyHomeCategorySection
+            key={category}
+            title={title}
+            category={category}
+            trainers={byCategory[category]}
+            loading={loading}
+            onViewProfile={(trainer) => void openProfileDrawer(trainer)}
+          />
+        ))}
 
-                    <div className="box">
-                        <div className="box-header justify-between items-center">
-                            <div className="flex items-center gap-2">
-                                <div className="flex flex-col gap-1">
-                                    <div className="w-0.5 h-4 bg-info rounded"></div>
-                                    <div className="w-0.5 h-3 bg-info rounded"></div>
-                                </div>
-                                <div className="box-title !mb-0 font-bold text-lg">Featured Trainers</div>
-                            </div>
-      <button
-    type="button"
-    onClick={() => router.push("/company/dashboard/trainers")}
-    className="bg-primary text-white px-4 py-2 rounded-md inline-flex items-center justify-center whitespace-nowrap leading-none hover:bg-primary/90 transition"
->
-    View All
-</button>
-                        </div>
-                        <div className="box-body">
-                            {loading ? (
-                                <div className="text-center py-8">
-                                    <div className="spinner-border text-primary" role="status">
-                                        <span className="visually-hidden">Loading...</span>
-                                    </div>
-                                </div>
-                            ) : trainers.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p className="text-muted">No trainers available</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                                    {trainers.map((trainer) => (
-                                        <div
-                                            key={trainer._id || trainer.id}
-                                            className="box hover:shadow-lg transition-shadow cursor-pointer border border-defaultborder bg-white rounded-lg"
-                                            onClick={() => handleTrainerClick()}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" || e.key === " ") {
-                                                    e.preventDefault();
-                                                    handleTrainerClick();
-                                                }
-                                            }}
-                                            role="button"
-                                            tabIndex={0}
-                                            aria-label={`Open trainers, ${trainer.name}`}
-                                        >
-                                            <div className="box-body p-5">
-                                                <div className="text-center">
-                                                    {trainer.profilePhoto?.path ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
-                                                        <img
-                                                            src={trainer.profilePhoto.path}
-                                                            alt=""
-                                                            className="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-2 border-primary/20"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display =
-                                                                    "none";
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-20 h-20 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-3 border-2 border-primary/20">
-                                                            <span className="text-primary font-semibold text-2xl">
-                                                                {trainer.name.charAt(0).toUpperCase()}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    <h5 className="font-bold text-sm mb-1 text-defaulttextcolor">
-                                                        {trainer.name}
-                                                    </h5>
-                                                    <p className="text-muted text-xs mb-3">{trainer.title}</p>
-                                                    <div className="flex flex-wrap gap-1 justify-center mb-3">
-                                                        {Array.isArray(trainer.specialistIn) ? (
-                                                            trainer.specialistIn.slice(0, 1).map((spec, idx) => (
-                                                                <span
-                                                                    key={idx}
-                                                                    className="badge bg-info/10 text-info text-xs"
-                                                                >
-                                                                    {spec}
-                                                                </span>
-                                                            ))
-                                                        ) : (
-                                                            <span className="badge bg-info/10 text-info text-xs">
-                                                                {trainer.specialistIn}
-                                                            </span>
-                                                        )}
-                                                        {Array.isArray(trainer.specialistIn) &&
-                                                            trainer.specialistIn.length > 1 && (
-                                                                <span className="badge bg-secondary/10 text-secondary text-xs">
-                                                                    +{trainer.specialistIn.length - 1}
-                                                                </span>
-                                                            )}
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => handleBookTrainer(trainer, e)}
-                                                        className="ti-btn ti-btn-primary w-full text-xs"
-                                                        disabled={!isTrainerAcceptingBookings(trainer)}
-                                                        title={
-                                                            !isTrainerAcceptingBookings(trainer)
-                                                                ? "Trainer is not accepting new bookings"
-                                                                : "Book this trainer"
-                                                        }
-                                                    >
-                                                        Book
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+        <CompanyHomeCtaBanner />
+      </div>
 
-                <CompanyDashboardRightRail overview={overview} />
-            </div>
+      <CompanyTrainerProfileDrawer
+        open={profileDrawerOpen}
+        trainer={selectedTrainer}
+        loading={profileLoading}
+        onClose={() => {
+          setProfileDrawerOpen(false);
+          setSelectedTrainer(null);
+        }}
+        onBookSession={handleBookSessionFromProfile}
+      />
 
-            <BookingModal
-                trainer={trainerToBook}
-                isOpen={showBookingModal}
-                onClose={() => {
-                    setShowBookingModal(false);
-                    setTrainerToBook(null);
-                }}
-                onSuccess={handleBookingSuccess}
-            />
-        </Fragment>
-    );
+      <CompanyBookingDrawer
+        trainer={trainerToBook}
+        isOpen={bookingDrawerOpen}
+        onClose={() => {
+          setBookingDrawerOpen(false);
+          setTrainerToBook(null);
+        }}
+        onSuccess={handleBookingSuccess}
+      />
+    </Fragment>
+  );
 };
 
 export default CompanyDashboard;

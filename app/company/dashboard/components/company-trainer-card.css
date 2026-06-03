@@ -1,0 +1,133 @@
+/* Shared trainer card — compact fixed height */
+
+.company-trainer-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 0.75rem;
+  padding: 0.65rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  min-height: 0;
+}
+
+.company-trainer-card:hover {
+  border-color: #e9d5ff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+}
+
+.company-trainer-card__photo-wrap {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.company-trainer-card__photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #ede9fe;
+  display: block;
+}
+
+.company-trainer-card__photo--fallback {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.company-trainer-card__photo--fallback span {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.company-trainer-card__name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.1rem;
+  line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.company-trainer-card__specialty {
+  font-size: 0.625rem;
+  color: #6b7280;
+  margin: 0 0 0.35rem;
+  line-clamp: 1;
+  overflow: hidden;
+  min-height: 0.875rem;
+}
+
+.company-trainer-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.625rem;
+  color: #6b7280;
+  margin: 0 0 0.4rem;
+}
+
+.company-trainer-card__rating strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.company-trainer-card__btn {
+  width: 100%;
+  margin-top: auto;
+  border-radius: 0.375rem;
+  border: 1.5px solid #7c3aed;
+  background: #fff;
+  color: #6d28d9;
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.35rem 0.4rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.company-trainer-card__btn:hover {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.company-trainers-grid--dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+@media (min-width: 640px) {
+  .company-trainers-grid--dashboard {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .company-trainers-grid--dashboard {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-trainers-grid--dashboard {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .company-trainers-grid--dashboard {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}

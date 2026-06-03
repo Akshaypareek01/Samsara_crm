@@ -1,7 +1,8 @@
 "use client";
 import React, { Fragment } from 'react';
 import CompanySidebar from './components/CompanySidebar';
-import Header from '@/shared/layout-components/header/header';
+import CompanyDashboardHeader from './components/CompanyDashboardHeader';
+import './components/company-dashboard.css';
 import Footer from '@/shared/layout-components/footer/footer';
 import Backtotop from '@/shared/layout-components/backtotop/backtotop';
 import { connect } from "react-redux";
@@ -28,8 +29,8 @@ const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
     return (
         <Fragment>
             <Switcher />
-            <div className="page">
-                <Header />
+            <div className="page company-dashboard-shell">
+                <CompanyDashboardHeader />
                 <CompanySidebar />
                 <div className="content">
                     <div className="main-content" onClick={Bodyclickk}>

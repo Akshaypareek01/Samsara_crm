@@ -1,0 +1,233 @@
+/* Company trainers listing — modern classic layout */
+
+.company-trainers-page {
+  background: #ffffff;
+}
+
+.company-trainers-page__header {
+  margin-bottom: 1.5rem;
+}
+
+.company-trainers-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+
+.company-trainers-page__subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.company-trainers-page__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.company-trainers-filters {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.company-trainers-filters__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .company-trainers-filters__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .company-trainers-filters__grid {
+    grid-template-columns: 2fr repeat(4, 1fr);
+  }
+}
+
+.company-trainers-filters__label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+.company-trainers-filters__input,
+.company-trainers-filters__select {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.85rem;
+  font-size: 0.8125rem;
+  color: #111827;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.company-trainers-filters__input:focus,
+.company-trainers-filters__select:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  background: #fff;
+}
+
+.company-trainers-filters__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.company-trainers-filters__count {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.company-trainers-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.625rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.company-trainers-btn--primary {
+  background: #7c3aed;
+  color: #fff;
+}
+
+.company-trainers-btn--primary:hover {
+  background: #6d28d9;
+}
+
+.company-trainers-btn--outline {
+  background: #fff;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+}
+
+.company-trainers-btn--outline:hover {
+  background: #f5f3ff;
+}
+
+.company-trainers-btn--ghost {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.company-trainers-btn--ghost:hover:not(:disabled) {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.company-trainers-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.company-trainers-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.company-trainers-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.company-trainers-pagination__page {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.company-trainers-pagination__page:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.company-trainers-pagination__page--active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+.company-trainers-pagination__page:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.company-trainers-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 1rem;
+  color: #6b7280;
+}
+
+.company-trainers-category-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #f5f3ff;
+  border: 1px solid #e9d5ff;
+}
+
+.company-trainers-category-banner p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #5b21b6;
+}

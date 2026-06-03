@@ -1,0 +1,107 @@
+.company-trainer-profile__hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: linear-gradient(135deg, #faf5ff 0%, #fff 60%);
+}
+
+.company-trainer-profile__avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 3px solid #e9d5ff;
+  flex-shrink: 0;
+}
+
+.company-trainer-profile__avatar-fallback {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, #ede9fe, #c4b5fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #6d28d9;
+  flex-shrink: 0;
+}
+
+.company-trainer-profile__tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.company-trainer-profile__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.company-trainer-profile__tab {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.company-trainer-profile__tab:hover {
+  color: #6d28d9;
+}
+
+.company-trainer-profile__tab--active {
+  color: #6d28d9;
+  border-bottom-color: #7c3aed;
+}
+
+.company-trainer-profile__panel {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.company-trainer-profile__gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .company-trainer-profile__gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.company-trainer-profile__gallery-item {
+  aspect-ratio: 1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.company-trainer-profile__gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.company-trainer-profile__empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 0.75rem;
+  background: #fafafa;
+}

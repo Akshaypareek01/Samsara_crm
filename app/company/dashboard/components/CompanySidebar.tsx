@@ -9,6 +9,8 @@ import SimpleBar from 'simplebar-react';
 import Menuloop from "@/shared/layout-components/sidebar/menuloop";
 import { usePathname, useRouter } from "next/navigation";
 import { MenuItems } from "./nav";
+import CompanySidebarFooter from "./CompanySidebarFooter";
+import "./company-sidebar.css";
 
 const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
     const [menuitems, setMenuitems] = useState(MenuItems);
@@ -606,15 +608,27 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
             <div id="responsive-overlay"
                 onClick={() => { menuClose(); }}></div>
-            <aside className="app-sidebar" id="sidebar" onMouseOver={() => Onhover()}
-                onMouseLeave={() => Outhover()}>
+            <aside
+                className="app-sidebar company-wellconnect-sidebar"
+                id="sidebar"
+                onMouseOver={() => Onhover()}
+                onMouseLeave={() => Outhover()}
+                aria-label="Company navigation"
+            >
                 <div className="main-sidebar-header">
-                    <Link href="/company/dashboard" className="header-logo">
-                        <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" style={{ height: '80px', width: 'auto' }} />
+                    <Link href="/company/dashboard" className="header-logo company-sidebar-brand">
+                        <img
+                            src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
+                            alt=""
+                        />
+                        <span className="company-sidebar-brand-text">
+                            <span className="company-sidebar-brand-title">Samsara Wellness</span>
+                            <span className="company-sidebar-brand-sub">HR CRM</span>
+                        </span>
                     </Link>
                 </div>
 
-                <SimpleBar className="main-sidebar " id="sidebar-scroll">
+                <SimpleBar className="main-sidebar" id="sidebar-scroll">
                     <nav className="main-menu-container nav nav-pills flex-column sub-open">
                         <div className="slide-left" id="slide-left" onClick={() => { slideLeft(); }}><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
                             height="24" viewBox="0 0 24 24">
@@ -677,6 +691,8 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
                         </div>
                     </nav>
                 </SimpleBar>
+
+                <CompanySidebarFooter />
             </aside>
         </Fragment>
     );

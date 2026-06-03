@@ -11,6 +11,10 @@ export type CompanyRightDrawerProps = {
     /** Tailwind max-width class for the panel */
     maxWidthClass?: string;
     ariaLabelledBy?: string;
+    /** When true, body has no padding (full-bleed tab layouts). */
+    flushBody?: boolean;
+    /** When true, renders above another open drawer (e.g. profile → book). */
+    stacked?: boolean;
 };
 
 /**
@@ -24,7 +28,11 @@ const CompanyRightDrawer: React.FC<CompanyRightDrawerProps> = ({
     footer,
     maxWidthClass = "max-w-lg",
     ariaLabelledBy = "company-drawer-title",
+    flushBody = false,
+    stacked = false,
 }) => {
+    const overlayZ = stacked ? "z-[1055]" : "z-[1040]";
+    const panelZ = stacked ? "z-[1060]" : "z-[1050]";
     useEffect(() => {
         if (!open) return;
         const prev = document.body.style.overflow;
@@ -48,12 +56,12 @@ const CompanyRightDrawer: React.FC<CompanyRightDrawerProps> = ({
     return (
         <>
             <div
-                className="fixed inset-0 bg-black/50 z-[1040] transition-opacity"
+                className={`fixed inset-0 bg-black/50 ${overlayZ} transition-opacity`}
                 onClick={onClose}
                 aria-hidden="true"
             />
             <aside
-                className={`fixed right-0 top-0 h-full w-full ${maxWidthClass} bg-white dark:bg-bodybg shadow-xl z-[1050] flex flex-col animate-slide-in-right`}
+                className={`fixed right-0 top-0 h-full w-full ${maxWidthClass} bg-white dark:bg-bodybg shadow-xl ${panelZ} flex flex-col animate-slide-in-right`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={ariaLabelledBy}
@@ -71,7 +79,11 @@ const CompanyRightDrawer: React.FC<CompanyRightDrawerProps> = ({
                         <i className="ri-close-line text-lg" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+                <div
+                    className={`flex-1 overflow-y-auto min-h-0 ${flushBody ? "" : "px-4 py-4"}`}
+                >
+                    {children}
+                </div>
                 {footer ? (
                     <div className="shrink-0 px-4 py-4 border-t border-defaultborder dark:border-white/10">
                         {footer}

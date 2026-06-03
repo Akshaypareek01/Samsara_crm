@@ -1,0 +1,277 @@
+/**
+ * WellConnect-style purple sidebar for company dashboard.
+ * Scoped to `.company-wellconnect-sidebar` to avoid affecting admin/trainer layouts.
+ */
+
+.company-dashboard-shell .app-sidebar.company-wellconnect-sidebar {
+  --company-sidebar-bg: #7c3aed;
+  --company-sidebar-bg-deep: #6d28d9;
+  --company-sidebar-text: rgba(255, 255, 255, 0.88);
+  --company-sidebar-text-muted: rgba(255, 255, 255, 0.65);
+  --company-sidebar-active-bg: #ffffff;
+  --company-sidebar-active-text: #6d28d9;
+  --company-sidebar-hover-bg: rgba(255, 255, 255, 0.12);
+  --company-sidebar-width: 15rem;
+
+  width: var(--company-sidebar-width) !important;
+  background: var(--company-sidebar-bg) !important;
+  border-inline-end: none !important;
+  box-shadow: 4px 0 24px rgba(109, 40, 217, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .main-sidebar-header {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 4.5rem;
+  background: var(--company-sidebar-bg) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-inline-end: none !important;
+  padding: 1.25rem 1.25rem 1rem !important;
+  justify-content: flex-start !important;
+  flex-shrink: 0;
+  z-index: 1 !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: #fff;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand img {
+  height: 2.25rem !important;
+  width: auto !important;
+  filter: brightness(0) invert(1);
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand-sub {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--company-sidebar-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar #sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .main-sidebar {
+  margin-top: 0 !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  height: 100% !important;
+  flex: 1;
+  min-height: 0;
+  background: transparent !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide__category {
+  display: none;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide {
+  padding-inline: 0.75rem !important;
+  margin-block: 0.15rem !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item {
+  color: var(--company-sidebar-text) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.65rem 0.85rem !important;
+  margin-inline: 0 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item::before {
+  display: none !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item .side-menu__icon {
+  color: rgba(255, 255, 255, 0.9) !important;
+  fill: currentColor !important;
+  font-size: 1.15rem !important;
+  margin-inline-end: 0.65rem !important;
+  width: 1.25rem;
+  min-width: 1.25rem;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item .side-menu__label,
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item .side-menu__angle {
+  color: inherit !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item:hover {
+  background: var(--company-sidebar-hover-bg) !important;
+  color: #fff !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item:hover .side-menu__icon,
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item:hover .side-menu__label,
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item:hover .side-menu__angle {
+  color: #fff !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item.active {
+  background: var(--company-sidebar-active-bg) !important;
+  color: var(--company-sidebar-active-text) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item.active .side-menu__icon,
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item.active .side-menu__label,
+.company-dashboard-shell .company-wellconnect-sidebar .side-menu__item.active .side-menu__angle {
+  color: var(--company-sidebar-active-text) !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide.has-sub.open > .side-menu__item,
+.company-dashboard-shell .company-wellconnect-sidebar .slide.has-sub > .side-menu__item.active {
+  background: var(--company-sidebar-hover-bg) !important;
+  color: #fff !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide-menu {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-radius: 0.65rem;
+  margin: 0.25rem 0.5rem 0.5rem !important;
+  padding: 0.35rem 0 !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide-menu .side-menu__item {
+  color: var(--company-sidebar-text-muted) !important;
+  font-size: 0.78rem !important;
+  padding: 0.5rem 0.85rem 0.5rem 2rem !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide-menu .side-menu__item.active {
+  background: var(--company-sidebar-active-bg) !important;
+  color: var(--company-sidebar-active-text) !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide-menu .side-menu__item:hover {
+  background: var(--company-sidebar-hover-bg) !important;
+  color: #fff !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .slide-menu .side-menu__label1 {
+  display: none;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar #slide-left svg,
+.company-dashboard-shell .company-wellconnect-sidebar #slide-right svg {
+  fill: rgba(255, 255, 255, 0.7) !important;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-footer {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--company-sidebar-bg);
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-help {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.65rem;
+  color: var(--company-sidebar-text);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-help:hover {
+  background: var(--company-sidebar-hover-bg);
+  color: #fff;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: none;
+  color: #fff;
+  transition: background-color 0.15s ease;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-initials {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-role {
+  font-size: 0.7rem;
+  color: var(--company-sidebar-text-muted);
+  line-height: 1.2;
+}
+
+.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-chevron {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1rem;
+}
+

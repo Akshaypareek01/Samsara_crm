@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Trainer, isTrainerAcceptingBookings } from "@/services/trainerService";
+import TrainerService, { Trainer, isTrainerAcceptingBookings } from "@/services/trainerService";
 import companyService from "@/services/companyService";
 import bookingService, { CreateBookingRequest } from "@/services/bookingService";
 import { clearCompanyInsightsCache } from "@/services/companyInsightsClient";
 import Swal from "sweetalert2";
 import CompanyRightDrawer from "./CompanyRightDrawer";
+import CompanyBookingTrainerPreview from "./CompanyBookingTrainerPreview";
 import { getTrainerBookableTrainingTypes } from "./companyTrainerProfileUtils";
+import "./company-booking-drawer.css";
 
 export type CompanyBookingDrawerProps = {
     trainer: Trainer | null;
@@ -17,7 +19,7 @@ export type CompanyBookingDrawerProps = {
 };
 
 /**
- * Company booking form in a right-side drawer.
+ * Company booking drawer with trainer preview (details + gallery) and booking form.
  */
 const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
     trainer,
@@ -35,29 +37,50 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
         notes: "",
     });
     const [loading, setLoading] = useState(false);
+    const [displayTrainer, setDisplayTrainer] = useState<Trainer | null>(null);
+    const [loadingTrainer, setLoadingTrainer] = useState(false);
 
     const getMinDate = () => new Date().toISOString().split("T")[0];
 
     useEffect(() => {
-        if (isOpen && trainer) {
-            const loadCompanyData = async () => {
-                try {
-                    const companyProfile = await companyService.getCompanyProfile();
-                    setFormData({
-                        company: companyProfile._id || companyProfile.id || "",
-                        trainer: trainer._id || trainer.id || "",
-                        bookingDate: "",
-                        startTime: "",
-                        duration: 2,
-                        typeOfTraining: [],
-                        notes: "",
-                    });
-                } catch (error) {
-                    console.error("Error loading company data:", error);
-                }
-            };
-            void loadCompanyData();
+        if (!isOpen || !trainer) {
+            setDisplayTrainer(null);
+            return;
         }
+
+        setDisplayTrainer(trainer);
+
+        const load = async () => {
+            try {
+                setLoadingTrainer(true);
+                const companyProfile = await companyService.getCompanyProfile();
+                const trainerId = trainer._id || trainer.id;
+                let full = trainer;
+                if (trainerId) {
+                    try {
+                        full = await TrainerService.getTrainerById(trainerId);
+                    } catch {
+                        full = trainer;
+                    }
+                }
+                setDisplayTrainer(full);
+                setFormData({
+                    company: companyProfile._id || companyProfile.id || "",
+                    trainer: trainerId || "",
+                    bookingDate: "",
+                    startTime: "",
+                    duration: 2,
+                    typeOfTraining: [],
+                    notes: "",
+                });
+            } catch (error) {
+                console.error("Error loading booking drawer data:", error);
+            } finally {
+                setLoadingTrainer(false);
+            }
+        };
+
+        void load();
     }, [isOpen, trainer]);
 
     const handleTrainingTypeToggle = (type: string) => {
@@ -110,7 +133,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
         e.preventDefault();
         if (!validateForm()) return;
 
-        if (!isTrainerAcceptingBookings(trainer)) {
+        if (!isTrainerAcceptingBookings(displayTrainer ?? trainer)) {
             void Swal.fire({
                 icon: "info",
                 title: "Not available",
@@ -141,15 +164,16 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
 
     if (!isOpen || !trainer) return null;
 
-    const availableTypes = getTrainerBookableTrainingTypes(trainer);
-    const canAcceptNewBookings = isTrainerAcceptingBookings(trainer);
+    const previewTrainer = displayTrainer ?? trainer;
+    const availableTypes = getTrainerBookableTrainingTypes(previewTrainer);
+    const canAcceptNewBookings = isTrainerAcceptingBookings(previewTrainer);
 
     const footer = (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
             <button
                 type="submit"
                 form="company-booking-drawer-form"
-                className="ti-btn ti-btn-primary !m-0 !float-none w-full inline-flex items-center justify-center gap-2 !px-4 !py-2.5 text-sm font-semibold min-h-[2.75rem] rounded-lg shadow-none"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 text-white text-sm font-semibold py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
                 disabled={loading || !canAcceptNewBookings}
             >
                 {loading ? (
@@ -163,7 +187,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
             </button>
             <button
                 type="button"
-                className="ti-btn ti-btn-light !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold min-h-[2.5rem] rounded-lg border border-defaultborder shadow-none"
+                className="flex-1 inline-flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold py-3 hover:bg-gray-50 transition-colors"
                 onClick={onClose}
                 disabled={loading}
             >
@@ -175,140 +199,147 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
     return (
         <CompanyRightDrawer
             open={isOpen}
-            title={`Book session — ${trainer.name}`}
+            title={`Book session — ${previewTrainer.name}`}
             onClose={onClose}
-            maxWidthClass="max-w-lg"
+            maxWidthClass="max-w-5xl"
+            flushBody
+            stacked
             ariaLabelledBy="company-booking-drawer-title"
             footer={footer}
         >
-            <form id="company-booking-drawer-form" onSubmit={handleSubmit} className="space-y-4">
-                {!canAcceptNewBookings && (
-                    <div className="alert alert-warning mb-0" role="alert">
-                        This trainer is not accepting new bookings at the moment.
-                    </div>
-                )}
+            <div className="company-booking-drawer__layout">
+                <div className="company-booking-drawer__preview-col">
+                    {loadingTrainer ? (
+                        <div className="flex justify-center py-16">
+                            <div className="spinner-border text-violet-600" style={{ color: "#7c3aed" }} role="status">
+                                <span className="visually-hidden">Loading trainer…</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <CompanyBookingTrainerPreview trainer={previewTrainer} />
+                    )}
+                </div>
 
-                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                    <div className="flex items-center gap-3">
-                        {trainer.profilePhoto?.path ? (
-                            <img
-                                src={trainer.profilePhoto.path}
-                                alt=""
-                                className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                            />
-                        ) : (
-                            <div
-                                className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"
-                                aria-hidden="true"
-                            >
-                                <span className="text-primary font-semibold text-xl">
-                                    {trainer.name.charAt(0).toUpperCase()}
-                                </span>
+                <div className="company-booking-drawer__form-col">
+                    <h3 className="company-booking-drawer__form-title">Session details</h3>
+                    <form id="company-booking-drawer-form" onSubmit={handleSubmit} className="space-y-4">
+                        {!canAcceptNewBookings && (
+                            <div className="alert alert-warning mb-0" role="alert">
+                                This trainer is not accepting new bookings at the moment.
                             </div>
                         )}
-                        <div className="min-w-0">
-                            <p className="font-semibold text-defaulttextcolor mb-0 truncate">{trainer.name}</p>
-                            <p className="text-sm text-muted mb-0 truncate">{trainer.title}</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="form-label" htmlFor="booking-date">
+                                    Booking date <span className="text-danger">*</span>
+                                </label>
+                                <input
+                                    id="booking-date"
+                                    type="date"
+                                    className="form-control"
+                                    value={formData.bookingDate}
+                                    min={getMinDate()}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, bookingDate: e.target.value }))
+                                    }
+                                    disabled={!canAcceptNewBookings}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="form-label" htmlFor="booking-time">
+                                    Start time <span className="text-danger">*</span>
+                                </label>
+                                <input
+                                    id="booking-time"
+                                    type="time"
+                                    className="form-control"
+                                    value={formData.startTime}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({ ...prev, startTime: e.target.value }))
+                                    }
+                                    disabled={!canAcceptNewBookings}
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label className="form-label" htmlFor="booking-date">
-                            Booking date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                            id="booking-date"
-                            type="date"
-                            className="form-control"
-                            value={formData.bookingDate}
-                            min={getMinDate()}
-                            onChange={(e) => setFormData((prev) => ({ ...prev, bookingDate: e.target.value }))}
-                            disabled={!canAcceptNewBookings}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="form-label" htmlFor="booking-time">
-                            Start time <span className="text-danger">*</span>
-                        </label>
-                        <input
-                            id="booking-time"
-                            type="time"
-                            className="form-control"
-                            value={formData.startTime}
-                            onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
-                            disabled={!canAcceptNewBookings}
-                            required
-                        />
-                    </div>
-                </div>
+                        <div>
+                            <label className="form-label" htmlFor="booking-duration">
+                                Duration (hours) <span className="text-danger">*</span>
+                            </label>
+                            <input
+                                id="booking-duration"
+                                type="number"
+                                className="form-control"
+                                value={formData.duration}
+                                min={0.5}
+                                max={24}
+                                step={0.5}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        duration: parseFloat(e.target.value),
+                                    }))
+                                }
+                                disabled={!canAcceptNewBookings}
+                                required
+                            />
+                            <small className="text-muted">Between 0.5 and 24 hours</small>
+                        </div>
 
-                <div>
-                    <label className="form-label" htmlFor="booking-duration">
-                        Duration (hours) <span className="text-danger">*</span>
-                    </label>
-                    <input
-                        id="booking-duration"
-                        type="number"
-                        className="form-control"
-                        value={formData.duration}
-                        min={0.5}
-                        max={24}
-                        step={0.5}
-                        onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, duration: parseFloat(e.target.value) }))
-                        }
-                        disabled={!canAcceptNewBookings}
-                        required
-                    />
-                    <small className="text-muted">Between 0.5 and 24 hours</small>
-                </div>
-
-                <div>
-                    <label className="form-label">
-                        Training types <span className="text-danger">*</span>
-                    </label>
-                    {availableTypes.length === 0 ? (
-                        <p className="text-sm text-muted mb-0">No training types available for this trainer.</p>
-                    ) : (
-                        <div className="border border-defaultborder rounded-lg p-3 max-h-[200px] overflow-y-auto">
-                            {availableTypes.map((type) => (
-                                <div key={type} className="form-check mb-2 last:mb-0">
-                                    <input
-                                        type="checkbox"
-                                        className="form-check-input"
-                                        id={`drawer-type-${type}`}
-                                        checked={formData.typeOfTraining.includes(type)}
-                                        onChange={() => handleTrainingTypeToggle(type)}
-                                        disabled={!canAcceptNewBookings}
-                                    />
-                                    <label className="form-check-label" htmlFor={`drawer-type-${type}`}>
-                                        {type}
-                                    </label>
+                        <div>
+                            <label className="form-label">
+                                Training types <span className="text-danger">*</span>
+                            </label>
+                            {availableTypes.length === 0 ? (
+                                <p className="text-sm text-muted mb-0">
+                                    No training types available for this trainer.
+                                </p>
+                            ) : (
+                                <div className="border border-defaultborder rounded-lg p-3 max-h-[180px] overflow-y-auto">
+                                    {availableTypes.map((type) => (
+                                        <div key={type} className="form-check mb-2 last:mb-0">
+                                            <input
+                                                type="checkbox"
+                                                className="form-check-input"
+                                                id={`drawer-type-${type}`}
+                                                checked={formData.typeOfTraining.includes(type)}
+                                                onChange={() => handleTrainingTypeToggle(type)}
+                                                disabled={!canAcceptNewBookings}
+                                            />
+                                            <label className="form-check-label" htmlFor={`drawer-type-${type}`}>
+                                                {type}
+                                            </label>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
+                            <small className="text-muted">
+                                Selected: {formData.typeOfTraining.length}
+                            </small>
                         </div>
-                    )}
-                    <small className="text-muted">Selected: {formData.typeOfTraining.length}</small>
-                </div>
 
-                <div>
-                    <label className="form-label" htmlFor="booking-notes">
-                        Notes (optional)
-                    </label>
-                    <textarea
-                        id="booking-notes"
-                        className="form-control"
-                        rows={3}
-                        value={formData.notes}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Special requirements or notes…"
-                        disabled={!canAcceptNewBookings}
-                    />
+                        <div>
+                            <label className="form-label" htmlFor="booking-notes">
+                                Notes (optional)
+                            </label>
+                            <textarea
+                                id="booking-notes"
+                                className="form-control"
+                                rows={3}
+                                value={formData.notes}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                                }
+                                placeholder="Special requirements or notes…"
+                                disabled={!canAcceptNewBookings}
+                            />
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </CompanyRightDrawer>
     );
 };

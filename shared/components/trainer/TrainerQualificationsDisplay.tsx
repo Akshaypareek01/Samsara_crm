@@ -15,6 +15,10 @@ interface TrainerQualificationsDisplayProps {
   education?: TrainerEducation | TrainerEducation[] | null;
   /** Certification entries (legacy object or array). */
   certification?: TrainerCertification | TrainerCertification[] | null;
+  /** When false, hides the education block. Defaults to true. */
+  showEducation?: boolean;
+  /** When false, hides the certifications block. Defaults to true. */
+  showCertification?: boolean;
 }
 
 /**
@@ -26,12 +30,15 @@ interface TrainerQualificationsDisplayProps {
 const TrainerQualificationsDisplay: React.FC<TrainerQualificationsDisplayProps> = ({
   education,
   certification,
+  showEducation = true,
+  showCertification = true,
 }) => {
   const educationEntries = normalizeEducationList(education);
   const certificationEntries = normalizeCertificationList(certification);
 
   return (
     <>
+      {showEducation && (
       <section className="rounded-lg border border-defaultborder p-4 bg-light/30 dark:bg-black/20">
         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Education</h4>
         {educationEntries.length === 0 ? (
@@ -66,7 +73,9 @@ const TrainerQualificationsDisplay: React.FC<TrainerQualificationsDisplayProps> 
           </div>
         )}
       </section>
+      )}
 
+      {showCertification && (
       <section className="rounded-lg border border-defaultborder p-4 bg-light/30 dark:bg-black/20">
         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
           Certifications &amp; Courses
@@ -103,6 +112,7 @@ const TrainerQualificationsDisplay: React.FC<TrainerQualificationsDisplayProps> 
           </div>
         )}
       </section>
+      )}
     </>
   );
 };

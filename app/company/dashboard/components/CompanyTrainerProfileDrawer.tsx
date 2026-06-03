@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { Trainer } from "@/services/trainerService";
 import { isTrainerAcceptingBookings } from "@/services/trainerService";
 import CompanyRightDrawer from "./CompanyRightDrawer";
@@ -11,18 +11,63 @@ import {
     trainerTrainingList,
 } from "./companyTrainerProfileUtils";
 import TrainerQualificationsDisplay from "@/shared/components/trainer/TrainerQualificationsDisplay";
+import "./company-trainer-profile-drawer.css";
 
 export type CompanyTrainerProfileDrawerProps = {
     open: boolean;
     trainer: Trainer | null;
     loading?: boolean;
     onClose: () => void;
-    /** When omitted, drawer is read-only (no book CTA). */
     onBookSession?: (trainer: Trainer) => void;
 };
 
+type ProfileTab = "overview" | "education" | "certifications" | "gallery";
+
+const TABS: { id: ProfileTab; label: string; icon: string }[] = [
+    { id: "overview", label: "Overview", icon: "ri-user-line" },
+    { id: "education", label: "Education", icon: "ri-graduation-cap-line" },
+    { id: "certifications", label: "Certifications", icon: "ri-award-line" },
+    { id: "gallery", label: "Gallery", icon: "ri-gallery-line" },
+];
+
 /**
- * Read-only trainer profile for companies (right drawer).
+ * Tab strip for trainer profile drawer.
+ */
+function ProfileTabs({
+    active,
+    onChange,
+    galleryCount,
+}: {
+    active: ProfileTab;
+    onChange: (tab: ProfileTab) => void;
+    galleryCount: number;
+}) {
+    return (
+        <div className="company-trainer-profile__tabs" role="tablist" aria-label="Trainer profile sections">
+            {TABS.map(({ id, label, icon }) => (
+                <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active === id}
+                    aria-controls={`trainer-tab-${id}`}
+                    id={`trainer-tab-btn-${id}`}
+                    className={`company-trainer-profile__tab ${active === id ? "company-trainer-profile__tab--active" : ""}`}
+                    onClick={() => onChange(id)}
+                >
+                    <i className={`${icon} me-1.5`} aria-hidden="true"></i>
+                    {label}
+                    {id === "gallery" && galleryCount > 0 ? (
+                        <span className="ms-1 text-[0.65rem] opacity-80">({galleryCount})</span>
+                    ) : null}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+/**
+ * Right-side tabbed trainer profile drawer for company users.
  */
 const CompanyTrainerProfileDrawer: React.FC<CompanyTrainerProfileDrawerProps> = ({
     open,
@@ -31,180 +76,246 @@ const CompanyTrainerProfileDrawer: React.FC<CompanyTrainerProfileDrawerProps> = 
     onClose,
     onBookSession,
 }) => {
+    const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
+
+    useEffect(() => {
+        if (open) setActiveTab("overview");
+    }, [open, trainer?._id, trainer?.id]);
+
     const canBook = trainer ? isTrainerAcceptingBookings(trainer) : false;
     const specialists = trainer ? trainerSpecialistList(trainer.specialistIn) : [];
     const trainings = trainer ? trainerTrainingList(trainer.typeOfTraining) : [];
+    const galleryImages = trainer?.images?.filter((img) => img.path) ?? [];
 
     const footer =
         trainer && !loading && onBookSession ? (
-        <div className="flex flex-col gap-2">
-            {!canBook && (
-                <p className="text-xs text-warning mb-0 text-center" role="status">
-                    This trainer is not accepting new bookings right now.
-                </p>
-            )}
-            <button
-                type="button"
-                className="ti-btn ti-btn-primary !m-0 !float-none w-full inline-flex items-center justify-center gap-2 !px-4 !py-2.5 text-sm font-semibold min-h-[2.75rem] rounded-lg shadow-none"
-                disabled={!canBook}
-                onClick={() => onBookSession(trainer)}
-            >
-                <i className="ri-calendar-check-line text-base" aria-hidden="true"></i>
-                Book Session
-            </button>
-        </div>
-    ) : undefined;
+            <div className="flex flex-col gap-2">
+                {!canBook && (
+                    <p className="text-xs text-amber-700 mb-0 text-center" role="status">
+                        This trainer is not accepting new bookings right now.
+                    </p>
+                )}
+                <button
+                    type="button"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 text-white text-sm font-semibold py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+                    disabled={!canBook}
+                    onClick={() => onBookSession(trainer)}
+                >
+                    <i className="ri-calendar-check-line text-base" aria-hidden="true"></i>
+                    Book Session
+                </button>
+            </div>
+        ) : undefined;
 
     return (
         <CompanyRightDrawer
             open={open}
-            title="Trainer profile"
+            title="Trainer Profile"
             onClose={onClose}
-            maxWidthClass="max-w-xl"
+            maxWidthClass="max-w-4xl"
+            flushBody
             ariaLabelledBy="company-trainer-profile-title"
             footer={footer}
         >
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                    <div className="spinner-border text-primary" role="status">
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                    <div className="spinner-border text-violet-600" style={{ color: "#7c3aed" }} role="status">
                         <span className="visually-hidden">Loading profile…</span>
                     </div>
-                    <p className="text-sm text-muted mb-0">Loading profile…</p>
+                    <p className="text-sm text-gray-500 mb-0">Loading profile…</p>
                 </div>
             ) : !trainer ? (
-                <p className="text-sm text-muted">No trainer selected.</p>
+                <p className="text-sm text-gray-500 p-6">No trainer selected.</p>
             ) : (
-                <div className="space-y-5">
-                    <div className="text-center pb-4 border-b border-defaultborder/60">
+                <>
+                    <div className="company-trainer-profile__hero">
                         {trainer.profilePhoto?.path ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 src={trainer.profilePhoto.path}
                                 alt=""
-                                className="w-28 h-28 rounded-full mx-auto mb-3 object-cover border-4 border-primary/20"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = "none";
-                                }}
+                                className="company-trainer-profile__avatar"
                             />
                         ) : (
-                            <div
-                                className="w-28 h-28 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center mx-auto mb-3 border-4 border-primary/20"
-                                aria-hidden="true"
-                            >
-                                <span className="text-primary font-bold text-4xl">
-                                    {trainer.name.charAt(0).toUpperCase()}
+                            <span className="company-trainer-profile__avatar-fallback" aria-hidden="true">
+                                {trainer.name.charAt(0).toUpperCase()}
+                            </span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-bold text-gray-900 mb-0 truncate">{trainer.name}</h3>
+                            <p className="text-sm text-gray-600 mb-2 truncate">{trainer.title}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {trainer.category ? (
+                                    <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
+                                        {trainer.category}
+                                    </span>
+                                ) : null}
+                                <span
+                                    className={`text-[0.65rem] font-semibold px-2 py-0.5 rounded-full ${
+                                        canBook ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                                    }`}
+                                >
+                                    {canBook ? "Accepting bookings" : "Not accepting bookings"}
                                 </span>
                             </div>
-                        )}
-                        <h3 className="text-xl font-bold text-defaulttextcolor mb-0">{trainer.name}</h3>
-                        <p className="text-muted text-sm mt-1 mb-2">{trainer.title}</p>
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            {trainer.category ? (
-                                <span className="badge bg-primary/10 text-primary text-xs">{trainer.category}</span>
-                            ) : null}
-                            <span
-                                className={`badge text-xs ${trainer.status !== false ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
-                            >
-                                {trainer.status !== false ? "Active" : "Inactive"}
-                            </span>
-                            <span
-                                className={`badge text-xs ${canBook ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
-                            >
-                                {canBook ? "Accepting bookings" : "Not accepting bookings"}
-                            </span>
                         </div>
                     </div>
 
-                    {trainer.bio && trainer.bio !== "none" && (
-                        <section>
-                            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">About</h4>
-                            <p className="text-sm text-defaulttextcolor leading-relaxed mb-0">{trainer.bio}</p>
-                        </section>
-                    )}
-
-                    <section>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Training for</h4>
-                        <div className="flex flex-wrap gap-1.5">
-                            {specialists.length > 0 ? (
-                                specialists.map((spec) => (
-                                    <span key={spec} className="badge bg-info/10 text-info text-xs">
-                                        {spec}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-sm text-muted">—</span>
-                            )}
-                        </div>
-                    </section>
-
-                    <section>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
-                            Specializations
-                        </h4>
-                        <div className="flex flex-wrap gap-1.5">
-                            {trainings.length > 0 ? (
-                                trainings.map((t) => (
-                                    <span key={t} className="badge bg-primary/10 text-primary text-xs">
-                                        {t}
-                                    </span>
-                                ))
-                            ) : (
-                                <span className="text-sm text-muted">—</span>
-                            )}
-                        </div>
-                    </section>
-
-                    <section>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Details</h4>
-                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-0">
-                            <div>
-                                <dt className="text-muted text-xs mb-0.5">Experience</dt>
-                                <dd className="font-medium text-defaulttextcolor mb-0">
-                                    {displayOrDash(trainer.experience)}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-muted text-xs mb-0.5">City</dt>
-                                <dd className="font-medium text-defaulttextcolor mb-0">{displayOrDash(trainer.city)}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-muted text-xs mb-0.5">PIN code</dt>
-                                <dd className="font-medium text-defaulttextcolor mb-0">
-                                    {displayOrDash(trainer.pinCode)}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt className="text-muted text-xs mb-0.5">Date of birth</dt>
-                                <dd className="font-medium text-defaulttextcolor mb-0">
-                                    {formatTrainerDob(trainer.dateOfBirth)}
-                                </dd>
-                            </div>
-                        </dl>
-                    </section>
-
-                    <TrainerQualificationsDisplay
-                        education={trainer.education}
-                        certification={trainer.certification}
+                    <ProfileTabs
+                        active={activeTab}
+                        onChange={setActiveTab}
+                        galleryCount={galleryImages.length}
                     />
 
-                    {trainer.images && trainer.images.length > 0 && (
-                        <section>
-                            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Gallery</h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {trainer.images.map((img, idx) => (
-                                    <img
-                                        key={img.key || idx}
-                                        src={img.path}
-                                        alt={`${trainer.name} gallery ${idx + 1}`}
-                                        className="w-full h-28 object-cover rounded-lg border border-defaultborder"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = "none";
-                                        }}
-                                    />
-                                ))}
+                    <div className="company-trainer-profile__panel">
+                        {activeTab === "overview" && (
+                            <div
+                                id="trainer-tab-overview"
+                                role="tabpanel"
+                                aria-labelledby="trainer-tab-btn-overview"
+                                className="space-y-5"
+                            >
+                                {trainer.bio && trainer.bio !== "none" && (
+                                    <section>
+                                        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                                            About
+                                        </h4>
+                                        <p className="text-sm text-gray-700 leading-relaxed mb-0">{trainer.bio}</p>
+                                    </section>
+                                )}
+                                <section>
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                                        Training for
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {specialists.length > 0 ? (
+                                            specialists.map((spec) => (
+                                                <span
+                                                    key={spec}
+                                                    className="text-xs px-2 py-1 rounded-md bg-sky-50 text-sky-800"
+                                                >
+                                                    {spec}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-400">—</span>
+                                        )}
+                                    </div>
+                                </section>
+                                <section>
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                                        Specializations
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {trainings.length > 0 ? (
+                                            trainings.map((t) => (
+                                                <span
+                                                    key={t}
+                                                    className="text-xs px-2 py-1 rounded-md bg-violet-50 text-violet-800"
+                                                >
+                                                    {t}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-400">—</span>
+                                        )}
+                                    </div>
+                                </section>
+                                <section>
+                                    <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                                        Details
+                                    </h4>
+                                    <dl className="grid grid-cols-2 gap-3 text-sm mb-0">
+                                        <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
+                                            <dt className="text-gray-500 text-xs">Experience</dt>
+                                            <dd className="font-medium text-gray-900 mb-0">
+                                                {displayOrDash(trainer.experience)}
+                                            </dd>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
+                                            <dt className="text-gray-500 text-xs">City</dt>
+                                            <dd className="font-medium text-gray-900 mb-0">
+                                                {displayOrDash(trainer.city)}
+                                            </dd>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
+                                            <dt className="text-gray-500 text-xs">PIN code</dt>
+                                            <dd className="font-medium text-gray-900 mb-0">
+                                                {displayOrDash(trainer.pinCode)}
+                                            </dd>
+                                        </div>
+                                        <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
+                                            <dt className="text-gray-500 text-xs">Date of birth</dt>
+                                            <dd className="font-medium text-gray-900 mb-0">
+                                                {formatTrainerDob(trainer.dateOfBirth)}
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </section>
                             </div>
-                        </section>
-                    )}
-                </div>
+                        )}
+
+                        {activeTab === "education" && (
+                            <div
+                                id="trainer-tab-education"
+                                role="tabpanel"
+                                aria-labelledby="trainer-tab-btn-education"
+                            >
+                                <TrainerQualificationsDisplay
+                                    education={trainer.education}
+                                    certification={trainer.certification}
+                                    showEducation
+                                    showCertification={false}
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === "certifications" && (
+                            <div
+                                id="trainer-tab-certifications"
+                                role="tabpanel"
+                                aria-labelledby="trainer-tab-btn-certifications"
+                            >
+                                <TrainerQualificationsDisplay
+                                    education={trainer.education}
+                                    certification={trainer.certification}
+                                    showEducation={false}
+                                    showCertification
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === "gallery" && (
+                            <div
+                                id="trainer-tab-gallery"
+                                role="tabpanel"
+                                aria-labelledby="trainer-tab-btn-gallery"
+                            >
+                                {galleryImages.length === 0 ? (
+                                    <p className="company-trainer-profile__empty mb-0">
+                                        No gallery photos uploaded yet.
+                                    </p>
+                                ) : (
+                                    <div className="company-trainer-profile__gallery-grid">
+                                        {galleryImages.map((img, idx) => (
+                                            <div key={img.key || idx} className="company-trainer-profile__gallery-item">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={img.path}
+                                                    alt={`${trainer.name} photo ${idx + 1}`}
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).parentElement!.style.display =
+                                                            "none";
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
         </CompanyRightDrawer>
     );
