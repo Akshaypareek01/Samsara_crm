@@ -7,6 +7,7 @@ export type CompanyRegistrationField =
   | 'domain'
   | 'numberOfEmployees'
   | 'gstNumber'
+  | 'panNumber'
   | 'companyLogo'
   | 'address'
   | 'city'
@@ -29,6 +30,7 @@ export const COMPANY_REGISTRATION_FIELD_IDS: Record<CompanyRegistrationField, st
   domain: 'company-domain',
   numberOfEmployees: 'company-employees',
   gstNumber: 'company-gst',
+  panNumber: 'company-pan',
   companyLogo: 'company-logo',
   address: 'company-address',
   city: 'company-city',
@@ -51,6 +53,7 @@ const FIELD_ORDER: CompanyRegistrationField[] = [
   'domain',
   'numberOfEmployees',
   'gstNumber',
+  'panNumber',
   'companyLogo',
   'address',
   'city',
@@ -72,6 +75,7 @@ const MOBILE_REGEX = /^[0-9]{10}$/;
 const PIN_REGEX = /^[0-9]{6}$/;
 const DOMAIN_REGEX = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 export interface CompanyRegistrationValidationResult {
   isValid: boolean;
@@ -162,6 +166,13 @@ export function validateCompanyRegistration(
     errors.gstNumber = 'GST number is required';
   } else if (!GST_REGEX.test(gst)) {
     errors.gstNumber = 'Please enter a valid 15-character GSTIN';
+  }
+
+  const pan = (data.panNumber || '').trim().toUpperCase();
+  if (!pan) {
+    errors.panNumber = 'PAN number is required';
+  } else if (!PAN_REGEX.test(pan)) {
+    errors.panNumber = 'Please enter a valid 10-character PAN (e.g. ABCDE1234F)';
   }
 
   if (!(data.companyLogo || '').trim()) {
@@ -263,6 +274,7 @@ export function mapBackendErrorToCompanyField(message: string): CompanyRegistrat
   if (lower.includes('company logo')) return 'companyLogo';
   if (lower.includes('company name')) return 'companyName';
   if (lower.includes('gst')) return 'gstNumber';
+  if (lower.includes('pan')) return 'panNumber';
   if (lower.includes('number of employees') || lower.includes('employees')) return 'numberOfEmployees';
   if (lower.includes('pincode') || lower.includes('pin code')) return 'pincode';
   if (lower.includes('secondary contact') && lower.includes('mobile')) return 'contact2Mobile';

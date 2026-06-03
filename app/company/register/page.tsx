@@ -2,7 +2,7 @@
 import Seo from '@/shared/layout-components/seo/seo';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { Fragment, useState, useRef } from 'react';
+import React, { Fragment, useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { Base_url } from '@/Config/BaseUrl';
@@ -19,13 +19,23 @@ import {
 import '@/shared/styles/trainer-form.css';
 
 const HERO_FEATURES = [
-    { icon: 'ri-team-line', title: 'Book wellness trainers', desc: 'Access certified yoga, sound healing and mental wellbeing experts.' },
+    { icon: 'ri-team-line', title: 'Book wellness trainers', desc: 'Access certified wellbeing experts.' },
     { icon: 'ri-calendar-check-line', title: 'Manage sessions easily', desc: 'Schedule and track corporate wellness programs in one place.' },
     { icon: 'ri-line-chart-line', title: 'Measure impact', desc: 'Build a healthier workforce with structured wellness initiatives.' },
 ];
 
 const CompanyRegister = () => {
     const router = useRouter();
+
+    /** Prevent document-level scroll; form panel scrolls internally. */
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, []);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -40,6 +50,7 @@ const CompanyRegister = () => {
         domain: '',
         numberOfEmployees: undefined,
         gstNumber: '',
+        panNumber: '',
         address: '',
         city: '',
         pincode: '',
@@ -205,6 +216,7 @@ const CompanyRegister = () => {
                 domain: normalizeCompanyDomain(formData.domain || ''),
                 numberOfEmployees: formData.numberOfEmployees,
                 gstNumber: (formData.gstNumber || '').trim().toUpperCase(),
+                panNumber: (formData.panNumber || '').trim().toUpperCase(),
                 address: (formData.address || '').trim(),
                 city: (formData.city || '').trim(),
                 pincode: (formData.pincode || '').trim(),
@@ -257,7 +269,7 @@ const CompanyRegister = () => {
         return (
             <Fragment>
                 <Seo title={"Company Registration"} />
-                <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg">
+                <div className="h-dvh min-h-0 overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg">
                     <div className="w-full max-w-md text-center bg-white dark:bg-bodybg rounded-2xl shadow-2xl border border-defaultborder/50 p-8 sm:p-10">
                         <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-success/10 flex items-center justify-center">
                             <i className="ri-checkbox-circle-fill text-success text-5xl" aria-hidden="true"></i>
@@ -283,9 +295,9 @@ const CompanyRegister = () => {
     return (
         <Fragment>
             <Seo title={"Company Registration"} />
-            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
-                <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
-                    <aside className="hidden lg:flex lg:col-span-5 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70">
+            <div className="h-dvh min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
+                <div className="w-full max-w-6xl h-full mx-auto min-h-0 grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
+                    <aside className="hidden lg:flex lg:col-span-5 min-h-0 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70">
                         <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true"></div>
                         <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5" aria-hidden="true"></div>
 
@@ -320,15 +332,20 @@ const CompanyRegister = () => {
                             </ul>
                         </div>
 
-                        <p className="relative z-10 text-white/60 text-xs mt-10">
-                            Already have an account?{' '}
-                            <Link href="/company/login" className="text-white font-semibold underline underline-offset-2">
-                                Sign in
-                            </Link>
-                        </p>
+                        <div className="relative z-10 mt-10 space-y-2">
+                            <p className="text-white/60 text-xs">
+                                Already have an account?{' '}
+                                <Link href="/company/login" className="text-white font-semibold underline underline-offset-2">
+                                    Sign in
+                                </Link>
+                            </p>
+                            <p className="text-white/50 text-[0.65rem] leading-relaxed">
+                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                            </p>
+                        </div>
                     </aside>
 
-                    <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 max-h-screen overflow-y-auto">
+                    <div className="lg:col-span-7 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 lg:p-10 pb-8">
                         <div className="mb-6">
                             <img
                                 src="/assets/images/logo.jpeg"
@@ -401,10 +418,24 @@ const CompanyRegister = () => {
                                     <div id="company-reg-terms-text" className="trainer-form-terms-text">
                                         <label htmlFor="company-reg-terms-checkbox" className="trainer-form-terms-label">
                                             I agree to the{' '}
-                                            <a href="#" onClick={(e) => e.preventDefault()}>Terms &amp; Conditions</a>
+                                            <Link
+                                                href="/company/legal#terms"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                Terms &amp; Conditions
+                                            </Link>
                                             {' '}and{' '}
-                                            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
-                                            {' '}I confirm that all information provided is accurate and I consent to my
+                                            <Link
+                                                href="/company/legal#privacy"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                Privacy Policy
+                                            </Link>
+                                            . I confirm that all information provided is accurate and I consent to my
                                             company profile being listed on the platform for wellness program outreach.
                                         </label>
                                     </div>
@@ -430,12 +461,17 @@ const CompanyRegister = () => {
                                         </>
                                     )}
                                 </button>
-                                <p className="text-center text-xs text-muted mt-3 lg:hidden">
-                                    Already have an account?{' '}
-                                    <Link href="/company/login" className="text-primary font-semibold">
-                                        Sign in
-                                    </Link>
-                                </p>
+                                <div className="text-center mt-3 space-y-2 lg:hidden">
+                                    <p className="text-xs text-muted">
+                                        Already have an account?{' '}
+                                        <Link href="/company/login" className="text-primary font-semibold">
+                                            Sign in
+                                        </Link>
+                                    </p>
+                                    <p className="text-[0.65rem] text-[#8c9097] dark:text-white/50 leading-relaxed">
+                                        Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                                    </p>
+                                </div>
                             </div>
                         </form>
                     </div>

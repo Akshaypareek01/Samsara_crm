@@ -17,6 +17,7 @@ export interface Company {
   domain?: string;
   numberOfEmployees?: number;
   gstNumber?: string;
+  panNumber?: string;
   address?: string;
   city?: string;
   pincode?: string;
@@ -35,6 +36,7 @@ export interface CreateCompanyRequest {
   domain?: string;
   numberOfEmployees?: number;
   gstNumber?: string;
+  panNumber?: string;
   address?: string;
   city?: string;
   pincode?: string;
@@ -51,6 +53,7 @@ export interface UpdateCompanyRequest {
   domain?: string;
   numberOfEmployees?: number;
   gstNumber?: string;
+  panNumber?: string;
   address?: string;
   city?: string;
   pincode?: string;

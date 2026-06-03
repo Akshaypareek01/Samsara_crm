@@ -169,6 +169,29 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
             />
             <TrainerFormFieldError message={fieldErrors.gstNumber} fieldId="company-gst" />
           </div>
+          <div className="sm:col-span-2">
+            <label className="trainer-form-label" htmlFor="company-pan">
+              PAN Number <span className="trainer-form-req">*</span>
+            </label>
+            <input
+              id="company-pan"
+              type="text"
+              className={fieldClass('panNumber')}
+              value={formData.panNumber}
+              onChange={(e) => {
+                clearFieldError('panNumber');
+                setFormData({
+                  ...formData,
+                  panNumber: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10),
+                });
+              }}
+              placeholder="e.g. ABCDE1234F"
+              maxLength={10}
+              aria-invalid={Boolean(fieldErrors.panNumber)}
+              aria-describedby={fieldErrors.panNumber ? 'company-pan-error' : undefined}
+            />
+            <TrainerFormFieldError message={fieldErrors.panNumber} fieldId="company-pan" />
+          </div>
           <div className="sm:col-span-2" id="company-logo">
             <label className="trainer-form-label">
               Company Logo <span className="trainer-form-req">*</span>

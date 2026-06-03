@@ -1,0 +1,144 @@
+/* Company legal document — readable prose on auth-style pages */
+
+.company-legal-article {
+  color: #1a1033;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.company-legal-doc-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #ede8ff;
+}
+
+.company-legal-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #845adf;
+  margin-bottom: 0.5rem;
+}
+
+.company-legal-doc-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 1rem;
+  color: #1a1033;
+}
+
+.company-legal-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem 1.25rem;
+  font-size: 13px;
+}
+
+@media (min-width: 640px) {
+  .company-legal-meta-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.company-legal-meta-grid dt {
+  font-weight: 600;
+  color: #5a5572;
+  margin-bottom: 0.15rem;
+}
+
+.company-legal-meta-grid dd {
+  margin: 0;
+  color: #333;
+}
+
+.company-legal-toc {
+  background: #faf9ff;
+  border: 1px solid #ede8ff;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.75rem;
+}
+
+.company-legal-toc-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #845adf;
+  margin-bottom: 0.5rem;
+}
+
+.company-legal-toc ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.company-legal-toc li {
+  margin-bottom: 0.35rem;
+}
+
+.company-legal-toc a {
+  color: #845adf;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.company-legal-toc a:hover {
+  text-decoration: underline;
+}
+
+.company-legal-part {
+  margin-bottom: 2rem;
+}
+
+.company-legal-part-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #845adf;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e4dfff;
+}
+
+.company-legal-section {
+  margin-bottom: 1.25rem;
+}
+
+.company-legal-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1033;
+  margin-bottom: 0.5rem;
+}
+
+.company-legal-paragraph {
+  margin-bottom: 0.75rem;
+  color: #444;
+}
+
+.company-legal-list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  color: #444;
+}
+
+.company-legal-list li {
+  margin-bottom: 0.65rem;
+}
+
+.company-legal-contact {
+  padding-top: 1rem;
+  border-top: 1px solid #ede8ff;
+}
+
+.company-legal-link {
+  color: #845adf;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.company-legal-link:hover {
+  text-decoration: underline;
+}

@@ -1,21 +1,12 @@
 "use client";
 import Seo from '@/shared/layout-components/seo/seo';
-import React, { Fragment, useState, useRef } from 'react';
-import TrainerService, {
-  CreateTrainerRequest,
-  SPECIALIST_OPTIONS,
-  TRAINER_CATEGORY_OPTIONS,
-  TYPE_OF_TRAINING_OPTIONS,
-  EXPERIENCE_OPTIONS,
-  TrainerImage,
-} from '@/services/trainerService';
+import Link from 'next/link';
+import React, { Fragment, useEffect, useState, useRef } from 'react';
+import TrainerService, { CreateTrainerRequest, TrainerImage } from '@/services/trainerService';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import Swal from 'sweetalert2';
-import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
-import TrainerQualificationFields from '@/shared/components/trainer/TrainerQualificationFields';
-import TrainerPhotosFields from '@/shared/components/trainer/TrainerPhotosFields';
-import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
+import TrainerRegisterFormFields from '@/shared/components/trainer/TrainerRegisterFormFields';
 import '@/shared/styles/trainer-form.css';
 import {
   filterFilledCertificationEntries,
@@ -28,9 +19,22 @@ import {
   TrainerRegistrationField,
   validateTrainerRegistration,
 } from '@/shared/utils/trainerRegistrationValidation';
-import { getTrainerDobMaxDate, validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
+const HERO_FEATURES = [
+    { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by corporate clients seeking wellness experts.' },
+    { icon: 'ri-calendar-check-line', title: 'Effortless scheduling', desc: 'Manage all your bookings from one dashboard.' },
+    { icon: 'ri-line-chart-line', title: 'Grow your practice', desc: 'Build credibility and expand your wellness offerings.' },
+];
 
 const TrainerRegister = () => {
+    /** Prevent document-level scroll; form panel scrolls internally. */
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, []);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -290,7 +294,7 @@ const TrainerRegister = () => {
         return (
             <Fragment>
                 <Seo title={"Trainer Registration"} />
-                <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg">
+                <div className="h-dvh min-h-0 overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg">
                     <div className="w-full max-w-md text-center bg-white dark:bg-bodybg rounded-2xl shadow-2xl border border-defaultborder/50 p-8 sm:p-10">
                         <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-success/10 flex items-center justify-center">
                             <i className="ri-checkbox-circle-fill text-success text-5xl"></i>
@@ -301,12 +305,12 @@ const TrainerRegister = () => {
                         <p className="text-[#8c9097] dark:text-white/50 text-sm sm:text-base mb-6">
                             Your trainer profile has been created. Thanks for joining Samsara — you can now sign in to manage your profile and bookings.
                         </p>
-                        <a
+                        <Link
                             href="/trainer/login"
                             className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium w-full !py-2.5 inline-flex items-center justify-center gap-2"
                         >
-                            <i className="ri-login-circle-line"></i> Go to Login
-                        </a>
+                            <i className="ri-login-circle-line" aria-hidden="true"></i> Go to Login
+                        </Link>
                     </div>
                 </div>
             </Fragment>
@@ -316,10 +320,9 @@ const TrainerRegister = () => {
     return (
         <Fragment>
             <Seo title={"Trainer Registration"} />
-            <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
-                <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
-                    {/* ── Brand / Hero panel ── */}
-                    <aside className="hidden lg:flex lg:col-span-5 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70">
+            <div className="h-dvh min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
+                <div className="w-full max-w-6xl h-full mx-auto min-h-0 grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
+                    <aside className="hidden lg:flex lg:col-span-5 min-h-0 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70">
                         <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true"></div>
                         <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5" aria-hidden="true"></div>
 
@@ -340,11 +343,7 @@ const TrainerRegister = () => {
                             </p>
 
                             <ul className="space-y-5">
-                                {[
-                                    { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by corporate clients.' },
-                                    { icon: 'ri-calendar-check-line', title: 'Effortless scheduling', desc: 'Manage all your bookings from one dashboard.' },
-                                    
-                                ].map((feature) => (
+                                {HERO_FEATURES.map((feature) => (
                                     <li key={feature.title} className="flex items-start gap-3">
                                         <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
                                             <i className={`${feature.icon} text-xl`} aria-hidden="true"></i>
@@ -358,16 +357,20 @@ const TrainerRegister = () => {
                             </ul>
                         </div>
 
-                        <p className="relative z-10 text-white/60 text-xs mt-10">
-                            Already have an account?{' '}
-                            <a href="/trainer/login" className="text-white font-semibold underline underline-offset-2">
-                                Sign in
-                            </a>
-                        </p>
+                        <div className="relative z-10 mt-10 space-y-2">
+                            <p className="text-white/60 text-xs">
+                                Already have an account?{' '}
+                                <Link href="/trainer/login" className="text-white font-semibold underline underline-offset-2">
+                                    Sign in
+                                </Link>
+                            </p>
+                            <p className="text-white/50 text-[0.65rem] leading-relaxed">
+                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                            </p>
+                        </div>
                     </aside>
 
-                    {/* ── Form panel ── */}
-                    <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 max-h-screen overflow-y-auto">
+                    <div className="lg:col-span-7 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 lg:p-10 pb-8">
                         <div className="mb-6">
                             <img
                                 src="/assets/images/logo.jpeg"
@@ -376,19 +379,22 @@ const TrainerRegister = () => {
                             />
                             <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Trainer Registration</h2>
                             <p className="text-[#8c9097] dark:text-white/50 text-sm mt-1">
-                                Fill in your details to create your trainer profile.
+                                Fill in your details to create an account.
                             </p>
                         </div>
 
                         {error && (
                             <div
                                 role="alert"
-                                className={`trainer-form-error-summary ${
+                                className={`trainer-form-error-summary mb-5 ${
                                     success ? 'bg-warning/10 text-warning border-warning/20' : ''
                                 }`}
                             >
                                 <div className="flex items-start gap-2">
-                                    <i className={`${success ? 'ri-error-warning-line' : 'ri-close-circle-line'} text-base mt-0.5`} aria-hidden="true"></i>
+                                    <i
+                                        className={`${success ? 'ri-error-warning-line' : 'ri-close-circle-line'} text-base mt-0.5`}
+                                        aria-hidden="true"
+                                    ></i>
                                     <div>
                                         <strong>{success ? 'Notice' : 'Please fix the following'}</strong>
                                         <p className="mb-0 mt-1">{error}</p>
@@ -404,310 +410,26 @@ const TrainerRegister = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-2">
-                            {/* Trainer Type — first section per HTML mock */}
-                            <section>
-                                <TrainerFormSectionTitle title="Trainer Type" iconClass="ri-id-card-line" />
-                                <div>
-                                    <label className="trainer-form-label" htmlFor="trainer-category">
-                                        Trainer Category <span className="trainer-form-req">*</span>
-                                    </label>
-                                    <select
-                                        id="trainer-category"
-                                        className={`${fieldClass('category')} trainer-form-select`}
-                                        value={formData.category}
-                                        onChange={(e) => {
-                                            clearFieldError('category');
-                                            setFormData((prev) => ({ ...prev, category: e.target.value }));
-                                        }}
-                                        required
-                                        aria-required="true"
-                                        aria-invalid={Boolean(fieldErrors.category)}
-                                        aria-describedby={fieldErrors.category ? 'trainer-category-error' : undefined}
-                                    >
-                                        <option value="">— Select trainer type —</option>
-                                        {TRAINER_CATEGORY_OPTIONS.map((cat) => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-                                    <TrainerFormFieldError message={fieldErrors.category} fieldId="trainer-category" />
-                                </div>
-                            </section>
+                        <form onSubmit={handleSubmit}>
+                            <TrainerRegisterFormFields
+                                formData={formData}
+                                setFormData={setFormData}
+                                patchDetails={patchDetails}
+                                setFieldErrors={setFieldErrors}
+                                fieldErrors={fieldErrors}
+                                fieldClass={fieldClass}
+                                clearFieldError={clearFieldError}
+                                profilePhotoInputRef={profilePhotoInputRef}
+                                galleryInputRefs={galleryInputRefs}
+                                uploadingProfilePhoto={uploadingProfilePhoto}
+                                uploadingGallerySlot={uploadingGallerySlot}
+                                onProfilePhotoChange={handleProfilePhotoChange}
+                                onGallerySlotChange={handleGallerySlotChange}
+                                onClearProfilePhoto={clearProfilePhoto}
+                                onRemoveGalleryImage={removeImage}
+                            />
 
-                            {/* Personal Details */}
-                            <section>
-                                <TrainerFormSectionTitle title="Personal Details" iconClass="ri-user-line" />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="reg-name">
-                                            Full Name <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="reg-name"
-                                            type="text"
-                                            className={fieldClass('name')}
-                                            value={formData.name}
-                                            onChange={(e) => {
-                                                clearFieldError('name');
-                                                setFormData((prev) => ({ ...prev, name: e.target.value }));
-                                            }}
-                                            placeholder="Jane Doe"
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.name)}
-                                            aria-describedby={fieldErrors.name ? 'reg-name-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.name} fieldId="reg-name" />
-                                    </div>
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="reg-title">
-                                            Professional Title <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="reg-title"
-                                            type="text"
-                                            className={fieldClass('title')}
-                                            value={formData.title}
-                                            onChange={(e) => {
-                                                clearFieldError('title');
-                                                setFormData((prev) => ({ ...prev, title: e.target.value }));
-                                            }}
-                                            placeholder="e.g., Certified Yoga Instructor"
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.title)}
-                                            aria-describedby={fieldErrors.title ? 'reg-title-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.title} fieldId="reg-title" />
-                                    </div>
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="trainer-dob">
-                                            Date of Birth <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="trainer-dob"
-                                            type="date"
-                                            className={fieldClass('dateOfBirth')}
-                                            value={formData.dateOfBirth ? String(formData.dateOfBirth).slice(0, 10) : ''}
-                                            max={getTrainerDobMaxDate()}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                const dobError = value ? validateTrainerDateOfBirth(value) : undefined;
-                                                if (dobError && value) {
-                                                    setFieldErrors((prev) => ({ ...prev, dateOfBirth: dobError }));
-                                                    return;
-                                                }
-                                                clearFieldError('dateOfBirth');
-                                                patchDetails({ dateOfBirth: value || null });
-                                            }}
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.dateOfBirth)}
-                                            aria-describedby={fieldErrors.dateOfBirth ? 'trainer-dob-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.dateOfBirth} fieldId="trainer-dob" />
-                                    </div>
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="reg-mobile">
-                                            Mobile Number <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="reg-mobile"
-                                            type="tel"
-                                            className={fieldClass('mobile')}
-                                            value={formData.mobile}
-                                            onChange={(e) => {
-                                                clearFieldError('mobile');
-                                                const value = e.target.value.replace(/\D/g, '');
-                                                if (value.length <= 10) {
-                                                    setFormData((prev) => ({ ...prev, mobile: value }));
-                                                }
-                                            }}
-                                            placeholder="1234567890"
-                                            maxLength={10}
-                                            inputMode="numeric"
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.mobile)}
-                                            aria-describedby={fieldErrors.mobile ? 'reg-mobile-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.mobile} fieldId="reg-mobile" />
-                                        {!fieldErrors.mobile && (
-                                            <small className="text-muted text-xs mt-1 block">10 digits only</small>
-                                        )}
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="trainer-form-label" htmlFor="reg-email">
-                                            Email ID <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="reg-email"
-                                            type="email"
-                                            className={fieldClass('email')}
-                                            value={formData.email}
-                                            onChange={(e) => {
-                                                clearFieldError('email');
-                                                setFormData((prev) => ({ ...prev, email: e.target.value }));
-                                            }}
-                                            placeholder="you@email.com"
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.email)}
-                                            aria-describedby={fieldErrors.email ? 'reg-email-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.email} fieldId="reg-email" />
-                                    </div>
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="trainer-city">
-                                            City <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="trainer-city"
-                                            type="text"
-                                            className={fieldClass('city')}
-                                            value={formData.city || ''}
-                                            onChange={(e) => {
-                                                clearFieldError('city');
-                                                patchDetails({ city: e.target.value });
-                                            }}
-                                            placeholder="Your city"
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.city)}
-                                            aria-describedby={fieldErrors.city ? 'trainer-city-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.city} fieldId="trainer-city" />
-                                    </div>
-                                    <div>
-                                        <label className="trainer-form-label" htmlFor="trainer-pincode">
-                                            PIN Code <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <input
-                                            id="trainer-pincode"
-                                            type="text"
-                                            inputMode="numeric"
-                                            className={fieldClass('pinCode')}
-                                            value={formData.pinCode || ''}
-                                            onChange={(e) => {
-                                                clearFieldError('pinCode');
-                                                const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                                patchDetails({ pinCode: digits });
-                                            }}
-                                            placeholder="6-digit PIN"
-                                            maxLength={6}
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.pinCode)}
-                                            aria-describedby={fieldErrors.pinCode ? 'trainer-pincode-error' : undefined}
-                                        />
-                                        <TrainerFormFieldError message={fieldErrors.pinCode} fieldId="trainer-pincode" />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                        <label className="trainer-form-label" htmlFor="trainer-experience">
-                                            Years of Experience <span className="trainer-form-req">*</span>
-                                        </label>
-                                        <select
-                                            id="trainer-experience"
-                                            className={`${fieldClass('experience')} trainer-form-select`}
-                                            value={formData.experience || ''}
-                                            onChange={(e) => {
-                                                clearFieldError('experience');
-                                                patchDetails({ experience: e.target.value });
-                                            }}
-                                            required
-                                            aria-invalid={Boolean(fieldErrors.experience)}
-                                            aria-describedby={fieldErrors.experience ? 'trainer-experience-error' : undefined}
-                                        >
-                                            <option value="">— Select experience range —</option>
-                                            {EXPERIENCE_OPTIONS.map((opt) => (
-                                                <option key={opt} value={opt}>{opt}</option>
-                                            ))}
-                                        </select>
-                                        <TrainerFormFieldError message={fieldErrors.experience} fieldId="trainer-experience" />
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Education & Certifications */}
-                            <section>
-                                <TrainerQualificationFields
-                                    education={formData.education}
-                                    certification={formData.certification}
-                                    onChange={patchDetails}
-                                />
-                            </section>
-
-                            {/* Professional Bio */}
-                            <section>
-                                <TrainerFormSectionTitle title="Professional Bio" iconClass="ri-file-text-line" />
-                                <div>
-                                    <label className="trainer-form-label" htmlFor="reg-bio">
-                                        About You <span className="trainer-form-req">*</span>
-                                    </label>
-                                    <textarea
-                                        id="reg-bio"
-                                        className={`${fieldClass('bio')} trainer-form-textarea`}
-                                        rows={4}
-                                        value={formData.bio}
-                                        onChange={(e) => {
-                                            clearFieldError('bio');
-                                            setFormData((prev) => ({ ...prev, bio: e.target.value }));
-                                        }}
-                                        maxLength={2000}
-                                        placeholder="Describe your expertise, philosophy, and experience... (max 2000 characters)"
-                                        required
-                                        aria-invalid={Boolean(fieldErrors.bio)}
-                                        aria-describedby={fieldErrors.bio ? 'reg-bio-error' : undefined}
-                                    />
-                                    <TrainerFormFieldError message={fieldErrors.bio} fieldId="reg-bio" />
-                                    <div className="trainer-form-char-count">
-                                        {(formData.bio || '').length} / 2000
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Training Focus */}
-                            <section>
-                                <TrainerFormSectionTitle title="Training Focus" iconClass="ri-focus-3-line" />
-                                <div className="space-y-4">
-                                    <TrainerChipSelect
-                                        label="Training For"
-                                        fieldId="reg-specialist-in"
-                                        options={SPECIALIST_OPTIONS}
-                                        value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
-                                        onChange={(selected) => {
-                                            clearFieldError('specialistIn');
-                                            setFormData((prev) => ({ ...prev, specialistIn: selected }));
-                                        }}
-                                        required
-                                        error={fieldErrors.specialistIn}
-                                    />
-                                    <TrainerChipSelect
-                                        label="Specializations"
-                                        fieldId="reg-type-of-training"
-                                        options={TYPE_OF_TRAINING_OPTIONS}
-                                        value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
-                                        onChange={(selected) => {
-                                            clearFieldError('typeOfTraining');
-                                            setFormData((prev) => ({ ...prev, typeOfTraining: selected }));
-                                        }}
-                                        required
-                                        error={fieldErrors.typeOfTraining}
-                                    />
-                                </div>
-                            </section>
-
-                            {/* Photos */}
-                            <section>
-                                <TrainerPhotosFields
-                                    profilePhoto={formData.profilePhoto}
-                                    images={formData.images}
-                                    profilePhotoInputRef={profilePhotoInputRef}
-                                    galleryInputRefs={galleryInputRefs}
-                                    uploadingProfilePhoto={uploadingProfilePhoto}
-                                    uploadingGallerySlot={uploadingGallerySlot}
-                                    onProfilePhotoChange={handleProfilePhotoChange}
-                                    onGallerySlotChange={handleGallerySlotChange}
-                                    onClearProfilePhoto={clearProfilePhoto}
-                                    onRemoveGalleryImage={removeImage}
-                                />
-                            </section>
-
-                            {/* Terms */}
-                            <div className="trainer-form-terms-wrap" id="reg-terms">
+                            <div className="trainer-form-terms-wrap mt-4" id="reg-terms">
                                 <div
                                     className={`trainer-form-terms-row${fieldErrors.agreedToTerms ? ' trainer-form-control-error' : ''}`}
                                 >
@@ -726,10 +448,24 @@ const TrainerRegister = () => {
                                     <div id="reg-terms-text" className="trainer-form-terms-text">
                                         <label htmlFor="reg-terms-checkbox" className="trainer-form-terms-label">
                                             I agree to the{' '}
-                                            <a href="#" onClick={(e) => e.preventDefault()}>Terms &amp; Conditions</a>
+                                            <Link
+                                                href="/trainer/legal#terms"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                Terms &amp; Conditions
+                                            </Link>
                                             {' '}and{' '}
-                                            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
-                                            {' '}I confirm that all information provided is accurate and I consent to my
+                                            <Link
+                                                href="/trainer/legal#privacy"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                Privacy Policy
+                                            </Link>
+                                            . I confirm that all information provided is accurate and I consent to my
                                             profile being listed on the platform for organizational outreach.
                                         </label>
                                     </div>
@@ -737,23 +473,35 @@ const TrainerRegister = () => {
                                 <TrainerFormFieldError message={fieldErrors.agreedToTerms} fieldId="reg-terms" />
                             </div>
 
-                            {/* Submit */}
-                            <div className="pt-2">
+                            <div className="pt-4 mt-2">
                                 <button
                                     type="submit"
                                     className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
                                     disabled={loading}
                                 >
                                     {loading ? (
-                                        <><span className="spinner-border spinner-border-sm"></span> Registering...</>
+                                        <>
+                                            <span className="spinner-border spinner-border-sm" role="status"></span>
+                                            Registering...
+                                        </>
                                     ) : (
-                                        <><i className="ri-user-add-line"></i> Register as Trainer</>
+                                        <>
+                                            <i className="ri-user-add-line" aria-hidden="true"></i>
+                                            Register as Trainer
+                                        </>
                                     )}
                                 </button>
-                                <p className="text-center text-xs text-muted mt-3 lg:hidden">
-                                    Already have an account?{' '}
-                                    <a href="/trainer/login" className="text-primary font-semibold">Sign in</a>
-                                </p>
+                                <div className="text-center mt-3 space-y-2 lg:hidden">
+                                    <p className="text-xs text-muted">
+                                        Already have an account?{' '}
+                                        <Link href="/trainer/login" className="text-primary font-semibold">
+                                            Sign in
+                                        </Link>
+                                    </p>
+                                    <p className="text-[0.65rem] text-[#8c9097] dark:text-white/50 leading-relaxed">
+                                        Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                                    </p>
+                                </div>
                             </div>
                         </form>
                     </div>

@@ -2,9 +2,19 @@
 import Seo from '@/shared/layout-components/seo/seo';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { Fragment, Suspense, useState } from 'react';
+import React, { Fragment, Suspense, useEffect, useState } from 'react';
 import CompanyService from '@/services/companyService';
+import '@/shared/styles/trainer-form.css';
 
+const HERO_FEATURES = [
+    { icon: 'ri-team-line', title: 'Book wellness trainers', desc: 'Access certified wellbeing experts.' },
+    { icon: 'ri-calendar-check-line', title: 'Manage sessions easily', desc: 'Schedule and track corporate wellness programs in one place.' },
+    { icon: 'ri-line-chart-line', title: 'Measure impact', desc: 'Build a healthier workforce with structured wellness initiatives.' },
+];
+
+/**
+ * Company OTP login — layout matches company registration page.
+ */
 const CompanyLoginInner = () => {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
@@ -14,137 +24,252 @@ const CompanyLoginInner = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
+    /** Prevent document-level scroll; panel scrolls internally when needed. */
+    useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, []);
+
+    /**
+     * Request a one-time password for the entered email.
+     *
+     * @param e - Form submit event.
+     */
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         try {
-            await CompanyService.sendLoginOtp(email);
+            await CompanyService.sendLoginOtp(email.trim());
             setStep('otp');
-        } catch (err: any) {
-            setError(err.message || 'Failed to send OTP. Please check your email.');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to send OTP. Please check your email.';
+            setError(message);
         } finally {
             setLoading(false);
         }
     };
 
+    /**
+     * Verify OTP and redirect to dashboard or safe `next` path.
+     *
+     * @param e - Form submit event.
+     */
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         try {
-            await CompanyService.verifyLoginOtp(email, otp);
+            await CompanyService.verifyLoginOtp(email.trim(), otp.trim());
             const next = searchParams.get('next');
             const safe =
                 next && next.startsWith('/') && !next.startsWith('//')
                     ? next
                     : '/company/dashboard';
             router.push(safe);
-        } catch (err: any) {
-            setError(err.message || 'Invalid OTP. Please try again.');
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Invalid OTP. Please try again.';
+            setError(message);
         } finally {
             setLoading(false);
         }
     };
 
+    /** Return to email step and clear OTP state. */
+    const handleChangeEmail = () => {
+        setStep('email');
+        setOtp('');
+        setError('');
+    };
+
     return (
         <Fragment>
             <Seo title={"Company Login"} />
-            <div className="container">
-                <div className="flex justify-center authentication authentication-basic items-center h-full text-defaultsize text-defaulttextcolor">
-                    <div className="grid grid-cols-12">
-                        <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
-                        <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-6 sm:col-span-8 col-span-12">
-                            <div className="my-[2.5rem] flex justify-center mb-6">
-                                <img src="/assets/images/logosm.png" alt="logo" className="h-32 w-auto" />
+            <div className="h-dvh min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
+                <div className="w-full max-w-6xl h-full mx-auto min-h-0 grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
+                    <aside
+                        className="hidden lg:flex lg:col-span-5 min-h-0 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70"
+                        aria-label="Company login information"
+                    >
+                        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true"></div>
+                        <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5" aria-hidden="true"></div>
+
+                        <div className="relative z-10">
+                            <div className="inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-10 shadow-lg leading-none">
+                                <img
+                                    src="/assets/images/logo.jpeg"
+                                    alt="Samsara"
+                                    className="h-24 xl:h-28 w-auto max-w-[220px] object-contain block"
+                                />
                             </div>
-                            <div className="box">
-                                <div className="box-body !p-[3rem]">
-                                    <p className="h5 font-semibold mb-2 text-center">Company Login</p>
-                                    <p className="mb-4 text-[#8c9097] dark:text-white/50 opacity-[0.7] font-normal text-center">
-                                        {step === 'email' ? 'Enter your email to receive an OTP.' : 'Enter the OTP sent to your email.'}
-                                    </p>
+                            <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-4">
+                                Welcome back to your organization portal
+                            </h1>
+                            <p className="text-white/80 text-sm leading-relaxed mb-9">
+                                Sign in to book certified trainers, manage corporate wellness programs, and
+                                support your teams on Samsara Wellness.
+                            </p>
 
-                                    {error && (
-                                        <div className="alert alert-danger mb-4 text-center text-sm text-red-500 bg-red-50 p-2 rounded">
-                                            {error}
+                            <ul className="space-y-5">
+                                {HERO_FEATURES.map((feature) => (
+                                    <li key={feature.title} className="flex items-start gap-3">
+                                        <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <i className={`${feature.icon} text-xl`} aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <p className="font-semibold text-sm">{feature.title}</p>
+                                            <p className="text-white/70 text-xs">{feature.desc}</p>
                                         </div>
-                                    )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
 
-                                    {step === 'email' ? (
-                                        <form onSubmit={handleSendOtp}>
-                                            <div className="grid grid-cols-12 gap-y-4">
-                                                <div className="xl:col-span-12 col-span-12">
-                                                    <label htmlFor="signin-email" className="form-label text-default">Email</label>
-                                                    <input
-                                                        type="email"
-                                                        required
-                                                        className="form-control form-control-lg w-full !rounded-md"
-                                                        id="signin-email"
-                                                        placeholder="Enter your email"
-                                                        value={email}
-                                                        onChange={(e) => setEmail(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="xl:col-span-12 col-span-12 grid mt-2">
-                                                    <button
-                                                        type="submit"
-                                                        className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium"
-                                                        disabled={loading}
-                                                    >
-                                                        {loading ? 'Sending...' : 'Send OTP'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    ) : (
-                                        <form onSubmit={handleVerifyOtp}>
-                                            <div className="grid grid-cols-12 gap-y-4">
-                                                <div className="xl:col-span-12 col-span-12">
-                                                    <label htmlFor="signin-otp" className="form-label text-default">OTP</label>
-                                                    <input
-                                                        type="text"
-                                                        required
-                                                        className="form-control form-control-lg w-full !rounded-md"
-                                                        id="signin-otp"
-                                                        placeholder="Enter OTP"
-                                                        value={otp}
-                                                        onChange={(e) => setOtp(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div className="xl:col-span-12 col-span-12 grid mt-2">
-                                                    <button
-                                                        type="submit"
-                                                        className="ti-btn ti-btn-primary !bg-primary !text-white !font-medium"
-                                                        disabled={loading}
-                                                    >
-                                                        {loading ? 'Verifying...' : 'Verify & Login'}
-                                                    </button>
-                                                </div>
-                                                <div className="xl:col-span-12 col-span-12 text-center mt-2">
-                                                    <button
-                                                        type="button"
-                                                        className="text-primary text-sm underline"
-                                                        onClick={() => setStep('email')}
-                                                    >
-                                                        Change Email
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    )}
-                                    <div className="xl:col-span-12 col-span-12 text-center mt-4">
-                                        <p className="text-muted text-sm">
-                                            Don't have an account?{' '}
-                                            <Link href="/company/register" className="text-primary font-semibold">
-                                                Register Here
-                                            </Link>
-                                        </p>
+                        <div className="relative z-10 mt-10 space-y-2">
+                            <p className="text-white/60 text-xs">
+                                Don&apos;t have an account?{' '}
+                                <Link
+                                    href="/company/register"
+                                    className="text-white font-semibold underline underline-offset-2"
+                                >
+                                    Register
+                                </Link>
+                            </p>
+                            <p className="text-white/50 text-[0.65rem] leading-relaxed">
+                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                            </p>
+                        </div>
+                    </aside>
+
+                    <div className="lg:col-span-7 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 lg:p-10 pb-8 flex flex-col justify-center">
+                        <div className="mb-6">
+                            <img
+                                src="/assets/images/logo.jpeg"
+                                alt="Samsara"
+                                className="h-20 sm:h-24 w-auto mb-4 lg:hidden"
+                            />
+                            <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Company Login</h2>
+                            <p className="text-[#8c9097] dark:text-white/50 text-sm mt-1">
+                                {step === 'email'
+                                    ? 'Enter your company email to receive a one-time password.'
+                                    : `Enter the OTP sent to ${email}.`}
+                            </p>
+                        </div>
+
+                        {error && (
+                            <div role="alert" className="trainer-form-error-summary mb-5">
+                                <div className="flex items-start gap-2">
+                                    <i className="ri-close-circle-line text-base mt-0.5" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Please fix the following</strong>
+                                        <p className="mb-0 mt-1">{error}</p>
                                     </div>
                                 </div>
                             </div>
+                        )}
+
+                        {step === 'email' ? (
+                            <form onSubmit={handleSendOtp} className="max-w-md w-full" noValidate>
+                                <div>
+                                    <label className="trainer-form-label" htmlFor="company-login-email">
+                                        Email <span className="trainer-form-req">*</span>
+                                    </label>
+                                    <input
+                                        id="company-login-email"
+                                        type="email"
+                                        required
+                                        autoComplete="email"
+                                        className="form-control trainer-form-control"
+                                        placeholder="company@email.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        aria-invalid={Boolean(error)}
+                                    />
+                                </div>
+                                <div className="pt-4 mt-2">
+                                    <button
+                                        type="submit"
+                                        className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm" role="status"></span>
+                                                Sending...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="ri-mail-send-line" aria-hidden="true"></i>
+                                                Send OTP
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleVerifyOtp} className="max-w-md w-full" noValidate>
+                                <div>
+                                    <label className="trainer-form-label" htmlFor="company-login-otp">
+                                        One-time password <span className="trainer-form-req">*</span>
+                                    </label>
+                                    <input
+                                        id="company-login-otp"
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        required
+                                        maxLength={4}
+                                        className="form-control trainer-form-control"
+                                        placeholder="4-digit OTP"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                        aria-invalid={Boolean(error)}
+                                    />
+                                </div>
+                                <div className="pt-4 mt-2 space-y-3">
+                                    <button
+                                        type="submit"
+                                        className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
+                                        disabled={loading}
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm" role="status"></span>
+                                                Verifying...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="ri-login-circle-line" aria-hidden="true"></i>
+                                                Verify &amp; Login
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="w-full text-sm text-primary font-semibold hover:underline"
+                                        onClick={handleChangeEmail}
+                                        disabled={loading}
+                                    >
+                                        Change email
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        <div className="text-center mt-6 space-y-2 lg:hidden max-w-md w-full">
+                            <p className="text-xs text-muted">
+                                Don&apos;t have an account?{' '}
+                                <Link href="/company/register" className="text-primary font-semibold">
+                                    Register
+                                </Link>
+                            </p>
+                            <p className="text-[0.65rem] text-[#8c9097] dark:text-white/50 leading-relaxed">
+                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                            </p>
                         </div>
-                        <div className="xxl:col-span-4 xl:col-span-4 lg:col-span-4 md:col-span-3 sm:col-span-2"></div>
                     </div>
                 </div>
             </div>
@@ -158,8 +283,8 @@ const CompanyLoginInner = () => {
 const CompanyLoginPage = () => (
     <Suspense
         fallback={
-            <div className="container flex min-h-[40vh] items-center justify-center">
-                <span className="text-sm text-gray-500">Loading…</span>
+            <div className="h-dvh min-h-0 overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-white to-primary/10">
+                <span className="text-sm text-[#8c9097]">Loading…</span>
             </div>
         }
     >
