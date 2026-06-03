@@ -301,7 +301,7 @@ const CompanyRegister = () => {
                                 Bring wellness to your organization
                             </h1>
                             <p className="text-white/80 text-sm leading-relaxed mb-9">
-                                Register your company on Samsara to book certified trainers and run
+                                Register your company on Samsara Wellness to book certified trainers and run
                                 corporate wellness programs for your teams.
                             </p>
 
