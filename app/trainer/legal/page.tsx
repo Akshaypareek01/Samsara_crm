@@ -50,7 +50,7 @@ const TrainerLegalPage = () => {
           </div>
 
           <p className="text-center text-[0.65rem] text-[#8c9097] dark:text-white/50 mt-4 leading-relaxed">
-            Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+            Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
           </p>
         </div>
       </div>

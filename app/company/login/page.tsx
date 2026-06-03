@@ -128,18 +128,16 @@ const CompanyLoginInner = () => {
                             </ul>
                         </div>
 
-                        <div className="relative z-10 mt-10 space-y-2">
-                            <p className="text-white/60 text-xs">
-                                Don&apos;t have an account?{' '}
-                                <Link
-                                    href="/company/register"
-                                    className="text-white font-semibold underline underline-offset-2"
-                                >
-                                    Register
-                                </Link>
-                            </p>
+                        <div className="relative z-10 mt-10 space-y-3">
+                            <p className="text-white/70 text-sm mb-0">Don&apos;t have an account?</p>
+                            <Link
+                                href="/company/register"
+                                className="inline-flex items-center justify-center w-full min-h-[52px] px-6 py-3.5 rounded-xl bg-white text-primary font-bold text-base sm:text-lg hover:bg-white/90 transition-colors shadow-lg"
+                            >
+                                Register
+                            </Link>
                             <p className="text-white/50 text-[0.65rem] leading-relaxed">
-                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                                Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
                             </p>
                         </div>
                     </aside>
@@ -192,7 +190,7 @@ const CompanyLoginInner = () => {
                                 <div className="pt-4 mt-2">
                                     <button
                                         type="submit"
-                                        className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
+                                        className="ti-btn ti-btn-primary w-full min-h-[52px] !bg-primary !text-white !font-bold text-base sm:text-lg !py-3.5 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
                                         disabled={loading}
                                     >
                                         {loading ? (
@@ -232,7 +230,7 @@ const CompanyLoginInner = () => {
                                 <div className="pt-4 mt-2 space-y-3">
                                     <button
                                         type="submit"
-                                        className="ti-btn ti-btn-primary w-full !bg-primary !text-white !font-semibold text-sm sm:text-base !py-3 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
+                                        className="ti-btn ti-btn-primary w-full min-h-[52px] !bg-primary !text-white !font-bold text-base sm:text-lg !py-3.5 inline-flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
                                         disabled={loading}
                                     >
                                         {loading ? (
@@ -259,15 +257,16 @@ const CompanyLoginInner = () => {
                             </form>
                         )}
 
-                        <div className="text-center mt-6 space-y-2 lg:hidden max-w-md w-full">
-                            <p className="text-xs text-muted">
-                                Don&apos;t have an account?{' '}
-                                <Link href="/company/register" className="text-primary font-semibold">
-                                    Register
-                                </Link>
-                            </p>
+                        <div className="text-center mt-6 space-y-3 lg:hidden max-w-md w-full">
+                            <p className="text-sm text-muted mb-0">Don&apos;t have an account?</p>
+                            <Link
+                                href="/company/register"
+                                className="ti-btn ti-btn-primary w-full min-h-[52px] !bg-primary !text-white !font-bold text-base sm:text-lg !py-3.5 inline-flex items-center justify-center shadow-lg shadow-primary/20"
+                            >
+                                Register
+                            </Link>
                             <p className="text-[0.65rem] text-[#8c9097] dark:text-white/50 leading-relaxed">
-                                Copyright&copy; 2025 Samsaraa Wellness Pvt Ltd. All rights reserved.
+                                Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
                             </p>
                         </div>
                     </div>
