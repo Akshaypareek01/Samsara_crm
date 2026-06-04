@@ -24,7 +24,7 @@ export default function CompanySettingsLogoField({
         <div className="company-settings-logo">
             <input
                 type="file"
-                ref={inputRef}
+                ref={inputRef as RefObject<HTMLInputElement>}
                 accept="image/*"
                 onChange={onFileChange}
                 className="hidden"
