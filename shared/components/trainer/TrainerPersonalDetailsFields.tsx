@@ -1,6 +1,10 @@
 "use client";
 import React from 'react';
-import { EXPERIENCE_OPTIONS, TrainerProfileDetails } from '@/services/trainerService';
+import {
+  EXPERIENCE_OPTIONS,
+  TRAINER_CITY_OPTIONS,
+  TrainerProfileDetails,
+} from '@/services/trainerService';
 import { getTrainerDobMaxDate, validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
 import '@/shared/styles/trainer-form.css';
 
@@ -73,15 +77,21 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
         <label className="trainer-form-label" htmlFor="trainer-city">
           City {star}
         </label>
-        <input
+        <select
           id="trainer-city"
-          type="text"
           className="form-control trainer-form-control"
           value={values.city || ''}
           onChange={(e) => onChange({ city: e.target.value })}
-          placeholder="Your city"
           required={requiredFields}
-        />
+          aria-label="City"
+        >
+          <option value="">Select city</option>
+          {TRAINER_CITY_OPTIONS.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="trainer-form-label" htmlFor="trainer-pincode">

@@ -56,6 +56,7 @@ const TrainersPageInner = () => {
     const [filterSpecialist, setFilterSpecialist] = useState('');
     const [filterCategory, setFilterCategory] = useState(urlCategory);
     const [filterTraining, setFilterTraining] = useState('');
+    const [filterCity, setFilterCity] = useState('');
     const [sortBy, setSortBy] = useState('createdAt:desc');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -87,7 +88,7 @@ const TrainersPageInner = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [searchTerm, filterSpecialist, filterCategory, filterTraining, sortBy]);
+    }, [searchTerm, filterSpecialist, filterCategory, filterTraining, filterCity, sortBy]);
 
     const handleCategoryChange = (value: string) => {
         setFilterCategory(value);
@@ -105,6 +106,7 @@ const TrainersPageInner = () => {
         setFilterCategory('');
         setFilterSpecialist('');
         setFilterTraining('');
+        setFilterCity('');
         setSortBy('createdAt:desc');
         setPage(1);
         router.replace(trainersPageUrl());
@@ -115,6 +117,7 @@ const TrainersPageInner = () => {
         !!activeCategory ||
         !!filterSpecialist ||
         !!filterTraining ||
+        !!filterCity ||
         sortBy !== 'createdAt:desc';
 
     const fetchTrainers = useCallback(async () => {
@@ -132,6 +135,7 @@ const TrainersPageInner = () => {
             if (filterSpecialist) params.specialistIn = filterSpecialist;
             if (activeCategory) params.category = activeCategory;
             if (filterTraining) params.typeOfTraining = filterTraining;
+            if (filterCity) params.city = filterCity;
 
             const response = await TrainerService.getTrainers(params);
             setTrainers(response.results || []);
@@ -142,7 +146,7 @@ const TrainersPageInner = () => {
         } finally {
             setLoading(false);
         }
-    }, [searchTerm, filterSpecialist, activeCategory, filterTraining, sortBy, page]);
+    }, [searchTerm, filterSpecialist, activeCategory, filterTraining, filterCity, sortBy, page]);
 
     useEffect(() => {
         void fetchTrainers();
@@ -214,6 +218,7 @@ const TrainersPageInner = () => {
                     activeCategory={activeCategory}
                     filterSpecialist={filterSpecialist}
                     filterTraining={filterTraining}
+                    filterCity={filterCity}
                     sortBy={sortBy}
                     loading={loading}
                     totalResults={totalResults}
@@ -222,6 +227,7 @@ const TrainersPageInner = () => {
                     onCategoryChange={handleCategoryChange}
                     onSpecialistChange={setFilterSpecialist}
                     onTrainingChange={setFilterTraining}
+                    onCityChange={setFilterCity}
                     onSortChange={setSortBy}
                     onClearFilters={handleClearFilters}
                 />

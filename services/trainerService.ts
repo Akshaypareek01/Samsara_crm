@@ -3,9 +3,10 @@ import {
   TRAINER_CATEGORY_OPTIONS,
   type TrainerCategory,
 } from '@/constants/trainerCategories';
+import { TRAINER_CITY_OPTIONS, type TrainerCity } from '@/constants/trainerCities';
 
-export { TRAINER_CATEGORY_OPTIONS };
-export type { TrainerCategory };
+export { TRAINER_CATEGORY_OPTIONS, TRAINER_CITY_OPTIONS };
+export type { TrainerCategory, TrainerCity };
 
 export interface TrainerImage {
   key: string;
@@ -114,6 +115,7 @@ export interface GetTrainersParams {
   category?: string;
   specialistIn?: string;
   typeOfTraining?: string;
+  city?: string;
   status?: boolean;
   acceptingBookings?: boolean;
   page?: number;

@@ -3,6 +3,7 @@ import {
   EXPERIENCE_OPTIONS,
   SPECIALIST_OPTIONS,
   TRAINER_CATEGORY_OPTIONS,
+  TRAINER_CITY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
 import { validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
@@ -116,8 +117,11 @@ export function validateTrainerRegistration(
     errors.email = 'Please enter a valid email address';
   }
 
-  if (!(data.city || '').trim()) {
+  const city = (data.city || '').trim();
+  if (!city) {
     errors.city = 'City is required';
+  } else if (!TRAINER_CITY_OPTIONS.includes(city as (typeof TRAINER_CITY_OPTIONS)[number])) {
+    errors.city = 'Please select a valid city';
   }
 
   const pin = (data.pinCode || '').trim();

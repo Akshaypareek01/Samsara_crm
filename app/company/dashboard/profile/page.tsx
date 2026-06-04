@@ -235,6 +235,12 @@ const CompanyProfile = () => {
                                     </p>
                                 </div>
                                 <div>
+                                    <p className="text-muted mb-0">PAN</p>
+                                    <p className="font-semibold mb-0">
+                                        {company.panNumber || "—"}
+                                    </p>
+                                </div>
+                                <div>
                                     <p className="text-muted mb-0">Status</p>
                                     <p className="font-semibold mb-0">
                                         {company.status !== false

@@ -37,6 +37,15 @@ export const MenuItems: any = [
         title: "Bookings",
     },
     {
+        path: "/company/dashboard/account-details",
+        icon: <i className="bx bx-wallet side-menu__icon"></i>,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Account Details",
+    },
+    {
         path: "/company/dashboard/settings",
         icon: SettingsIcon,
         type: "link",

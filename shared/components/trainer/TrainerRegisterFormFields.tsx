@@ -5,6 +5,7 @@ import {
   EXPERIENCE_OPTIONS,
   SPECIALIST_OPTIONS,
   TRAINER_CATEGORY_OPTIONS,
+  TRAINER_CITY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
 import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
@@ -205,20 +206,25 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
             <label className="trainer-form-label" htmlFor="trainer-city">
               City <span className="trainer-form-req">*</span>
             </label>
-            <input
+            <select
               id="trainer-city"
-              type="text"
               className={fieldClass('city')}
               value={formData.city || ''}
               onChange={(e) => {
                 clearFieldError('city');
                 patchDetails({ city: e.target.value });
               }}
-              placeholder="Your city"
               required
               aria-invalid={Boolean(fieldErrors.city)}
               aria-describedby={fieldErrors.city ? 'trainer-city-error' : undefined}
-            />
+            >
+              <option value="">Select city</option>
+              {TRAINER_CITY_OPTIONS.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
             <TrainerFormFieldError message={fieldErrors.city} fieldId="trainer-city" />
           </div>
           <div>

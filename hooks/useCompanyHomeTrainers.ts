@@ -6,6 +6,7 @@ import {
   HOME_TRAINER_CATEGORIES,
   type HomeTrainerCategory,
 } from '@/app/company/dashboard/constants/homeTrainerCategories';
+import { sortTrainersByNewest } from '@/app/company/dashboard/utils/sortTrainersByNewest';
 
 const TRAINERS_PER_CATEGORY = 6;
 
@@ -50,7 +51,7 @@ export function useCompanyHomeTrainers(): UseCompanyHomeTrainersResult {
             sortBy: 'createdAt:desc',
           }).then((res) => ({
             category,
-            trainers: res.results ?? [],
+            trainers: sortTrainersByNewest(res.results ?? []),
           }))
         )
       );

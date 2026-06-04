@@ -96,6 +96,17 @@ export const MenuItems: any = [
   },
 
   {
+    icon: <i className="bx bx-wallet side-menu__icon"></i>,
+    title: "Account Details",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/account-details",
+    permission: "companyManagement",
+  },
+
+  {
     icon: MembershipIcon,
     title: "Membership Management",
     type: "sub",
