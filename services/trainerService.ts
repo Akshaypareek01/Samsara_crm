@@ -113,6 +113,7 @@ export interface UpdateTrainerRequest extends TrainerProfileDetails {
 export interface GetTrainersParams {
   name?: string;
   category?: string;
+  excludeCategory?: string;
   specialistIn?: string;
   typeOfTraining?: string;
   city?: string;

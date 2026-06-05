@@ -8,11 +8,32 @@ import store from "@/shared/redux/store";
 import SimpleBar from 'simplebar-react';
 import Menuloop from "@/shared/layout-components/sidebar/menuloop";
 import { usePathname } from "next/navigation";
-import { MenuItems } from "./nav";
+import { getTrainerMenuItems } from "./nav";
+import TrainerSidebarFooter from "./TrainerSidebarFooter";
+import TrainerService from "@/services/trainerService";
+import "./trainer-sidebar.css";
 
 const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
-    const [menuitems, setMenuitems] = useState(MenuItems);
+    const [menuitems, setMenuitems] = useState(() => getTrainerMenuItems(false));
     const path = usePathname()
+
+    useEffect(() => {
+        let cancelled = false;
+        const loadProfile = async () => {
+            try {
+                const profile = await TrainerService.getMyProfile();
+                if (cancelled) return;
+                const isEap = profile.category === "EAP Trainer";
+                setMenuitems(getTrainerMenuItems(isEap));
+            } catch {
+                if (!cancelled) setMenuitems(getTrainerMenuItems(false));
+            }
+        };
+        void loadProfile();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     function closeMenu() {
         const closeMenudata = (items: any) => {
@@ -21,7 +42,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 if (item.children) closeMenudata(item.children);
             });
         };
-        closeMenudata(MenuItems);
+        closeMenudata(menuitems);
         setMenuitems((arr: any) => [...arr]);
     }
 
@@ -395,7 +416,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 setSubmenuRecursively(item.children);
             });
         };
-        setSubmenuRecursively(MenuItems);
+        setSubmenuRecursively(menuitems);
     }
     const [previousUrl, setPreviousUrl] = useState("/");
 
@@ -526,12 +547,26 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 id="responsive-overlay"
                 onClick={() => { menuClose(); }}
             ></div>
-            <aside className="app-sidebar" id="sidebar" onMouseOver={() => Onhover()}
-                onMouseLeave={() => Outhover()}>
+            <aside
+                className="app-sidebar trainer-wellconnect-sidebar"
+                id="sidebar"
+                onMouseOver={() => Onhover()}
+                onMouseLeave={() => Outhover()}
+                aria-label="Trainer navigation"
+            >
                 <div className="main-sidebar-header">
-                    <div className="flex items-center justify-between w-full">
-                        <Link href="/trainer/dashboard" className="header-logo flex-1">
-                            <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" style={{ height: '80px', width: 'auto' }} />
+                    <div className="flex items-center justify-between w-full gap-2">
+                        <Link href="/trainer/dashboard" className="header-logo trainer-sidebar-brand">
+                            <img
+                                src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
+                                alt="Samsara Wellness logo"
+                                width={36}
+                                height={36}
+                            />
+                            <span className="trainer-sidebar-brand-text">
+                                <span className="trainer-sidebar-brand-title">Samsara Wellness</span>
+                                <span className="trainer-sidebar-brand-sub">Trainer Portal</span>
+                            </span>
                         </Link>
                         <button
                             type="button"
@@ -540,16 +575,15 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                                 e.stopPropagation();
                                 menuClose();
                             }}
-                            className="lg:hidden ti-btn ti-btn-sm ti-btn-ghost text-defaulttextcolor hover:text-primary p-2 flex-shrink-0"
+                            className="trainer-sidebar-close lg:hidden"
                             aria-label="Close sidebar"
-                            title="Close menu"
                         >
-                            <i className="ri-close-line text-xl"></i>
+                            <i className="ri-close-line text-lg" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
-                <SimpleBar className="main-sidebar " id="sidebar-scroll">
+                <SimpleBar className="main-sidebar" id="sidebar-scroll">
                     <nav className="main-menu-container nav nav-pills flex-column sub-open">
                         <div className="slide-left" id="slide-left" onClick={() => { slideLeft(); }}><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24"
                             height="24" viewBox="0 0 24 24">
@@ -557,7 +591,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                         </svg></div>
 
                         <ul className="main-menu" onClick={() => Sideclick()}>
-                            {MenuItems.map((levelone: any, index: any) => (
+                            {menuitems.map((levelone: any, index: any) => (
                                 <Fragment key={index}>
                                     <li className={`${levelone.menutitle ? 'slide__category' : ''} ${levelone.type === 'link' ? 'slide' : ''}
                                                ${levelone.type === 'sub' ? 'slide has-sub' : ''} ${levelone?.active ? 'open' : ''} ${levelone?.selected ? 'active' : ''}`}>
@@ -615,6 +649,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                         </div>
                     </nav>
                 </SimpleBar>
+                <TrainerSidebarFooter />
             </aside>
         </Fragment>
     );

@@ -28,6 +28,15 @@ export const MenuItems: any = [
         title: "Trainers",
     },
     {
+        path: "/company/dashboard/eap-trainers",
+        icon: <i className="bx bx-book-open side-menu__icon"></i>,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "EAP Trainers",
+    },
+    {
         path: "/company/dashboard/bookings",
         icon: BookingsIcon,
         type: "link",

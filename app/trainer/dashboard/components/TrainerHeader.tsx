@@ -1,21 +1,26 @@
 "use client";
-import Link from 'next/link';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import { ThemeChanger } from "@/shared/redux/action";
 import { connect } from 'react-redux';
-import store from '@/shared/redux/store';
-import { basePath } from '@/Config/basePath';
-import { useRouter } from 'next/navigation';
+import { ThemeChanger } from "@/shared/redux/action";
 import ApiService from '@/services/ApiService';
 import TrainerService from '@/services/trainerService';
 import Swal from 'sweetalert2';
+import { useRouter } from 'next/navigation';
 import {
   TRAINER_ACCEPTING_BOOKINGS_EVENT,
   broadcastTrainerAcceptingBookings,
   type TrainerAcceptingBookingsDetail,
 } from '@/utils/trainerAvailabilitySync';
+import { toggleTrainerSidebar } from '../utils/toggleTrainerSidebar';
 
-const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
+type TrainerHeaderProps = {
+  local_varaiable?: unknown;
+};
+
+/**
+ * Trainer dashboard top bar: menu toggle, booking availability, logout.
+ */
+const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
   const router = useRouter();
   const [availabilityLoading, setAvailabilityLoading] = useState(true);
   const [availabilitySaving, setAvailabilitySaving] = useState(false);
@@ -52,8 +57,7 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
   }, []);
 
   /**
-   * Persists “open for new bookings” and keeps profile page in sync via broadcast.
-   *
+   * Persists booking availability and syncs profile page.
    * @param next - Target availability flag.
    */
   const handleHeaderAvailabilityToggle = async (next: boolean) => {
@@ -73,18 +77,14 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
 
   /**
    * Signs the trainer out after confirmation.
-   *
-   * @param e - Click event from the logout control.
    */
-  const handleLogout = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-
+  const handleLogout = async () => {
     const result = await Swal.fire({
       title: 'Log out?',
       text: 'Are you sure you want to log out of your trainer account?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
+      confirmButtonColor: '#7c3aed',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, log out',
       cancelButtonText: 'Cancel',
@@ -107,155 +107,81 @@ const TrainerHeader = ({ local_varaiable, ThemeChanger }: any) => {
     }
   };
 
-  function menuClose() {
-    const theme = store.getState();
-    if (typeof window !== 'undefined' && window.innerWidth <= 992) {
-      ThemeChanger({ ...theme, dataToggled: "close" });
-    }
-    const overlayElement = document.querySelector("#responsive-overlay") as HTMLElement | null;
-    if (overlayElement) {
-      overlayElement.classList.remove("active");
-    }
-  }
-
-  const toggleSidebar = () => {
-    const theme = store.getState();
-    if (window.innerWidth <= 992) {
-      if (theme.dataToggled === "close") {
-        ThemeChanger({ ...theme, dataToggled: "open" });
-        setTimeout(() => {
-          const overlay = document.querySelector("#responsive-overlay");
-          if (overlay) {
-            overlay.classList.add("active");
-            overlay.addEventListener("click", () => {
-              menuClose();
-            });
-          }
-        }, 100);
-      } else {
-        ThemeChanger({ ...theme, dataToggled: "close" });
-        menuClose();
-      }
-    }
-  };
-
-  useEffect(() => {
-    const navbar = document?.querySelector(".header");
-    const navbar1 = document?.querySelector(".app-sidebar");
-    const sticky: any = navbar?.clientHeight;
-
-    function stickyFn() {
-      if (window.pageYOffset >= sticky) {
-        navbar?.classList.add("sticky-pin");
-        navbar1?.classList.add("sticky-pin");
-      } else {
-        navbar?.classList.remove("sticky-pin");
-        navbar1?.classList.remove("sticky-pin");
-      }
-    }
-
-    window.addEventListener("scroll", stickyFn);
-    window.addEventListener("DOMContentLoaded", stickyFn);
-
-    return () => {
-      window.removeEventListener("scroll", stickyFn);
-      window.removeEventListener("DOMContentLoaded", stickyFn);
-    };
-  }, []);
-
   return (
     <Fragment>
-      <div className="app-header">
-        <nav className="main-header !h-[3.75rem]" aria-label="Global">
-          <div className="main-header-container ps-[0.725rem] pe-[1rem] flex items-center justify-between gap-2">
-            <div className="header-content-left flex items-center flex-shrink-0">
-              <div className="header-element">
-                <div className="horizontal-logo">
-                  <Link href="/trainer/dashboard" className="header-logo">
-                    <img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="desktop-logo" style={{ height: '40px', width: 'auto' }} />
-                  </Link>
-                </div>
-              </div>
-              <div className="header-element md:px-[0.325rem] !items-center" onClick={() => toggleSidebar()}>
-                <Link
-                  aria-label="Toggle Sidebar"
-                  className="sidemenu-toggle animated-arrow hor-toggle horizontal-navtoggle inline-flex items-center"
-                  href="#!"
-                  scroll={false}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toggleSidebar();
-                  }}
-                >
-                  <span></span>
-                </Link>
-              </div>
-            </div>
+      <header className="trainer-dashboard-header app-header" role="banner">
+        <div className="trainer-dashboard-header-inner">
+          <button
+            type="button"
+            className="trainer-dashboard-header-menu"
+            onClick={() => toggleTrainerSidebar()}
+            aria-label="Toggle navigation menu"
+          >
+            <i className="ri-menu-2-line text-xl" aria-hidden="true"></i>
+          </button>
 
-            <div className="flex-1" aria-hidden="true" />
+          <div className="trainer-dashboard-header-spacer" aria-hidden="true" />
 
-            <div className="header-content-right flex items-center justify-end gap-3 flex-shrink-0 ms-auto">
-              {!availabilityLoading && trainerActive && (
-                <div
-                  className="header-element !flex !items-center gap-2.5 px-3 py-1.5 rounded-md border border-defaultborder bg-white dark:bg-bodybg"
-                  title={
-                    acceptingBookings
-                      ? 'You are online — companies can book new sessions with you'
-                      : 'You are offline — companies cannot create new bookings until you go online'
-                  }
+          <div className="trainer-dashboard-header-actions">
+            {!availabilityLoading && trainerActive && (
+              <div
+                className="trainer-dashboard-header-availability"
+                title={
+                  acceptingBookings
+                    ? 'You are online — companies can book new sessions'
+                    : 'You are offline — new bookings are paused'
+                }
+              >
+                <span
+                  id="trainer-header-booking-label"
+                  className="trainer-dashboard-header-availability-label"
                 >
-                  <span
-                    id="trainer-header-booking-label"
-                    className="text-[0.8125rem] font-medium text-defaulttextcolor whitespace-nowrap leading-none"
-                  >
-                    New bookings
-                  </span>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={acceptingBookings}
-                    aria-labelledby="trainer-header-booking-label trainer-header-status-label"
-                    disabled={availabilitySaving}
-                    onClick={() => {
-                      void handleHeaderAvailabilityToggle(!acceptingBookings);
-                    }}
-                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-success' : 'bg-gray-300 dark:bg-white/20'}`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${acceptingBookings ? 'translate-x-5' : 'translate-x-0'}`}
-                      aria-hidden="true"
-                    />
-                  </button>
-                  <span
-                    id="trainer-header-status-label"
-                    className={`text-[0.7rem] font-semibold uppercase tracking-wide whitespace-nowrap ${acceptingBookings ? 'text-success' : 'text-warning'}`}
-                    aria-live="polite"
-                  >
-                    {acceptingBookings ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-              )}
-              <div className="header-element !flex !items-center">
+                  New bookings
+                </span>
                 <button
                   type="button"
-                  onClick={handleLogout}
-                  className="ti-btn !bg-danger !text-white inline-flex items-center justify-center !p-0 !w-9 !h-9 !rounded-md !leading-none !shadow-none !m-0"
-                  title="Logout"
-                  aria-label="Logout"
+                  role="switch"
+                  aria-checked={acceptingBookings}
+                  aria-labelledby="trainer-header-booking-label trainer-header-status-label"
+                  disabled={availabilitySaving}
+                  onClick={() => {
+                    void handleHeaderAvailabilityToggle(!acceptingBookings);
+                  }}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-emerald-500' : 'bg-gray-300'}`}
                 >
-                  <i className="ri-logout-box-line text-[1.05rem]"></i>
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${acceptingBookings ? 'translate-x-5' : 'translate-x-0'}`}
+                    aria-hidden="true"
+                  />
                 </button>
+                <span
+                  id="trainer-header-status-label"
+                  className={`text-[0.7rem] font-semibold uppercase tracking-wide whitespace-nowrap ${acceptingBookings ? 'text-emerald-600' : 'text-amber-600'}`}
+                  aria-live="polite"
+                >
+                  {acceptingBookings ? 'Online' : 'Offline'}
+                </span>
               </div>
-            </div>
+            )}
+
+            <button
+              type="button"
+              className="trainer-dashboard-header-logout"
+              onClick={() => void handleLogout()}
+              aria-label="Log out"
+            >
+              <i className="ri-logout-box-r-line text-base" aria-hidden="true"></i>
+              <span>Logout</span>
+            </button>
           </div>
-        </nav>
-      </div>
+        </div>
+      </header>
     </Fragment>
   );
 };
 
-const mapStateToProps = (state: any) => ({
-  local_varaiable: state
+const mapStateToProps = (state: unknown) => ({
+  local_varaiable: state,
 });
 
 export default connect(mapStateToProps, { ThemeChanger })(TrainerHeader);

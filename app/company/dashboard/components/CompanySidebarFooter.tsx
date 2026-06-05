@@ -1,14 +1,16 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCompanySession } from '@/hooks/useCompanySession';
+import HelpSupportModal from '@/shared/components/HelpSupportModal';
 
 /**
  * Sidebar footer: help link and signed-in company user card.
  */
 const CompanySidebarFooter: React.FC = () => {
   const { company } = useCompanySession();
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const displayName =
     company?.contactPerson1?.name?.trim() ||
@@ -27,14 +29,22 @@ const CompanySidebarFooter: React.FC = () => {
 
   return (
     <footer className="company-sidebar-footer" aria-label="Sidebar footer">
-      <Link
-        href="/company/dashboard/settings"
+      <button
+        type="button"
         className="company-sidebar-help"
         aria-label="Help and support"
+        aria-haspopup="dialog"
+        onClick={() => setHelpOpen(true)}
       >
         <i className="ri-customer-service-2-line text-lg" aria-hidden="true"></i>
         Help &amp; Support
-      </Link>
+      </button>
+
+      <HelpSupportModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        description="Need assistance with bookings, trainers, or your company account? Reach out to our team and we'll get back to you as soon as possible."
+      />
 
       <Link
         href="/company/dashboard/profile"

@@ -1,4 +1,5 @@
 import ApiService from './ApiService';
+import { normalizeBookingNotes } from '@/shared/utils/bookingFormUtils';
 
 // ==================== INTERFACES ====================
 
@@ -15,6 +16,7 @@ export interface Booking {
     _id?: string;
     company: string | any; // Can be populated with company object
     trainer: string | any; // Can be populated with trainer object
+    eapTraining?: string | EapTrainingRef | null;
     bookingDate: string; // "2026-01-30"
     startTime: string; // "14:00"
     duration: number; // Hours (0.5 to 24)
@@ -38,6 +40,16 @@ export interface Booking {
     updatedAt?: string;
 }
 
+/** Populated EAP training on a booking. */
+export interface EapTrainingRef {
+    _id?: string;
+    id?: string;
+    title?: string;
+    coverImage?: string;
+    durationOptions?: number[];
+    syllabus?: { durationHours: number; points: string[] }[];
+}
+
 export interface CreateBookingRequest {
     company: string; // Company MongoDB ID
     trainer: string; // Trainer MongoDB ID
@@ -45,6 +57,7 @@ export interface CreateBookingRequest {
     startTime: string; // "14:00" (24-hour format)
     duration: number; // 0.5 to 24 hours
     typeOfTraining: string[]; // Array of training types
+    eapTraining?: string; // EAP training id when booking an EAP program
     notes?: string; // Optional company notes
 }
 
@@ -384,8 +397,14 @@ class BookingService {
      */
     async updateBookingStatus(bookingId: string, statusData: UpdateStatusRequest): Promise<Booking> {
         try {
-            console.log('🔄 Updating booking status:', bookingId, statusData);
-            const response = await ApiService.patch(`/bookings/${bookingId}/status`, statusData);
+            const payload: UpdateStatusRequest = { status: statusData.status };
+            const normalizedNotes = normalizeBookingNotes(statusData.trainerNotes);
+            if (normalizedNotes) {
+                payload.trainerNotes = normalizedNotes;
+            }
+
+            console.log('🔄 Updating booking status:', bookingId, payload);
+            const response = await ApiService.patch(`/bookings/${bookingId}/status`, payload);
 
             // Normalize id field
             if (response.id && !response._id) {

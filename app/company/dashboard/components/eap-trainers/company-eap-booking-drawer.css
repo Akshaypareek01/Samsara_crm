@@ -1,0 +1,270 @@
+.company-eap-booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.company-eap-booking-hero {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+  padding: 0.875rem;
+  border: 1px solid #e9d5ff;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #faf5ff 0%, #fff 70%);
+}
+
+.company-eap-booking-hero__cover {
+  width: 5.5rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  border: 1px solid #ede9fe;
+}
+
+.company-eap-booking-hero__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.company-eap-booking-hero__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.375rem;
+  line-height: 1.35;
+}
+
+.company-eap-booking-hero__trainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.company-eap-booking-hero__avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.company-eap-booking-hero__avatar--fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.company-eap-booking-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #fff;
+}
+
+.company-eap-booking-section__label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  margin: 0 0 0.625rem;
+}
+
+.company-eap-booking-duration-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.company-eap-booking-duration-chip {
+  padding: 0.4375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid #ddd6fe;
+  background: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.company-eap-booking-duration-chip:hover {
+  border-color: #7c3aed;
+  color: #5b21b6;
+}
+
+.company-eap-booking-duration-chip--selected {
+  background: #5b21b6;
+  border-color: #5b21b6;
+  color: #fff;
+}
+
+.company-eap-booking-outline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.company-eap-booking-outline li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.company-eap-booking-outline li::before {
+  content: "";
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: #7c3aed;
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+}
+
+.company-eap-booking-schedule {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.company-eap-booking-field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.375rem;
+}
+
+.company-eap-booking-form .form-control,
+.company-eap-booking-form textarea.form-control {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.company-eap-booking-form textarea.form-control {
+  min-height: 5.5rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.company-eap-booking-form .form-control:focus,
+.company-eap-booking-form textarea.form-control:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
+  background: #fff;
+}
+
+.company-eap-booking-form .form-control.is-invalid,
+.company-eap-booking-form textarea.form-control.is-invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgb(220 38 38 / 0.08);
+}
+
+.company-eap-booking-notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+.company-eap-booking-notes-count {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.company-eap-booking-field-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.company-eap-booking-field-hint {
+  margin-top: 0.35rem;
+  font-size: 0.6875rem;
+  color: #9ca3af;
+}
+
+.company-eap-booking-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+@media (min-width: 480px) {
+  .company-eap-booking-footer {
+    flex-direction: row;
+  }
+}
+
+.company-eap-booking-footer__submit {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #5b21b6;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.company-eap-booking-footer__submit:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+.company-eap-booking-footer__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.company-eap-booking-footer__cancel {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.company-eap-booking-footer__cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}

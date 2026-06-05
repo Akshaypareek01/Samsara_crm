@@ -122,6 +122,11 @@
   margin: 0;
 }
 
+.company-account-details-doc-item__number {
+  color: #2563eb;
+  font-weight: 700;
+}
+
 .company-account-details-btn {
   display: inline-flex;
   align-items: center;

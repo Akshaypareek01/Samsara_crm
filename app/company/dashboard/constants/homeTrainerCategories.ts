@@ -16,7 +16,9 @@ export type HomeTrainerCategory = (typeof TRAINER_CATEGORY_OPTIONS)[number];
 export const HOME_TRAINER_CATEGORIES: {
   category: HomeTrainerCategory;
   title: string;
-}[] = TRAINER_CATEGORY_OPTIONS.map((category) => ({
-  category,
-  title: HOME_TRAINER_CATEGORY_LABELS[category],
-}));
+}[] = TRAINER_CATEGORY_OPTIONS.filter((category) => category !== 'EAP Trainer').map(
+  (category) => ({
+    category,
+    title: HOME_TRAINER_CATEGORY_LABELS[category],
+  })
+);

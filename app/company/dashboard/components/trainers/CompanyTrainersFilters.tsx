@@ -76,7 +76,7 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
           aria-label="Filter by category"
         >
           <option value="">All Categories</option>
-          {TRAINER_CATEGORY_OPTIONS.map((cat) => (
+          {TRAINER_CATEGORY_OPTIONS.filter((cat) => cat !== 'EAP Trainer').map((cat) => (
             <option key={cat} value={cat}>
               {cat}
             </option>

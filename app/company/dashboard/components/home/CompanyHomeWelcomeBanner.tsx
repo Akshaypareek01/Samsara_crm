@@ -19,8 +19,8 @@ const CompanyHomeWelcomeBanner: React.FC<CompanyHomeWelcomeBannerProps> = ({
 
   return (
     <section className="company-home-welcome" aria-label="Welcome">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-        <div className="max-w-2xl z-[1]">
+      <div className="company-home-welcome__inner">
+        <div className="company-home-welcome__copy">
           <h1 className="company-home-welcome-title">
             Welcome back, {greetingName}! <span aria-hidden="true">👋</span>
           </h1>
@@ -35,6 +35,12 @@ const CompanyHomeWelcomeBanner: React.FC<CompanyHomeWelcomeBannerProps> = ({
             src={heroSrc}
             alt=""
             className="company-home-welcome-hero"
+            onError={(e) => {
+              const wrap = (e.target as HTMLImageElement).closest(
+                ".company-home-welcome-hero-wrap"
+              );
+              if (wrap) (wrap as HTMLElement).style.display = "none";
+            }}
           />
         </div>
       </div>

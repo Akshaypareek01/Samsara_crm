@@ -1,0 +1,299 @@
+.eap-training-drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.eap-training-drawer-section {
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
+}
+
+.eap-training-drawer-section__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5b21b6;
+  margin: 0 0 0.875rem;
+}
+
+.eap-training-drawer-section__title i {
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.eap-training-drawer-field {
+  margin-bottom: 0;
+}
+
+.eap-training-drawer-field + .eap-training-drawer-field {
+  margin-top: 1rem;
+}
+
+.eap-training-drawer-field label,
+.eap-training-drawer-field__label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.375rem;
+}
+
+.eap-training-drawer-field .form-control,
+.eap-training-drawer-field input[type="text"] {
+  width: 100%;
+  min-height: 2.625rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.eap-training-drawer-field .form-control:focus,
+.eap-training-drawer-field input[type="text"]:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
+}
+
+.eap-training-drawer-field .form-control::placeholder,
+.eap-training-drawer-field input[type="text"]::placeholder {
+  color: #9ca3af;
+}
+
+.eap-training-drawer-cover {
+  position: relative;
+  border: 2px dashed #ddd6fe;
+  border-radius: 0.75rem;
+  background: #faf5ff;
+  overflow: hidden;
+  min-height: 9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eap-training-drawer-cover--has-image {
+  border-style: solid;
+  border-color: #e5e7eb;
+  background: #fff;
+  min-height: auto;
+}
+
+.eap-training-drawer-cover img {
+  width: 100%;
+  max-height: 11rem;
+  object-fit: cover;
+  display: block;
+}
+
+.eap-training-drawer-cover__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.eap-training-drawer-cover__placeholder i {
+  font-size: 2rem;
+  color: #7c3aed;
+  opacity: 0.7;
+}
+
+.eap-training-drawer-cover__actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  background: #fff;
+}
+
+.eap-training-drawer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.eap-training-drawer-chip {
+  padding: 0.4375rem 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid #ddd6fe;
+  background: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.eap-training-drawer-chip:hover {
+  border-color: #7c3aed;
+  color: #5b21b6;
+}
+
+.eap-training-drawer-chip--selected {
+  background: #5b21b6;
+  border-color: #5b21b6;
+  color: #fff;
+}
+
+.eap-training-drawer-syllabus {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.625rem;
+  padding: 0.875rem;
+  background: #fff;
+}
+
+.eap-training-drawer-syllabus + .eap-training-drawer-syllabus {
+  margin-top: 0.75rem;
+}
+
+.eap-training-drawer-syllabus__head {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.625rem;
+}
+
+.eap-training-drawer-point {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.eap-training-drawer-point input {
+  flex: 1;
+  min-height: 2.375rem;
+  padding: 0.4375rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.eap-training-drawer-point input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
+}
+
+.eap-training-drawer-point__remove {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.eap-training-drawer-point__remove:hover:not(:disabled) {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.eap-training-drawer-point__remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.eap-training-drawer-add-point {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #5b21b6;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.eap-training-drawer-add-point:hover {
+  color: #7c3aed;
+}
+
+.eap-training-drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .eap-training-drawer-footer {
+    flex-direction: row;
+  }
+}
+
+.eap-training-drawer-footer__submit {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #5b21b6;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.eap-training-drawer-footer__submit:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+.eap-training-drawer-footer__submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.eap-training-drawer-footer__cancel {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.eap-training-drawer-footer__cancel:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.eap-training-drawer-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0.375rem 0 0;
+  line-height: 1.4;
+}

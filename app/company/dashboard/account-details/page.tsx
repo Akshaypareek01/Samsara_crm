@@ -164,14 +164,18 @@ export default function CompanyAccountDetailsPage() {
                                                     <p className="company-account-details-doc-item__title">
                                                         {doc.title || "Document"}
                                                     </p>
-                                                    <p className="company-account-details-doc-item__meta">
-                                                        {doc.documentNumber
-                                                            ? `No. ${doc.documentNumber}`
-                                                            : "—"}
-                                                        {doc.fileName
-                                                            ? ` · ${doc.fileName}`
-                                                            : ""}
-                                                    </p>
+                                                    {doc.documentNumber ? (
+                                                        <p className="company-account-details-doc-item__meta">
+                                                            No.{" "}
+                                                            <span className="company-account-details-doc-item__number">
+                                                                {doc.documentNumber}
+                                                            </span>
+                                                        </p>
+                                                    ) : (
+                                                        <p className="company-account-details-doc-item__meta">
+                                                            —
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <a
                                                     href={doc.fileUrl}

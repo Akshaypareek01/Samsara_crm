@@ -127,6 +127,7 @@ const TrainersPageInner = () => {
             const params: Record<string, string | number | boolean> = {
                 status: true,
                 acceptingBookings: true,
+                excludeCategory: 'EAP Trainer',
                 page,
                 limit: PAGE_LIMIT,
                 sortBy,

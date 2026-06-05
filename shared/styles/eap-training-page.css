@@ -1,0 +1,131 @@
+.eap-training-page {
+  --eap-purple: #5b21b6;
+  --eap-purple-light: #ede9fe;
+  --eap-purple-muted: #7c3aed;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.eap-training-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.eap-training-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--eap-purple);
+  margin: 0;
+}
+
+.eap-training-page__subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.25rem 0 0;
+}
+
+.eap-training-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.eap-training-btn--primary {
+  background: var(--eap-purple);
+  color: #fff;
+}
+
+.eap-training-btn--primary:hover {
+  background: var(--eap-purple-muted);
+}
+
+.eap-training-btn--ghost {
+  background: transparent;
+  color: var(--eap-purple);
+  border: 1px solid #ddd6fe;
+}
+
+.eap-training-btn--danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.eap-training-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.eap-training-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.eap-training-card__cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--eap-purple-light);
+}
+
+.eap-training-card__body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.eap-training-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.eap-training-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.eap-training-card__badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--eap-purple-light);
+  color: var(--eap-purple);
+}
+
+.eap-training-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.eap-training-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  border: 2px dashed #e2e8f0;
+  border-radius: 0.75rem;
+  color: #64748b;
+}

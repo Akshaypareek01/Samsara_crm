@@ -8,6 +8,7 @@ import { connect } from "react-redux";
 import { ThemeChanger } from "@/shared/redux/action";
 import Switcher from "@/shared/layout-components/switcher/switcher";
 import store from "@/shared/redux/store";
+import './components/trainer-dashboard.css';
 import './trainer-mobile-fix.css';
 
 const TrainerLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
@@ -27,7 +28,7 @@ const TrainerLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
     return (
         <Fragment>
             <Switcher />
-            <div className="page">
+            <div className="page trainer-dashboard-shell">
                 <TrainerHeader />
                 <TrainerSidebar />
                 <div className="content">

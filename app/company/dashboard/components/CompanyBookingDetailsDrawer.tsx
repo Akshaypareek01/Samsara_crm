@@ -15,6 +15,7 @@ import {
     getTrainerProfilePhotoUrl,
 } from "@/shared/utils/bookingTrainerUtils";
 import CompanyRightDrawer from "./CompanyRightDrawer";
+import EapBookingDetailsSection from "@/shared/components/EapBookingDetailsSection";
 
 export type CompanyBookingDetailsDrawerProps = {
     open: boolean;
@@ -170,6 +171,8 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                             </div>
                         </div>
                     </section>
+
+                    <EapBookingDetailsSection booking={booking} />
 
                     {booking.typeOfTraining?.length > 0 && (
                         <section>

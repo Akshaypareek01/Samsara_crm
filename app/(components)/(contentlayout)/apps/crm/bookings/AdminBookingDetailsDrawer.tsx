@@ -5,6 +5,7 @@ import type { Booking } from "@/services/bookingService";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { canApproveBooking, canAdminCancelBooking, formatBookingDate, formatBookingTime } from "@/shared/utils/bookingUtils";
 import CrmRightDrawer from "../components/CrmRightDrawer";
+import EapBookingDetailsSection from "@/shared/components/EapBookingDetailsSection";
 import {
     getBookingCompanyName,
     getBookingTrainerName,
@@ -168,6 +169,8 @@ const AdminBookingDetailsDrawer: React.FC<AdminBookingDetailsDrawerProps> = ({
                             </div>
                         </div>
                     </section>
+
+                    <EapBookingDetailsSection booking={booking} />
 
                     {booking.typeOfTraining?.length > 0 && (
                         <section>
