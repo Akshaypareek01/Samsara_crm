@@ -1,4 +1,5 @@
 import ApiService from './ApiService';
+import type { Trainer } from './trainerService';
 
 /** Allowed EAP session durations in hours. */
 export const EAP_DURATION_OPTIONS = [1, 2, 4, 6] as const;
@@ -67,6 +68,11 @@ export interface EapTrainingsResponse {
   totalResults: number;
 }
 
+export interface EapCompanyLandingResponse {
+  trainers: Trainer[];
+  trainings: EapTraining[];
+}
+
 /**
  * Normalize Mongo id fields on an EAP training record.
  *
@@ -120,6 +126,19 @@ class EapTrainingService {
    */
   async deleteTraining(id: string): Promise<void> {
     await ApiService.delete(`/eap-trainings/${id}`);
+  }
+
+  /**
+   * Featured newest EAP trainers and trainings for the company landing sections.
+   */
+  async getCompanyLanding(): Promise<EapCompanyLandingResponse> {
+    const response = await ApiService.get('/eap-trainings/landing');
+    const trainers = (response.trainers || []).map((t: Trainer) => {
+      if (t.id && !t._id) return { ...t, _id: t.id };
+      return t;
+    });
+    const trainings = (response.trainings || []).map((t: EapTraining) => normalizeTraining(t));
+    return { trainers, trainings };
   }
 
   /**

@@ -88,11 +88,27 @@ const EapTrainingForm: React.FC<EapTrainingFormProps> = ({
   }, [open, training]);
 
   /**
-   * Upload cover image via the shared storage endpoint.
+   * Open the hidden file picker for cover image upload.
+   */
+  const openCoverFilePicker = () => {
+    if (!uploading) fileRef.current?.click();
+  };
+
+  /**
+   * Validate and upload cover image via the shared storage endpoint.
    *
    * @param file - Selected image file.
    */
   const uploadCover = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      void Swal.fire({ icon: "error", title: "Invalid file", text: "Please select an image file." });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      void Swal.fire({ icon: "error", title: "File too large", text: "Image must be under 5MB." });
+      return;
+    }
+
     try {
       setUploading(true);
       const body = new FormData();
@@ -106,6 +122,7 @@ const EapTrainingForm: React.FC<EapTrainingFormProps> = ({
       });
       if (response.data?.success && response.data?.url) {
         setForm((prev) => ({ ...prev, coverImage: response.data.url }));
+        void Swal.fire({ icon: "success", title: "Cover uploaded", timer: 1500, showConfirmButton: false });
       } else {
         throw new Error("Upload failed");
       }
@@ -114,7 +131,16 @@ const EapTrainingForm: React.FC<EapTrainingFormProps> = ({
       void Swal.fire({ icon: "error", title: "Upload failed", text: message });
     } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
+  };
+
+  /**
+   * Handle cover image file selection from the file input.
+   */
+  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void uploadCover(file);
   };
 
   /**
@@ -287,14 +313,12 @@ const EapTrainingForm: React.FC<EapTrainingFormProps> = ({
           </h3>
           <input
             ref={fileRef}
+            id="eap-cover-file"
             type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void uploadCover(file);
-            }}
-            aria-label="Upload cover image"
+            accept="image/jpeg,image/png,image/webp,image/*"
+            className="eap-training-drawer-file-input"
+            onChange={handleCoverFileChange}
+            aria-label="Upload cover image file"
           />
           <div
             className={`eap-training-drawer-cover ${
@@ -303,46 +327,55 @@ const EapTrainingForm: React.FC<EapTrainingFormProps> = ({
           >
             {form.coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.coverImage} alt="Training cover preview" />
+              <img
+                src={form.coverImage}
+                alt="Training cover preview"
+                className="eap-training-drawer-cover__preview"
+              />
             ) : (
-              <div className="eap-training-drawer-cover__placeholder">
-                <i className="ri-upload-cloud-2-line" aria-hidden="true" />
-                <span className="text-sm font-medium">Upload a cover image</span>
-                <span className="text-xs">JPG or PNG, recommended 16:9</span>
+              <div className="eap-training-drawer-cover__empty">
+                <i className="ri-image-add-line" aria-hidden="true" />
+                <span className="font-medium text-sm text-[#374151]">No cover image yet</span>
+                <p className="eap-training-drawer-cover__hint">
+                  Upload a program cover shown to companies. JPG or PNG, max 5MB, 16:9 recommended.
+                </p>
               </div>
             )}
-            {form.coverImage && (
-              <div className="eap-training-drawer-cover__actions">
+
+            <div className="eap-training-drawer-cover__toolbar">
+              <button
+                type="button"
+                className="eap-training-drawer-btn eap-training-drawer-btn--primary eap-training-drawer-btn--grow"
+                onClick={openCoverFilePicker}
+                disabled={uploading}
+                aria-label={form.coverImage ? "Change cover image" : "Upload cover image"}
+              >
+                {uploading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <i className="ri-upload-2-line" aria-hidden="true" />
+                    {form.coverImage ? "Change image" : "Upload image"}
+                  </>
+                )}
+              </button>
+              {form.coverImage && (
                 <button
                   type="button"
-                  className="eap-training-btn eap-training-btn--ghost flex-1 justify-center"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
-                >
-                  {uploading ? "Uploading…" : "Change image"}
-                </button>
-                <button
-                  type="button"
-                  className="eap-training-btn eap-training-btn--danger"
+                  className="eap-training-drawer-btn eap-training-drawer-btn--danger"
                   onClick={() => setForm((prev) => ({ ...prev, coverImage: "" }))}
                   disabled={uploading}
                   aria-label="Remove cover image"
                 >
                   <i className="ri-delete-bin-line" aria-hidden="true" />
+                  Remove
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-          {!form.coverImage && (
-            <button
-              type="button"
-              className="eap-training-btn eap-training-btn--primary w-full justify-center mt-3"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? "Uploading…" : "Choose image"}
-            </button>
-          )}
         </section>
 
         <section className="eap-training-drawer-section" aria-labelledby="eap-details-section">

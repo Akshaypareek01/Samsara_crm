@@ -10,6 +10,9 @@ export type EapTrainingTrainerRef = Pick<
   id?: string;
 };
 
+/** Trainer shape used on EAP landing showcase cards. */
+export type EapLandingTrainer = Trainer | EapTrainingTrainerRef;
+
 /**
  * Resolve populated trainer from an EAP training record.
  *

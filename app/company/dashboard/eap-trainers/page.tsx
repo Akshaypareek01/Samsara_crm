@@ -1,12 +1,17 @@
 "use client";
 
 import Seo from "@/shared/layout-components/seo/seo";
-import React, { Fragment, Suspense, useCallback, useEffect, useState } from "react";
+import React, { Fragment, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import EapTrainingService, { type EapTraining, type EapDurationHours } from "@/services/eapTrainingService";
+import TrainerService, { type Trainer } from "@/services/trainerService";
+import EapTrainingsLanding from "@/app/trainer/dashboard/components/eap-training/EapTrainingsLanding";
+import { useCompanyEapLanding } from "@/hooks/useCompanyEapLanding";
 import CompanyEapTrainingsFilters from "../components/eap-trainers/CompanyEapTrainingsFilters";
 import CompanyEapTrainingBrowseCard from "../components/eap-trainers/CompanyEapTrainingBrowseCard";
+import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
 import "@/shared/styles/eap-training-page.css";
+import "../components/company-trainer-card.css";
 import "../components/eap-trainers/company-eap-trainers-page.css";
 
 const PAGE_LIMIT = 12;
@@ -29,10 +34,20 @@ const getPageNumbers = (current: number, total: number): (number | "..." )[] => 
 const EapTrainersPageInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const catalogRef = useRef<HTMLDivElement>(null);
 
   const [trainings, setTrainings] = useState<EapTraining[]>([]);
+  const {
+    trainers: eapTrainers,
+    trainings: landingTrainings,
+    loading: landingLoading,
+    error: landingError,
+  } = useCompanyEapLanding();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
@@ -106,6 +121,43 @@ const EapTrainersPageInner = () => {
     void fetchTrainings();
   }, [fetchTrainings]);
 
+  /**
+   * Open trainer profile drawer and load full record.
+   */
+  const openTrainerProfile = useCallback(async (trainer: Trainer) => {
+    const id = trainer._id || trainer.id;
+    setSelectedTrainer(trainer);
+    setProfileDrawerOpen(true);
+    if (!id) return;
+    try {
+      setProfileLoading(true);
+      const full = await TrainerService.getTrainerById(id);
+      setSelectedTrainer(full);
+    } catch (err: unknown) {
+      console.error("Error loading trainer profile:", err);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
+
+  /**
+   * Navigate to training detail page.
+   */
+  const openTrainingDetail = useCallback(
+    (training: EapTraining) => {
+      const id = training._id || training.id;
+      if (id) router.push(`/company/dashboard/eap-trainers/${id}`);
+    },
+    [router]
+  );
+
+  /**
+   * Scroll to the full catalog section below the landing hero.
+   */
+  const scrollToCatalog = useCallback(() => {
+    catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const hasActiveFilters =
     !!searchInput ||
     !!trainerNameInput ||
@@ -124,12 +176,33 @@ const EapTrainersPageInner = () => {
 
   return (
     <div className="company-eap-trainers-page">
-      <header className="company-eap-trainers-page__header">
-        <h1 className="company-eap-trainers-page__title">EAP Training Programs</h1>
-        <p className="company-eap-trainers-page__subtitle">
-          Browse structured EAP programs, view session outlines, and book by duration.
-        </p>
-      </header>
+      {landingError && (
+        <div className="alert alert-warning mb-4" role="alert">
+          {landingError}
+        </div>
+      )}
+
+      <EapTrainingsLanding
+        trainers={eapTrainers}
+        trainings={landingTrainings}
+        loading={landingLoading}
+        featuredMode
+        trainersSectionTitle="Our Trainers"
+        trainingsSectionTitle="Available Trainings"
+        onTrainerClick={(trainer) => void openTrainerProfile(trainer as Trainer)}
+        onTrainingViewDetails={openTrainingDetail}
+        onSeeAllTrainings={scrollToCatalog}
+        showSeeAllButton
+      />
+
+      <div ref={catalogRef} className="company-eap-trainers-page__catalog">
+        <header className="company-eap-trainers-page__header">
+          <h2 className="company-eap-trainers-page__title">All Training Programs</h2>
+          <p className="company-eap-trainers-page__subtitle">
+            Browse structured EAP programs, view session outlines, and book by duration.
+          </p>
+        </header>
+      </div>
 
       <CompanyEapTrainingsFilters
         searchInput={searchInput}
@@ -214,6 +287,16 @@ const EapTrainersPageInner = () => {
           )}
         </>
       )}
+
+      <CompanyTrainerProfileDrawer
+        open={profileDrawerOpen}
+        trainer={selectedTrainer}
+        loading={profileLoading}
+        onClose={() => {
+          setProfileDrawerOpen(false);
+          setSelectedTrainer(null);
+        }}
+      />
     </div>
   );
 };

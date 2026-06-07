@@ -1,0 +1,430 @@
+.eap-landing {
+  --eap-blue: #1d4ed8;
+  --eap-blue-soft: #2563eb;
+  --eap-border: #e5e7eb;
+  --eap-muted: #6b7280;
+  --eap-heading: #0f172a;
+}
+
+.eap-landing__page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--eap-heading);
+  margin: 0 0 1.5rem;
+  text-transform: uppercase;
+}
+
+.eap-landing__section {
+  background: #fff;
+  border: 1px solid var(--eap-border);
+  border-radius: 1rem;
+  padding: 1.5rem 1.25rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.04);
+}
+
+@media (min-width: 640px) {
+  .eap-landing__section {
+    padding: 1.75rem 1.75rem 2rem;
+  }
+}
+
+.eap-landing__section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.eap-landing__section-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.625rem;
+  background: #eff6ff;
+  color: var(--eap-blue-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.eap-landing__section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--eap-heading);
+  margin: 0 0 0.2rem;
+}
+
+.eap-landing__section-subtitle {
+  font-size: 0.8125rem;
+  color: var(--eap-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.eap-landing__scroll-row {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.eap-landing__scroll-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.eap-landing__scroll-row::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+
+.eap-landing__program-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .eap-landing__program-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .eap-landing__program-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.eap-landing__program-item {
+  min-width: 0;
+  align-self: start;
+}
+
+.eap-landing__program-item .eap-training-card {
+  height: auto;
+}
+
+.eap-landing__scroll-row--dashboard-trainers {
+  align-items: stretch;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.eap-landing__dashboard-trainer-item {
+  flex: 0 0 10.5rem;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .eap-landing__dashboard-trainer-item {
+    flex: 0 0 11rem;
+  }
+}
+
+.eap-landing__dashboard-trainer-item .company-trainer-card {
+  height: 100%;
+}
+
+.eap-landing__scroll-row--program {
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
+
+.eap-landing__program-scroll-item {
+  flex: 0 0 min(100%, 16.5rem);
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .eap-landing__program-scroll-item {
+    flex: 0 0 16.5rem;
+  }
+}
+
+.eap-landing__program-scroll-item .eap-training-card {
+  height: auto;
+  width: 100%;
+}
+
+.eap-landing__trainer-scroll-item {
+  flex: 0 0 11.5rem;
+  scroll-snap-align: start;
+}
+
+/* Trainer showcase card */
+.eap-trainer-showcase {
+  width: 100%;
+  scroll-snap-align: start;
+  border: 1px solid #d1d5db;
+  border-radius: 0.875rem;
+  padding: 1.25rem 1rem 1rem;
+  background: #fff;
+  text-align: center;
+  position: relative;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.eap-trainer-showcase--clickable {
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.eap-trainer-showcase--clickable:hover,
+.eap-trainer-showcase:hover {
+  box-shadow: 0 8px 24px rgb(37 99 235 / 0.08);
+  border-color: #93c5fd;
+}
+
+.eap-trainer-showcase__badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background: #eff6ff;
+  color: var(--eap-blue-soft);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.eap-trainer-showcase__photo-ring {
+  width: 5.5rem;
+  height: 5.5rem;
+  margin: 0 auto 0.875rem;
+  border-radius: 9999px;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eap-trainer-showcase__photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+  background: #f8fafc;
+}
+
+.eap-trainer-showcase__photo--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--eap-blue-soft);
+  background: #eff6ff;
+}
+
+.eap-trainer-showcase__name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--eap-heading);
+  margin: 0 0 0.25rem;
+  line-height: 1.3;
+}
+
+.eap-trainer-showcase__title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--eap-blue-soft);
+  margin: 0 0 0.875rem;
+  line-height: 1.35;
+}
+
+.eap-trainer-showcase__experience {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  color: var(--eap-muted);
+  margin: 0;
+}
+
+/* Available training card */
+.eap-available-training {
+  flex: 0 0 min(100%, 16.5rem);
+  scroll-snap-align: start;
+  border: 1px solid var(--eap-border);
+  border-radius: 0.875rem;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 11rem;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+@media (min-width: 640px) {
+  .eap-available-training {
+    flex: 0 0 16.5rem;
+  }
+}
+
+.eap-available-training:hover {
+  box-shadow: 0 8px 24px rgb(37 99 235 / 0.06);
+  border-color: #bfdbfe;
+}
+
+.eap-available-training__top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.eap-available-training__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.eap-available-training__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.eap-available-training__title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--eap-heading);
+  margin: 0 0 0.35rem;
+  line-height: 1.35;
+}
+
+.eap-available-training__desc {
+  font-size: 0.75rem;
+  color: var(--eap-muted);
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.eap-available-training__footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.eap-available-training__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--eap-blue-soft);
+  cursor: pointer;
+}
+
+.eap-available-training__link:hover {
+  color: var(--eap-blue);
+  text-decoration: underline;
+}
+
+.eap-available-training__actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.eap-available-training__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+}
+
+.eap-available-training__action-btn--edit {
+  color: var(--eap-blue-soft);
+}
+
+.eap-available-training__action-btn--delete {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.eap-landing__see-all-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 2rem;
+}
+
+.eap-landing__see-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 14rem;
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: 0.625rem;
+  background: var(--eap-blue-soft);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgb(37 99 235 / 0.25);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.eap-landing__see-all:hover {
+  background: var(--eap-blue);
+  transform: translateY(-1px);
+}
+
+.eap-landing__empty {
+  font-size: 0.875rem;
+  color: var(--eap-muted);
+  text-align: center;
+  padding: 2rem 1rem;
+  margin: 0;
+  border: 1px dashed var(--eap-border);
+  border-radius: 0.75rem;
+  width: 100%;
+}
+
+.eap-landing__loading {
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  width: 100%;
+}

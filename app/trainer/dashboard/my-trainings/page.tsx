@@ -5,9 +5,9 @@ import Pageheader from "@/shared/layout-components/page-header/pageheader";
 import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import TrainerService from "@/services/trainerService";
+import TrainerService, { type Trainer } from "@/services/trainerService";
 import EapTrainingService, { type EapTraining } from "@/services/eapTrainingService";
-import EapTrainingCard from "../components/eap-training/EapTrainingCard";
+import EapTrainingsLanding from "../components/eap-training/EapTrainingsLanding";
 import EapTrainingForm from "../components/eap-training/EapTrainingForm";
 import "@/shared/styles/eap-training-page.css";
 
@@ -17,6 +17,7 @@ import "@/shared/styles/eap-training-page.css";
 const MyTrainingsPage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<Trainer | null>(null);
   const [trainings, setTrainings] = useState<EapTraining[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<EapTraining | null>(null);
@@ -32,14 +33,15 @@ const MyTrainingsPage = () => {
     const init = async () => {
       try {
         setLoading(true);
-        const profile = await TrainerService.getMyProfile();
-        if (profile.category !== "EAP Trainer") {
+        const me = await TrainerService.getMyProfile();
+        if (me.category !== "EAP Trainer") {
           if (!cancelled) {
             setAccessDenied(true);
             router.replace("/trainer/dashboard");
           }
           return;
         }
+        if (!cancelled) setProfile(me);
         await loadTrainings();
       } catch (err: unknown) {
         if (!cancelled) {
@@ -111,9 +113,8 @@ const MyTrainingsPage = () => {
       <div className="eap-training-page">
         <header className="eap-training-page__header">
           <div>
-            <h1 className="eap-training-page__title">My Training Programs</h1>
-            <p className="eap-training-page__subtitle">
-              Create programs with duration options and session bullet points for companies to book.
+            <p className="eap-training-page__subtitle mb-0">
+              Manage how companies see your profile and training programs.
             </p>
           </div>
           <button
@@ -127,29 +128,24 @@ const MyTrainingsPage = () => {
           </button>
         </header>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading trainings…</span>
-            </div>
-          </div>
-        ) : trainings.length === 0 ? (
+        <EapTrainingsLanding
+          trainers={profile ? [profile] : []}
+          trainings={trainings}
+          loading={loading}
+          trainersSectionTitle="Your Profile"
+          trainersSectionSubtitle="This is how companies see you on the EAP trainings page."
+          trainingsSectionTitle="Your Training Programs"
+          trainingsSectionSubtitle="Programs you offer — companies can browse and book these sessions."
+          onTrainingEdit={openEdit}
+          onTrainingDelete={(training) => void handleDelete(training)}
+        />
+
+        {!loading && trainings.length === 0 && (
           <div className="eap-training-empty">
             <p className="mb-3">No training programs yet.</p>
             <button type="button" className="eap-training-btn eap-training-btn--primary" onClick={openCreate}>
               Create your first program
             </button>
-          </div>
-        ) : (
-          <div className="eap-training-grid">
-            {trainings.map((training) => (
-              <EapTrainingCard
-                key={training._id || training.id}
-                training={training}
-                onEdit={openEdit}
-                onDelete={handleDelete}
-              />
-            ))}
           </div>
         )}
       </div>

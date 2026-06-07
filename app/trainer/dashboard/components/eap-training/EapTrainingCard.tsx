@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import type { EapTraining } from "@/services/eapTrainingService";
+import { getEapTrainingDescription } from "@/shared/utils/eapTrainingDisplayUtils";
 
 type EapTrainingCardProps = {
   training: EapTraining;
@@ -9,10 +10,11 @@ type EapTrainingCardProps = {
   onEdit?: (training: EapTraining) => void;
   onDelete?: (training: EapTraining) => void;
   onBook?: (training: EapTraining) => void;
+  onViewDetails?: (training: EapTraining) => void;
 };
 
 /**
- * Card displaying an EAP training program with optional trainer or company actions.
+ * Program card with cover image, title, summary, durations, and optional actions.
  */
 const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
   training,
@@ -20,24 +22,49 @@ const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
   onEdit,
   onDelete,
   onBook,
+  onViewDetails,
 }) => {
   const id = training._id || training.id || training.title;
+  const [coverError, setCoverError] = useState(false);
+  const description = getEapTrainingDescription(training);
+  const sessionCount = training.syllabus?.length ?? training.durationOptions.length;
+  const isBrowse = readOnly && Boolean(onViewDetails);
 
   return (
-    <article className="eap-training-card" aria-labelledby={`eap-training-title-${id}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={training.coverImage}
-        alt=""
-        className="eap-training-card__cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
-      />
+    <article
+      className={`eap-training-card${isBrowse ? " eap-training-card--browse" : ""}`}
+      aria-labelledby={`eap-training-title-${id}`}
+    >
+      <div className="eap-training-card__cover-wrap">
+        {training.coverImage && !coverError ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={training.coverImage}
+            alt=""
+            className="eap-training-card__cover"
+            onError={() => setCoverError(true)}
+          />
+        ) : (
+          <div className="eap-training-card__cover-fallback" aria-hidden="true">
+            <i className="ri-image-line" />
+            <span>No cover image</span>
+          </div>
+        )}
+      </div>
+
       <div className="eap-training-card__body">
         <h3 className="eap-training-card__title" id={`eap-training-title-${id}`}>
           {training.title}
         </h3>
+        <p className="eap-training-card__desc">{description}</p>
+
+        <div className="eap-training-card__meta" aria-label="Program details">
+          <span className="eap-training-card__meta-item">
+            <i className="ri-time-line" aria-hidden="true" />
+            {sessionCount} session option{sessionCount === 1 ? "" : "s"}
+          </span>
+        </div>
+
         <div className="eap-training-card__badges" aria-label="Available durations">
           {training.durationOptions.map((hours) => (
             <span key={hours} className="eap-training-card__badge">
@@ -45,12 +72,13 @@ const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
             </span>
           ))}
         </div>
+
         {!readOnly && (onEdit || onDelete) && (
           <div className="eap-training-card__actions">
             {onEdit && (
               <button
                 type="button"
-                className="eap-training-btn eap-training-btn--ghost"
+                className="eap-training-btn eap-training-btn--ghost eap-training-card__action-grow"
                 onClick={() => onEdit(training)}
                 aria-label={`Edit ${training.title}`}
               >
@@ -71,16 +99,29 @@ const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
             )}
           </div>
         )}
-        {readOnly && onBook && (
+        {readOnly && (onViewDetails || onBook) && (
           <div className="eap-training-card__actions">
-            <button
-              type="button"
-              className="eap-training-btn eap-training-btn--primary w-full justify-center"
-              onClick={() => onBook(training)}
-              aria-label={`Book ${training.title}`}
-            >
-              Book
-            </button>
+            {onViewDetails && (
+              <button
+                type="button"
+                className="eap-training-btn eap-training-btn--primary eap-training-card__action-grow"
+                onClick={() => onViewDetails(training)}
+                aria-label={`View details for ${training.title}`}
+              >
+                View Details
+                <i className="ri-arrow-right-line" aria-hidden="true" />
+              </button>
+            )}
+            {onBook && (
+              <button
+                type="button"
+                className="eap-training-btn eap-training-btn--primary eap-training-card__action-grow"
+                onClick={() => onBook(training)}
+                aria-label={`Book ${training.title}`}
+              >
+                Book
+              </button>
+            )}
           </div>
         )}
       </div>

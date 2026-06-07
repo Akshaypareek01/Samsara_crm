@@ -24,6 +24,8 @@ export type CompanyEapBookingDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /** Pre-selected session duration from the detail page. */
+  initialDuration?: EapDurationHours | null;
 };
 
 /**
@@ -35,6 +37,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  initialDuration = null,
 }) => {
   const [formData, setFormData] = useState<CreateBookingRequest>({
     company: "",
@@ -60,7 +63,11 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
       try {
         const companyProfile = await companyService.getCompanyProfile();
         const trainerId = trainer._id || trainer.id || "";
-        const defaultDuration = training.durationOptions[0] ?? 2;
+        const fallbackDuration = training.durationOptions[0] ?? 2;
+        const defaultDuration =
+          initialDuration && training.durationOptions.includes(initialDuration)
+            ? initialDuration
+            : fallbackDuration;
         setSelectedDuration(defaultDuration);
         setFormData({
           company: companyProfile._id || companyProfile.id || "",
@@ -79,7 +86,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
       }
     };
     void init();
-  }, [isOpen, trainer, training]);
+  }, [isOpen, trainer, training, initialDuration]);
 
   /**
    * Validate booking form before submit.
