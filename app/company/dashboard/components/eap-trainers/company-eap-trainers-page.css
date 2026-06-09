@@ -24,6 +24,28 @@
   margin: 0.35rem 0 0;
 }
 
+.company-eap-trainers-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #5b21b6;
+  text-decoration: none;
+  margin-bottom: 1.25rem;
+}
+
+.company-eap-trainers-page__back:hover {
+  color: #4c1d95;
+  text-decoration: underline;
+}
+
+@media (min-width: 1024px) {
+  .company-eap-filters__grid--trainers {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
 /* Filters */
 .company-eap-filters {
   background: #fff;
@@ -259,9 +281,25 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-top: 2rem;
+}
+
+.company-eap-pagination__summary {
+  flex: 1 1 100%;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .company-eap-pagination {
+    justify-content: center;
+  }
+
+  .company-eap-pagination__summary {
+    flex: 1 1 auto;
+    text-align: left;
+  }
 }
 
 .company-eap-pagination__pages {
@@ -481,7 +519,11 @@
 .company-eap-detail__session-list {
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
+  gap: 1rem;
+}
+
+.company-eap-detail--preview .company-eap-detail__session-list {
+  gap: 1.125rem;
 }
 
 .company-eap-session-card {
@@ -547,8 +589,35 @@
 }
 
 .company-eap-session-card__details {
-  padding: 0.75rem 1rem 1rem;
-  border-top: 1px solid #f1f5f9;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.875rem 1rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.company-eap-session-card--selected .company-eap-session-card__details {
+  background: #f1f5f9;
+  border-top-color: #bfdbfe;
+}
+
+.company-eap-session-card__description {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 0.625rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.company-eap-session-card--selected .company-eap-session-card__description {
+  border-color: #dbeafe;
+  background: #fff;
 }
 
 .company-eap-session-card__points {
@@ -568,9 +637,14 @@
 }
 
 .company-eap-session-card__empty {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 0.625rem;
+  background: #fff;
+  border: 1px dashed #cbd5e1;
   font-size: 0.8125rem;
   color: #64748b;
-  margin: 0;
+  line-height: 1.5;
 }
 
 .company-eap-detail__trainer-card {

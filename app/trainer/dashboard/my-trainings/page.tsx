@@ -5,10 +5,14 @@ import Pageheader from "@/shared/layout-components/page-header/pageheader";
 import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import TrainerService, { type Trainer } from "@/services/trainerService";
 import EapTrainingService, { type EapTraining } from "@/services/eapTrainingService";
+import { useEapTrainerAccess } from "@/hooks/useEapTrainerAccess";
 import EapTrainingsLanding from "../components/eap-training/EapTrainingsLanding";
-import EapTrainingForm from "../components/eap-training/EapTrainingForm";
+import {
+  getEapTrainingRouteId,
+  trainerEapTrainingCreatePath,
+  trainerEapTrainingPreviewPath,
+} from "../utils/trainerEapTrainingRoutes";
 import "@/shared/styles/eap-training-page.css";
 
 /**
@@ -16,12 +20,9 @@ import "@/shared/styles/eap-training-page.css";
  */
 const MyTrainingsPage = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Trainer | null>(null);
+  const { loading: accessLoading, accessDenied } = useEapTrainerAccess();
   const [trainings, setTrainings] = useState<EapTraining[]>([]);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<EapTraining | null>(null);
-  const [accessDenied, setAccessDenied] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const loadTrainings = useCallback(async () => {
     const list = await EapTrainingService.listMine();
@@ -29,19 +30,12 @@ const MyTrainingsPage = () => {
   }, []);
 
   useEffect(() => {
+    if (accessLoading || accessDenied) return;
+
     let cancelled = false;
     const init = async () => {
       try {
         setLoading(true);
-        const me = await TrainerService.getMyProfile();
-        if (me.category !== "EAP Trainer") {
-          if (!cancelled) {
-            setAccessDenied(true);
-            router.replace("/trainer/dashboard");
-          }
-          return;
-        }
-        if (!cancelled) setProfile(me);
         await loadTrainings();
       } catch (err: unknown) {
         if (!cancelled) {
@@ -56,24 +50,16 @@ const MyTrainingsPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [loadTrainings, router]);
+  }, [accessLoading, accessDenied, loadTrainings]);
 
   /**
-   * Open the create training form.
-   */
-  const openCreate = () => {
-    setEditing(null);
-    setFormOpen(true);
-  };
-
-  /**
-   * Open the edit form for a training.
+   * Navigate to the company-facing preview page.
    *
-   * @param training - Training to edit.
+   * @param training - Training to preview.
    */
-  const openEdit = (training: EapTraining) => {
-    setEditing(training);
-    setFormOpen(true);
+  const openPreview = (training: EapTraining) => {
+    const id = getEapTrainingRouteId(training);
+    if (id) router.push(trainerEapTrainingPreviewPath(id));
   };
 
   /**
@@ -82,7 +68,7 @@ const MyTrainingsPage = () => {
    * @param training - Training to delete.
    */
   const handleDelete = async (training: EapTraining) => {
-    const id = training._id || training.id;
+    const id = getEapTrainingRouteId(training);
     if (!id) return;
     const result = await Swal.fire({
       icon: "warning",
@@ -105,22 +91,19 @@ const MyTrainingsPage = () => {
 
   if (accessDenied) return null;
 
+  const pageLoading = accessLoading || loading;
+
   return (
     <Fragment>
       <Seo title="My Training" />
       <Pageheader currentpage="My Training" activepage="Trainer" mainpage="My Training" />
 
       <div className="eap-training-page">
-        <header className="eap-training-page__header">
-          <div>
-            <p className="eap-training-page__subtitle mb-0">
-              Manage how companies see your profile and training programs.
-            </p>
-          </div>
+        <header className="eap-training-page__header justify-end">
           <button
             type="button"
             className="eap-training-btn eap-training-btn--primary"
-            onClick={openCreate}
+            onClick={() => router.push(trainerEapTrainingCreatePath())}
             aria-label="Create new training program"
           >
             <i className="ri-add-line" aria-hidden="true" />
@@ -129,36 +112,30 @@ const MyTrainingsPage = () => {
         </header>
 
         <EapTrainingsLanding
-          trainers={profile ? [profile] : []}
+          trainers={[]}
           trainings={trainings}
-          loading={loading}
-          trainersSectionTitle="Your Profile"
-          trainersSectionSubtitle="This is how companies see you on the EAP trainings page."
+          loading={pageLoading}
+          showPageTitle={false}
+          showTrainersSection={false}
           trainingsSectionTitle="Your Training Programs"
           trainingsSectionSubtitle="Programs you offer — companies can browse and book these sessions."
-          onTrainingEdit={openEdit}
+          onTrainingPreview={openPreview}
           onTrainingDelete={(training) => void handleDelete(training)}
         />
 
-        {!loading && trainings.length === 0 && (
+        {!pageLoading && trainings.length === 0 && (
           <div className="eap-training-empty">
             <p className="mb-3">No training programs yet.</p>
-            <button type="button" className="eap-training-btn eap-training-btn--primary" onClick={openCreate}>
+            <button
+              type="button"
+              className="eap-training-btn eap-training-btn--primary"
+              onClick={() => router.push(trainerEapTrainingCreatePath())}
+            >
               Create your first program
             </button>
           </div>
         )}
       </div>
-
-      <EapTrainingForm
-        open={formOpen}
-        training={editing}
-        onClose={() => {
-          setFormOpen(false);
-          setEditing(null);
-        }}
-        onSaved={() => void loadTrainings()}
-      />
     </Fragment>
   );
 };

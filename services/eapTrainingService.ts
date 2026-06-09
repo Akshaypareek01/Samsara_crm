@@ -1,15 +1,12 @@
 import ApiService from './ApiService';
 import type { Trainer } from './trainerService';
+import {
+  EAP_DURATION_OPTIONS,
+  type EapDurationHours,
+  type EapSyllabusEntry,
+} from '@/shared/utils/eapTrainingUtils';
 
-/** Allowed EAP session durations in hours. */
-export const EAP_DURATION_OPTIONS = [1, 2, 4, 6] as const;
-
-export type EapDurationHours = (typeof EAP_DURATION_OPTIONS)[number];
-
-export interface EapSyllabusEntry {
-  durationHours: EapDurationHours;
-  points: string[];
-}
+export { EAP_DURATION_OPTIONS, type EapDurationHours, type EapSyllabusEntry };
 
 export interface EapTraining {
   id?: string;
@@ -149,12 +146,25 @@ class EapTrainingService {
   async listTrainings(params: ListEapTrainingsParams = {}): Promise<EapTrainingsResponse> {
     const response = await ApiService.get('/eap-trainings', params);
     const results = (response.results || []).map((t: EapTraining) => normalizeTraining(t));
+    const page = Number(response.page) || Number(params.page) || 1;
+    const limit = Number(response.limit) || Number(params.limit) || 10;
+    const totalResults =
+      response.totalResults !== undefined && response.totalResults !== null
+        ? Number(response.totalResults)
+        : results.length;
+    const totalPages =
+      response.totalPages !== undefined && response.totalPages !== null
+        ? Number(response.totalPages)
+        : limit > 0
+          ? Math.ceil(totalResults / limit)
+          : 0;
+
     return {
       results,
-      page: response.page || params.page || 1,
-      limit: response.limit || params.limit || 10,
-      totalPages: response.totalPages || 1,
-      totalResults: response.totalResults || results.length,
+      page,
+      limit,
+      totalPages,
+      totalResults,
     };
   }
 

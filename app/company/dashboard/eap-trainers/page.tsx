@@ -9,6 +9,7 @@ import EapTrainingsLanding from "@/app/trainer/dashboard/components/eap-training
 import { useCompanyEapLanding } from "@/hooks/useCompanyEapLanding";
 import CompanyEapTrainingsFilters from "../components/eap-trainers/CompanyEapTrainingsFilters";
 import CompanyEapTrainingBrowseCard from "../components/eap-trainers/CompanyEapTrainingBrowseCard";
+import CompanyEapTrainingsPagination from "../components/eap-trainers/CompanyEapTrainingsPagination";
 import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
 import "@/shared/styles/eap-training-page.css";
 import "../components/company-trainer-card.css";
@@ -39,7 +40,6 @@ const EapTrainersPageInner = () => {
   const [trainings, setTrainings] = useState<EapTraining[]>([]);
   const {
     trainers: eapTrainers,
-    trainings: landingTrainings,
     loading: landingLoading,
     error: landingError,
   } = useCompanyEapLanding();
@@ -98,7 +98,7 @@ const EapTrainersPageInner = () => {
       setLoading(true);
       setError("");
       const params: Record<string, string | number> = {
-        page,
+        page: Number(page),
         limit: PAGE_LIMIT,
         sortBy,
       };
@@ -121,6 +121,12 @@ const EapTrainersPageInner = () => {
     void fetchTrainings();
   }, [fetchTrainings]);
 
+  useEffect(() => {
+    if (page > 1) {
+      catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [page]);
+
   /**
    * Open trainer profile drawer and load full record.
    */
@@ -140,24 +146,6 @@ const EapTrainersPageInner = () => {
     }
   }, []);
 
-  /**
-   * Navigate to training detail page.
-   */
-  const openTrainingDetail = useCallback(
-    (training: EapTraining) => {
-      const id = training._id || training.id;
-      if (id) router.push(`/company/dashboard/eap-trainers/${id}`);
-    },
-    [router]
-  );
-
-  /**
-   * Scroll to the full catalog section below the landing hero.
-   */
-  const scrollToCatalog = useCallback(() => {
-    catalogRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   const hasActiveFilters =
     !!searchInput ||
     !!trainerNameInput ||
@@ -172,8 +160,6 @@ const EapTrainersPageInner = () => {
     setPage(1);
   };
 
-  const pageNumbers = getPageNumbers(page, totalPages);
-
   return (
     <div className="company-eap-trainers-page">
       {landingError && (
@@ -184,15 +170,14 @@ const EapTrainersPageInner = () => {
 
       <EapTrainingsLanding
         trainers={eapTrainers}
-        trainings={landingTrainings}
+        trainings={[]}
         loading={landingLoading}
         featuredMode
         trainersSectionTitle="Our Trainers"
-        trainingsSectionTitle="Available Trainings"
         onTrainerClick={(trainer) => void openTrainerProfile(trainer as Trainer)}
-        onTrainingViewDetails={openTrainingDetail}
-        onSeeAllTrainings={scrollToCatalog}
-        showSeeAllButton
+        showTrainingsSection={false}
+        showSeeAllTrainersButton
+        onSeeAllTrainers={() => router.push("/company/dashboard/eap-trainers/trainers")}
       />
 
       <div ref={catalogRef} className="company-eap-trainers-page__catalog">
@@ -244,46 +229,15 @@ const EapTrainersPageInner = () => {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <nav className="company-eap-pagination" aria-label="Pagination">
-              <button
-                type="button"
-                className="company-eap-btn company-eap-btn--ghost"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Previous
-              </button>
-              <div className="company-eap-pagination__pages">
-                {pageNumbers.map((token, i) =>
-                  token === "..." ? (
-                    <span key={`ellipsis-${i}`} className="company-eap-pagination__ellipsis">
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={token}
-                      type="button"
-                      className={`company-eap-pagination__page ${
-                        token === page ? "company-eap-pagination__page--active" : ""
-                      }`}
-                      onClick={() => setPage(token)}
-                      aria-current={token === page ? "page" : undefined}
-                    >
-                      {token}
-                    </button>
-                  )
-                )}
-              </div>
-              <button
-                type="button"
-                className="company-eap-btn company-eap-btn--ghost"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </button>
-            </nav>
+          {totalResults > 0 && (
+            <CompanyEapTrainingsPagination
+              page={page}
+              totalPages={totalPages}
+              totalResults={totalResults}
+              pageLimit={PAGE_LIMIT}
+              onPageChange={setPage}
+              getPageNumbers={getPageNumbers}
+            />
           )}
         </>
       )}

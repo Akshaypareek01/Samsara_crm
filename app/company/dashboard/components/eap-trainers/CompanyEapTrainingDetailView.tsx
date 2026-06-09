@@ -10,7 +10,12 @@ import {
   getEapTrainingTrainerId,
 } from "@/shared/utils/eapTrainingTrainerUtils";
 import { getEapTrainingDescription } from "@/shared/utils/eapTrainingDisplayUtils";
-import { getOrderedEapSyllabusEntries } from "@/shared/utils/eapTrainingUtils";
+import {
+  getOrderedEapSyllabusEntries,
+  formatEapDurationLabel,
+  formatEapSessionDurationLabel,
+  normalizeEapDurationHours,
+} from "@/shared/utils/eapTrainingUtils";
 import CompanyTrainerProfilePanel from "../CompanyTrainerProfilePanel";
 import CompanyEapSessionOptionCard from "./CompanyEapSessionOptionCard";
 import CompanyEapBookingDrawer from "./CompanyEapBookingDrawer";
@@ -21,6 +26,10 @@ type CompanyEapTrainingDetailViewProps = {
   training: EapTraining;
   fullTrainer?: Trainer | null;
   trainerLoading?: boolean;
+  /** Trainer manage flow: show company-facing layout without booking actions. */
+  previewMode?: boolean;
+  /** Hide back navigation (e.g. inside a drawer). */
+  hideBackLink?: boolean;
 };
 
 const DETAIL_TABS: { id: DetailTab; label: string; icon: string }[] = [
@@ -35,9 +44,19 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
   training,
   fullTrainer,
   trainerLoading = false,
+  previewMode = false,
+  hideBackLink = false,
 }) => {
   const sessionEntries = useMemo(() => getOrderedEapSyllabusEntries(training), [training]);
-  const defaultDuration = training.durationOptions[0] ?? sessionEntries[0]?.durationHours ?? null;
+  const normalizedDurations = useMemo(
+    () =>
+      Array.from(new Set(training.durationOptions.map((h) => normalizeEapDurationHours(h)))).sort(
+        (a, b) => a - b
+      ) as EapDurationHours[],
+    [training.durationOptions]
+  );
+  const defaultDuration =
+    normalizedDurations[0] ?? sessionEntries[0]?.durationHours ?? null;
   const summary = getEapTrainingDescription(training);
 
   const [activeTab, setActiveTab] = useState<DetailTab>("sessions");
@@ -71,20 +90,29 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
   };
 
   return (
-    <div className="company-eap-detail">
-      <Link href="/company/dashboard/eap-trainers" className="company-eap-detail__back">
-        <i className="ri-arrow-left-line" aria-hidden="true" />
-        Back to programs
-      </Link>
+    <div className={`company-eap-detail${previewMode ? " company-eap-detail--preview" : ""}`}>
+      {previewMode && (
+        <p className="company-eap-detail__preview-note" role="status">
+          <i className="ri-eye-line" aria-hidden="true" />
+          Company preview — this is how your program appears to clients.
+        </p>
+      )}
+
+      {!hideBackLink && !previewMode && (
+        <Link href="/company/dashboard/eap-trainers" className="company-eap-detail__back">
+          <i className="ri-arrow-left-line" aria-hidden="true" />
+          Back to programs
+        </Link>
+      )}
 
       <header className="company-eap-detail__hero">
         <div className="company-eap-detail__hero-body">
           <h1 className="company-eap-detail__hero-title">{training.title}</h1>
           {summary && <p className="company-eap-detail__hero-summary">{summary}</p>}
           <div className="company-eap-detail__hero-badges" aria-label="Available session durations">
-            {training.durationOptions.map((hours) => (
+            {normalizedDurations.map((hours) => (
               <span key={hours} className="company-eap-detail__hero-badge">
-                {hours} hr{hours === 1 ? "" : "s"}
+                {formatEapDurationLabel(hours)}
               </span>
             ))}
           </div>
@@ -142,7 +170,9 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
         >
           <h2 className="company-eap-detail__panel-title">Select a session</h2>
           <p className="company-eap-detail__panel-subtitle">
-            Choose a duration to view the outline, then book your preferred slot.
+            {previewMode
+              ? "Companies choose a duration to view the outline before booking."
+              : "Choose a duration to view the outline, then book your preferred slot."}
           </p>
           <div
             className="company-eap-detail__session-list"
@@ -154,7 +184,7 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
                 <CompanyEapSessionOptionCard
                   key={entry.durationHours}
                   durationHours={entry.durationHours}
-                  points={entry.points}
+                  description={entry.description}
                   selected={selectedDuration === entry.durationHours}
                   onSelect={() => setSelectedDuration(entry.durationHours)}
                 />
@@ -164,7 +194,7 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
                 <CompanyEapSessionOptionCard
                   key={hours}
                   durationHours={hours}
-                  points={[]}
+                  description=""
                   selected={selectedDuration === hours}
                   onSelect={() => setSelectedDuration(hours)}
                 />
@@ -172,32 +202,34 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
             )}
           </div>
 
-          <div className="company-eap-detail__book-bar">
-            {!canBook && (
-              <p className="company-eap-detail__book-note" role="status">
-                This trainer is not accepting new bookings right now.
-              </p>
-            )}
-            {!selectedDuration && (
-              <p className="company-eap-detail__book-note" role="status">
-                Select a session above to continue.
-              </p>
-            )}
-            <button
-              type="button"
-              className="company-eap-detail__book-btn"
-              disabled={!canBook || trainerLoading || !selectedDuration}
-              onClick={handleBookingClick}
-              aria-label={
-                selectedDuration
-                  ? `Book ${training.title} — ${selectedDuration} hour session`
-                  : "Select a session to book"
-              }
-            >
-              <i className="ri-calendar-check-line" aria-hidden="true" />
-              Booking
-            </button>
-          </div>
+          {!previewMode && (
+            <div className="company-eap-detail__book-bar">
+              {!canBook && (
+                <p className="company-eap-detail__book-note" role="status">
+                  This trainer is not accepting new bookings right now.
+                </p>
+              )}
+              {!selectedDuration && (
+                <p className="company-eap-detail__book-note" role="status">
+                  Select a session above to continue.
+                </p>
+              )}
+              <button
+                type="button"
+                className="company-eap-detail__book-btn"
+                disabled={!canBook || trainerLoading || !selectedDuration}
+                onClick={handleBookingClick}
+                aria-label={
+                  selectedDuration
+                    ? `Book ${training.title} — ${formatEapSessionDurationLabel(selectedDuration)}`
+                    : "Select a session to book"
+                }
+              >
+                <i className="ri-calendar-check-line" aria-hidden="true" />
+                Booking
+              </button>
+            </div>
+          )}
         </section>
       )}
 
@@ -218,13 +250,15 @@ const CompanyEapTrainingDetailView: React.FC<CompanyEapTrainingDetailViewProps> 
         </section>
       )}
 
-      <CompanyEapBookingDrawer
-        trainer={trainer}
-        training={training}
-        isOpen={bookingOpen}
-        initialDuration={selectedDuration}
-        onClose={() => setBookingOpen(false)}
-      />
+      {!previewMode && (
+        <CompanyEapBookingDrawer
+          trainer={trainer}
+          training={training}
+          isOpen={bookingOpen}
+          initialDuration={selectedDuration}
+          onClose={() => setBookingOpen(false)}
+        />
+      )}
     </div>
   );
 };

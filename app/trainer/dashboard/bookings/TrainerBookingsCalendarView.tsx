@@ -314,6 +314,8 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                             </div>
                         </div>
 
+                        <div className="trainer-bookings-calendar-scroll">
+                        <div className="trainer-bookings-calendar-grid">
                         <div className="grid grid-cols-7 mb-1">
                             {DAYS_OF_WEEK.map((d) => (
                                 <div key={d} className="text-center text-xs font-semibold text-muted py-2">
@@ -337,7 +339,7 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                                         type="button"
                                         disabled={!isValid || loading}
                                         onClick={() => isValid && setSelectedDay(day)}
-                                        className={`relative min-h-[72px] rounded-lg p-1.5 flex flex-col text-left transition-colors ${
+                                        className={`trainer-bookings-calendar-day relative min-h-[72px] rounded-lg p-1.5 flex flex-col text-left transition-colors ${
                                             !isValid
                                                 ? "invisible"
                                                 : isSelected
@@ -393,6 +395,8 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                                     </button>
                                 );
                             })}
+                        </div>
+                        </div>
                         </div>
 
                         <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-defaultborder">

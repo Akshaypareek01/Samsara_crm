@@ -33,6 +33,21 @@ export interface TrainerCertification {
   year?: number | null;
 }
 
+/** Trainer payout account details (UPI + bank). */
+export interface TrainerAccountDetails {
+  upiId?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  accountHolderName?: string;
+}
+
+/** Aggregate session rating summary (denormalized on trainer). */
+export interface TrainerRatingSummary {
+  averageRating: number;
+  totalReviews: number;
+}
+
 /** Personal & professional detail fields shared across trainer payloads */
 export interface TrainerProfileDetails {
   dateOfBirth?: string | null;
@@ -60,6 +75,8 @@ export interface Trainer extends TrainerProfileDetails {
   status?: boolean;
   /** When false, companies cannot create new bookings for this trainer. */
   acceptingBookings?: boolean;
+  accountDetails?: TrainerAccountDetails;
+  ratingSummary?: TrainerRatingSummary;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -108,6 +125,7 @@ export interface UpdateTrainerRequest extends TrainerProfileDetails {
   profilePhoto?: TrainerImage | null;
   status?: boolean;
   acceptingBookings?: boolean;
+  accountDetails?: TrainerAccountDetails;
 }
 
 export interface GetTrainersParams {

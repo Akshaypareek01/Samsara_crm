@@ -33,8 +33,39 @@
 .eap-landing__section-head {
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
+}
+
+.eap-landing__section-head-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.eap-landing__see-all-small {
+  flex-shrink: 0;
+  align-self: flex-start;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  color: var(--eap-blue-soft);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.eap-landing__see-all-small:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: var(--eap-blue);
 }
 
 .eap-landing__section-icon {

@@ -502,6 +502,8 @@ export const CompanyDashboardRightRail: React.FC<RailProps> = ({ overview }) => 
                     </div>
                 </div>
                 <div className="box-body pt-0">
+                    <div className="company-bookings-calendar-scroll">
+                    <div className="company-bookings-calendar-grid">
                     <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-2">
                         {["S", "M", "T", "W", "T", "F", "S"].map((x, i) => (
                             <span key={`${x}-${i}`} className="py-1 font-semibold">
@@ -526,6 +528,8 @@ export const CompanyDashboardRightRail: React.FC<RailProps> = ({ overview }) => 
                                 {day}
                             </button>
                         ))}
+                    </div>
+                    </div>
                     </div>
                 </div>
             </div>

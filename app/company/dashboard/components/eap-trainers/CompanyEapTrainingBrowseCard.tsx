@@ -7,6 +7,7 @@ import {
   getEapTrainingTrainer,
   getEapTrainingTrainerPhoto,
 } from "@/shared/utils/eapTrainingTrainerUtils";
+import { formatEapDurationLabel, normalizeEapDurationHours } from "@/shared/utils/eapTrainingUtils";
 
 type CompanyEapTrainingBrowseCardProps = {
   training: EapTraining;
@@ -69,7 +70,7 @@ const CompanyEapTrainingBrowseCard: React.FC<CompanyEapTrainingBrowseCardProps> 
         <div className="company-eap-browse-card__badges" aria-label="Available durations">
           {training.durationOptions.map((hours) => (
             <span key={hours} className="company-eap-browse-card__badge">
-              {hours} hr{hours === 1 ? "" : "s"}
+              {formatEapDurationLabel(normalizeEapDurationHours(hours))}
             </span>
           ))}
         </div>

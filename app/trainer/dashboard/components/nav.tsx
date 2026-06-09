@@ -4,6 +4,7 @@ const DashboardIcon = <i className="bx bx-home side-menu__icon"></i>;
 const BookingsIcon = <i className="bx bx-calendar side-menu__icon"></i>;
 const MyTrainingIcon = <i className="bx bx-book-open side-menu__icon"></i>;
 const ProfileIcon = <i className="bx bx-user side-menu__icon"></i>;
+const AccountIcon = <i className="bx bx-wallet side-menu__icon"></i>;
 
 const BASE_MENU_ITEMS: any[] = [
     {
@@ -35,6 +36,15 @@ const BASE_MENU_ITEMS: any[] = [
         selected: false,
         dirchange: false,
         title: "Profile",
+    },
+    {
+        path: "/trainer/dashboard/my-account",
+        icon: AccountIcon,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "My Account",
     },
 ];
 

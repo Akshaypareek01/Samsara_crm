@@ -557,12 +557,14 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 <div className="main-sidebar-header">
                     <div className="flex items-center justify-between w-full gap-2">
                         <Link href="/trainer/dashboard" className="header-logo trainer-sidebar-brand">
-                            <img
-                                src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
-                                alt="Samsara Wellness logo"
-                                width={36}
-                                height={36}
-                            />
+                            <span className="trainer-sidebar-brand-mark">
+                                <img
+                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
+                                    alt="Samsara Wellness logo"
+                                    width={72}
+                                    height={72}
+                                />
+                            </span>
                             <span className="trainer-sidebar-brand-text">
                                 <span className="trainer-sidebar-brand-title">Samsara Wellness</span>
                                 <span className="trainer-sidebar-brand-sub">Trainer Portal</span>
@@ -575,7 +577,7 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                                 e.stopPropagation();
                                 menuClose();
                             }}
-                            className="trainer-sidebar-close lg:hidden"
+                            className="trainer-sidebar-close trainer-sidebar-close-mobile"
                             aria-label="Close sidebar"
                         >
                             <i className="ri-close-line text-lg" aria-hidden="true"></i>

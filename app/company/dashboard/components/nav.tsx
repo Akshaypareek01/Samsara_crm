@@ -25,7 +25,7 @@ export const MenuItems: any = [
         active: false,
         selected: false,
         dirchange: false,
-        title: "Trainers",
+        title: "Wellness Trainers",
     },
     {
         path: "/company/dashboard/eap-trainers",

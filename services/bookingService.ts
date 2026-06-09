@@ -47,7 +47,7 @@ export interface EapTrainingRef {
     title?: string;
     coverImage?: string;
     durationOptions?: number[];
-    syllabus?: { durationHours: number; points: string[] }[];
+    syllabus?: { durationHours: number; description?: string; points?: string[] }[];
 }
 
 export interface CreateBookingRequest {

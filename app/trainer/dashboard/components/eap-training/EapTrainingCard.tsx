@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import type { EapTraining } from "@/services/eapTrainingService";
 import { getEapTrainingDescription } from "@/shared/utils/eapTrainingDisplayUtils";
+import { formatEapDurationLabel, normalizeEapDurationHours } from "@/shared/utils/eapTrainingUtils";
 
 type EapTrainingCardProps = {
   training: EapTraining;
   readOnly?: boolean;
+  onPreview?: (training: EapTraining) => void;
   onEdit?: (training: EapTraining) => void;
   onDelete?: (training: EapTraining) => void;
   onBook?: (training: EapTraining) => void;
@@ -19,6 +21,7 @@ type EapTrainingCardProps = {
 const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
   training,
   readOnly = false,
+  onPreview,
   onEdit,
   onDelete,
   onBook,
@@ -68,14 +71,25 @@ const EapTrainingCard: React.FC<EapTrainingCardProps> = ({
         <div className="eap-training-card__badges" aria-label="Available durations">
           {training.durationOptions.map((hours) => (
             <span key={hours} className="eap-training-card__badge">
-              {hours} hr{hours === 1 ? "" : "s"}
+              {formatEapDurationLabel(normalizeEapDurationHours(hours))}
             </span>
           ))}
         </div>
 
-        {!readOnly && (onEdit || onDelete) && (
+        {!readOnly && (onPreview || onEdit || onDelete) && (
           <div className="eap-training-card__actions">
-            {onEdit && (
+            {onPreview && (
+              <button
+                type="button"
+                className="eap-training-btn eap-training-btn--ghost eap-training-card__action-grow"
+                onClick={() => onPreview(training)}
+                aria-label={`Preview ${training.title}`}
+              >
+                <i className="ri-eye-line" aria-hidden="true" />
+                Preview
+              </button>
+            )}
+            {!onPreview && onEdit && (
               <button
                 type="button"
                 className="eap-training-btn eap-training-btn--ghost eap-training-card__action-grow"

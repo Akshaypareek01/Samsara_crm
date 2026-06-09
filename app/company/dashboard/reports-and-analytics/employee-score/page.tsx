@@ -485,13 +485,13 @@ const EmployeeScorePage = () => {
                 {/* Collapsed state: show a preview row */}
                 {!deletionOpen && deletion.length > 0 && (
                     <div className="box-body py-3 px-4">
-                        <div className="grid grid-cols-4 gap-4 text-xs">
+                        <div className="grid grid-cols-4 gap-4 text-xs company-employee-score-grid-4">
                             <span className="text-muted font-medium">Employee Name</span>
                             <span className="text-muted font-medium">Deleted By</span>
                             <span className="text-muted font-medium">Deletion Date/Time</span>
                             <span className="text-muted font-medium">Reason</span>
                         </div>
-                        <div className="grid grid-cols-4 gap-4 text-sm mt-2">
+                        <div className="grid grid-cols-4 gap-4 text-sm mt-2 company-employee-score-grid-4">
                             <span className="font-semibold text-defaulttextcolor">{deletion[0].employeeName}</span>
                             <span className="text-muted">{deletion[0].deletedBy}</span>
                             <span className="text-muted">{deletion[0].deletionDateTime}</span>

@@ -265,6 +265,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                         </div>
                     </div>
                     <div className="box-body pt-0">
+                        <div className="company-bookings-calendar-scroll">
+                        <div className="company-bookings-calendar-grid">
                         <div className="grid grid-cols-7 mb-1">
                             {DAYS_OF_WEEK.map((d) => (
                                 <div key={d} className="text-center text-xs font-semibold text-muted py-2">
@@ -289,7 +291,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                         type="button"
                                         disabled={!isValid}
                                         onClick={() => isValid && setSelectedDay(day)}
-                                        className={`relative min-h-[64px] rounded-lg p-1.5 flex flex-col text-left ${
+                                        className={`company-bookings-calendar-day relative min-h-[64px] rounded-lg p-1.5 flex flex-col text-left ${
                                             !isValid
                                                 ? "invisible"
                                                 : isSelected
@@ -337,6 +339,8 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                     </button>
                                 );
                             })}
+                        </div>
+                        </div>
                         </div>
                         <div className="flex items-center gap-4 flex-wrap mt-4 pt-3 border-t border-defaultborder">
                             {[

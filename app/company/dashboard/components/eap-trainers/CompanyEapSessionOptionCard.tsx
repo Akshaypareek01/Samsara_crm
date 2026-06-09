@@ -6,17 +6,17 @@ import { formatEapSessionDurationLabel } from "@/shared/utils/eapTrainingUtils";
 
 type CompanyEapSessionOptionCardProps = {
   durationHours: EapDurationHours;
-  points: string[];
+  description: string;
   selected: boolean;
   onSelect: () => void;
 };
 
 /**
- * Selectable EAP session duration card with syllabus bullet details.
+ * Selectable EAP session duration card with syllabus paragraph details.
  */
 const CompanyEapSessionOptionCard: React.FC<CompanyEapSessionOptionCardProps> = ({
   durationHours,
-  points,
+  description,
   selected,
   onSelect,
 }) => {
@@ -40,12 +40,8 @@ const CompanyEapSessionOptionCard: React.FC<CompanyEapSessionOptionCardProps> = 
       </span>
 
       <span className="company-eap-session-card__details">
-        {points.length > 0 ? (
-          <ul className="company-eap-session-card__points">
-            {points.map((point, index) => (
-              <li key={index}>{point}</li>
-            ))}
-          </ul>
+        {description.trim() ? (
+          <p className="company-eap-session-card__description">{description}</p>
         ) : (
           <p className="company-eap-session-card__empty">Session outline will be shared before the booking.</p>
         )}

@@ -24,10 +24,17 @@ type EapTrainingsLandingProps = {
   trainingsSectionSubtitle?: string;
   onTrainerClick?: (trainer: EapLandingTrainer) => void;
   onTrainingViewDetails?: (training: EapTraining) => void;
+  onTrainingPreview?: (training: EapTraining) => void;
   onTrainingEdit?: (training: EapTraining) => void;
   onTrainingDelete?: (training: EapTraining) => void;
   onSeeAllTrainings?: () => void;
   showSeeAllButton?: boolean;
+  onSeeAllTrainers?: () => void;
+  showSeeAllTrainersButton?: boolean;
+  /** When false, hides the trainings/programs section (e.g. company catalog page). */
+  showTrainingsSection?: boolean;
+  /** When false, hides the trainers/profile section (e.g. trainer manage page). */
+  showTrainersSection?: boolean;
 };
 
 /**
@@ -45,12 +52,17 @@ const EapTrainingsLanding: React.FC<EapTrainingsLandingProps> = ({
   trainingsSectionSubtitle = "Choose from our wide range of EAP training programs.",
   onTrainerClick,
   onTrainingViewDetails,
+  onTrainingPreview,
   onTrainingEdit,
   onTrainingDelete,
   onSeeAllTrainings,
   showSeeAllButton = false,
+  onSeeAllTrainers,
+  showSeeAllTrainersButton = false,
+  showTrainingsSection = true,
+  showTrainersSection = true,
 }) => {
-  const isManageMode = Boolean(onTrainingEdit || onTrainingDelete);
+  const isManageMode = Boolean(onTrainingPreview || onTrainingEdit || onTrainingDelete);
 
   const featuredTrainers = useMemo(
     () => (featuredMode ? trainers.slice(0, EAP_FEATURED_LIMIT) : trainers),
@@ -81,17 +93,30 @@ const EapTrainingsLanding: React.FC<EapTrainingsLandingProps> = ({
     <div className="eap-landing">
       {showPageTitle && <h1 className="eap-landing__page-title">EAP Trainings</h1>}
 
+      {showTrainersSection && (
       <section className="eap-landing__section" aria-labelledby="eap-trainers-section-title">
         <div className="eap-landing__section-head">
-          <span className="eap-landing__section-icon" aria-hidden="true">
-            <i className="ri-team-line" />
-          </span>
-          <div>
-            <h2 className="eap-landing__section-title" id="eap-trainers-section-title">
-              {trainersSectionTitle}
-            </h2>
-            <p className="eap-landing__section-subtitle">{trainerSubtitle}</p>
+          <div className="eap-landing__section-head-main">
+            <span className="eap-landing__section-icon" aria-hidden="true">
+              <i className="ri-team-line" />
+            </span>
+            <div>
+              <h2 className="eap-landing__section-title" id="eap-trainers-section-title">
+                {trainersSectionTitle}
+              </h2>
+              <p className="eap-landing__section-subtitle">{trainerSubtitle}</p>
+            </div>
           </div>
+          {showSeeAllTrainersButton && onSeeAllTrainers && (
+            <button
+              type="button"
+              className="eap-landing__see-all-small"
+              onClick={onSeeAllTrainers}
+              aria-label="See all EAP trainers"
+            >
+              See All
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -133,7 +158,9 @@ const EapTrainingsLanding: React.FC<EapTrainingsLandingProps> = ({
           </div>
         )}
       </section>
+      )}
 
+      {showTrainingsSection && (
       <section className="eap-landing__section" aria-labelledby="eap-trainings-section-title">
         <div className="eap-landing__section-head">
           <span className="eap-landing__section-icon" aria-hidden="true">
@@ -161,7 +188,8 @@ const EapTrainingsLanding: React.FC<EapTrainingsLandingProps> = ({
               <div key={training._id || training.id} role="listitem" className="eap-landing__program-item">
                 <EapTrainingCard
                   training={training}
-                  onEdit={onTrainingEdit}
+                  onPreview={onTrainingPreview}
+                  onEdit={onTrainingPreview ? undefined : onTrainingEdit}
                   onDelete={onTrainingDelete}
                 />
               </div>
@@ -205,8 +233,9 @@ const EapTrainingsLanding: React.FC<EapTrainingsLandingProps> = ({
           </div>
         )}
       </section>
+      )}
 
-      {showSeeAllButton && onSeeAllTrainings && (
+      {showSeeAllButton && onSeeAllTrainings && showTrainingsSection && (
         <div className="eap-landing__see-all-wrap">
           <button
             type="button"

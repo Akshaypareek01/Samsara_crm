@@ -8,6 +8,8 @@ import { ThemeChanger } from '@/shared/redux/action';
 import AdminService from '@/services/adminService';
 import { useCompanySession } from '@/hooks/useCompanySession';
 import { toggleCompanySidebar } from '../utils/toggleCompanySidebar';
+import CompanyRatingAlertsBell from './CompanyRatingAlertsBell';
+import './company-trainer-rating-drawer.css';
 
 type CompanyDashboardHeaderProps = {
   local_varaiable?: unknown;
@@ -96,6 +98,10 @@ const CompanyDashboardHeader: React.FC<CompanyDashboardHeaderProps> = () => {
 
         <div className="company-dashboard-header-spacer" aria-hidden="true" />
 
+        <div className="company-dashboard-header-actions">
+          <CompanyRatingAlertsBell />
+        </div>
+
         <div className="company-dashboard-header-user-block">
           <Link
             href="/company/dashboard/profile"
@@ -110,7 +116,7 @@ const CompanyDashboardHeader: React.FC<CompanyDashboardHeaderProps> = () => {
                 {initials}
               </span>
             )}
-            <span className="company-dashboard-header-user-text">
+            <span className="company-dashboard-header-user-text hidden sm:flex">
               <span className="company-dashboard-header-user-name">{displayName}</span>
               <span className="company-dashboard-header-user-role">{role}</span>
             </span>
@@ -123,7 +129,7 @@ const CompanyDashboardHeader: React.FC<CompanyDashboardHeaderProps> = () => {
             aria-label="Log out"
           >
             <i className="ri-logout-box-r-line text-base" aria-hidden="true"></i>
-            <span>Logout</span>
+            <span className="company-dashboard-header-logout-text">Logout</span>
           </button>
         </div>
       </div>

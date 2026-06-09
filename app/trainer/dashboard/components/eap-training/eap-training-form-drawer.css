@@ -230,10 +230,19 @@
 }
 
 .eap-training-drawer-syllabus__head {
+  display: block;
   font-size: 0.8125rem;
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.625rem;
+}
+
+.eap-training-drawer-syllabus__textarea {
+  width: 100%;
+  min-height: 6.5rem;
+  resize: vertical;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
 .eap-training-drawer-point {

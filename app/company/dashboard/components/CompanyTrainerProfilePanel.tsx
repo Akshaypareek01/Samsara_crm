@@ -10,6 +10,7 @@ import {
   trainerTrainingList,
 } from "./companyTrainerProfileUtils";
 import TrainerQualificationsDisplay from "@/shared/components/trainer/TrainerQualificationsDisplay";
+import TrainerRatingBadge from "@/shared/components/trainer/TrainerRatingBadge";
 import "./company-trainer-profile-drawer.css";
 
 type ProfileTab = "overview" | "education" | "certifications" | "gallery";
@@ -117,7 +118,8 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
         )}
         <div className="min-w-0 flex-1">
           <h3 className="text-lg font-bold text-gray-900 mb-0 truncate">{trainer.name}</h3>
-          <p className="text-sm text-gray-600 mb-2 truncate">{trainer.title}</p>
+          <p className="text-sm text-gray-600 mb-1 truncate">{trainer.title}</p>
+          <TrainerRatingBadge trainer={trainer} size="md" className="mb-2" />
           <div className="flex flex-wrap gap-1.5">
             {trainer.category ? (
               <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">

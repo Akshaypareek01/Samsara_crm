@@ -2,6 +2,14 @@ import { ThemeChanger } from '@/shared/redux/action';
 import store from '@/shared/redux/store';
 
 /**
+ * Dispatches a theme update through Redux.
+ * @param payload - Full theme state patch.
+ */
+function dispatchThemeChange(payload: ReturnType<typeof store.getState>): void {
+  store.dispatch(ThemeChanger(payload) as never);
+}
+
+/**
  * Toggles the company dashboard sidebar (mobile overlay + desktop collapse).
  */
 export function toggleCompanySidebar(): void {
@@ -9,27 +17,16 @@ export function toggleCompanySidebar(): void {
 
   if (window.innerWidth >= 992) {
     if (theme.dataToggled === 'close-menu-close') {
-      ThemeChanger({ ...theme, dataToggled: '' });
+      dispatchThemeChange({ ...theme, dataToggled: '' });
     } else {
-      ThemeChanger({ ...theme, dataToggled: 'close-menu-close' });
+      dispatchThemeChange({ ...theme, dataToggled: 'close-menu-close' });
     }
     return;
   }
 
   if (theme.dataToggled === 'close') {
-    ThemeChanger({ ...theme, dataToggled: 'open' });
-    setTimeout(() => {
-      const overlay = document.querySelector('#responsive-overlay');
-      if (overlay) {
-        overlay.classList.add('active');
-        overlay.addEventListener('click', () => {
-          overlay.classList.remove('active');
-          const current = store.getState();
-          ThemeChanger({ ...current, dataToggled: 'close' });
-        });
-      }
-    }, 100);
+    dispatchThemeChange({ ...theme, dataToggled: 'open' });
   } else {
-    ThemeChanger({ ...theme, dataToggled: 'close' });
+    dispatchThemeChange({ ...theme, dataToggled: 'close' });
   }
 }

@@ -194,7 +194,7 @@ export function useTrainerProfileForm() {
     setFormData((prev) => ({ ...prev, profilePhoto: null }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<boolean> => {
     e.preventDefault();
     try {
       setSaving(true);
@@ -220,15 +220,15 @@ export function useTrainerProfileForm() {
         typeOfTrainingArray.length === 0
       ) {
         Swal.fire('Error!', 'Please fill in all required fields', 'error');
-        return;
+        return false;
       }
       if (formData.bio.length > 2000) {
         Swal.fire('Error!', 'Bio must be less than 2000 characters', 'error');
-        return;
+        return false;
       }
       if (formData.pinCode && !/^[0-9]{6}$/.test(formData.pinCode)) {
         Swal.fire('Error!', 'PIN code must be 6 digits', 'error');
-        return;
+        return false;
       }
 
       const filledEducation = filterFilledEducationEntries(formData.education);
@@ -260,10 +260,12 @@ export function useTrainerProfileForm() {
         profilePhoto: updatedTrainer.profilePhoto,
       });
       Swal.fire('Success!', 'Profile updated successfully', 'success');
+      return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update profile';
       setError(msg);
       Swal.fire('Error!', msg, 'error');
+      return false;
     } finally {
       setSaving(false);
     }
@@ -308,5 +310,6 @@ export function useTrainerProfileForm() {
     clearProfilePhoto,
     handleSubmit,
     handleAcceptingBookingsToggle,
+    fetchProfile,
   };
 }

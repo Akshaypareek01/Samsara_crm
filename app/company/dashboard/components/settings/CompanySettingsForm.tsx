@@ -16,6 +16,7 @@ type CompanySettingsFormProps = {
     onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onLogoClear: () => void;
     onSubmit: (e: React.FormEvent) => void;
+    onCancel: () => void;
 };
 
 /**
@@ -58,6 +59,7 @@ export default function CompanySettingsForm({
     onLogoChange,
     onLogoClear,
     onSubmit,
+    onCancel,
 }: CompanySettingsFormProps) {
     const [contactTab, setContactTab] = useState<"primary" | "secondary">("primary");
     const contact =
@@ -419,6 +421,14 @@ export default function CompanySettingsForm({
             </section>
 
             <div className="company-settings-form-footer">
+                <button
+                    type="button"
+                    className="company-settings-btn company-settings-btn--ghost"
+                    onClick={onCancel}
+                    disabled={saving || uploadingLogo}
+                >
+                    Cancel
+                </button>
                 <button
                     type="submit"
                     className="company-settings-btn company-settings-btn--primary"

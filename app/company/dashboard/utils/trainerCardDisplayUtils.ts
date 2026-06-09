@@ -2,18 +2,14 @@ import type { Trainer } from '@/services/trainerService';
 import { HOME_TRAINER_CATEGORY_LABELS } from '../constants/homeTrainerCategories';
 
 /**
- * Primary specialty label for trainer cards.
+ * Professional title line for trainer cards (e.g. "Certified Yoga Instructor").
  *
  * @param trainer - Trainer record from the API.
  */
 export function trainerSpecialtyLabel(trainer: Trainer): string {
-  if (Array.isArray(trainer.specialistIn) && trainer.specialistIn.length > 0) {
-    return trainer.specialistIn[0];
-  }
-  if (typeof trainer.specialistIn === 'string' && trainer.specialistIn) {
-    return trainer.specialistIn;
-  }
-  return trainer.title || 'Wellness specialist';
+  const title = trainer.title?.trim();
+  if (title) return title;
+  return 'Wellness specialist';
 }
 
 /**

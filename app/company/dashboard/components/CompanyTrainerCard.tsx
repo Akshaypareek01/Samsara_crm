@@ -2,8 +2,8 @@
 
 import React from 'react';
 import type { Trainer } from '@/services/trainerService';
-import { trainerDisplayRating } from '../utils/trainerDisplayRating';
 import { trainerSpecialtyLabel } from '../utils/trainerCardDisplayUtils';
+import TrainerRatingBadge from '@/shared/components/trainer/TrainerRatingBadge';
 
 type CompanyTrainerCardProps = {
   trainer: Trainer;
@@ -17,9 +17,7 @@ const CompanyTrainerCard: React.FC<CompanyTrainerCardProps> = ({
   trainer,
   onViewProfile,
 }) => {
-  const seed = trainer._id || trainer.id || trainer.name;
-  const { rating, reviews } = trainerDisplayRating(seed);
-  const specialty = trainerSpecialtyLabel(trainer);
+  const professionalTitle = trainerSpecialtyLabel(trainer);
 
   return (
     <article className="company-trainer-card">
@@ -42,13 +40,9 @@ const CompanyTrainerCard: React.FC<CompanyTrainerCardProps> = ({
       </div>
 
       <h3 className="company-trainer-card__name">{trainer.name}</h3>
-      <p className="company-trainer-card__specialty">{specialty}</p>
+      <p className="company-trainer-card__specialty">{professionalTitle}</p>
 
-      <p className="company-trainer-card__rating" aria-label={`Rating ${rating}, ${reviews} reviews`}>
-        <i className="ri-star-fill text-amber-400" aria-hidden="true"></i>
-        <strong>{rating}</strong>
-        <span>({reviews})</span>
-      </p>
+      <TrainerRatingBadge trainer={trainer} className="company-trainer-card__rating" />
 
       <button
         type="button"

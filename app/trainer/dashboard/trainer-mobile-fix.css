@@ -1,39 +1,140 @@
-/* Mobile sidebar for trainer dashboard (purple WellConnect theme) */
+/* Trainer dashboard mobile-first shell fixes (WellConnect purple sidebar) */
+
+/* Sidebar close button: visible only below 992px (matches JS breakpoint, not Tailwind lg) */
+.trainer-dashboard-shell .trainer-wellconnect-sidebar .trainer-sidebar-close-mobile {
+  display: none;
+}
+
 @media (max-width: 991.98px) {
+  .trainer-dashboard-shell .trainer-wellconnect-sidebar .trainer-sidebar-close-mobile {
+    display: inline-flex;
+  }
+
   .trainer-dashboard-shell .trainer-wellconnect-sidebar .main-sidebar-header {
     display: flex !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
   }
 
-  .trainer-dashboard-shell .page .app-sidebar.trainer-wellconnect-sidebar {
+  .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     height: 100vh !important;
-    z-index: 999 !important;
+    height: 100dvh !important;
+    z-index: 1000 !important;
     width: 15rem !important;
     max-width: 85vw !important;
+    transition: transform 0.3s ease;
   }
 
-  .trainer-dashboard-shell .page .content {
+  html[data-toggled="close"] .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar,
+  html:not([data-toggled]) .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  html[dir="rtl"][data-toggled="close"] .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar,
+  html[dir="rtl"]:not([data-toggled]) .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
+    transform: translateX(100%);
+    pointer-events: none;
+  }
+
+  html[data-toggled="open"] .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .trainer-dashboard-shell .content {
     margin-left: 0 !important;
     width: 100% !important;
     padding-left: 0 !important;
   }
 
-  .trainer-dashboard-shell .page .main-content {
+  .trainer-dashboard-shell .main-content {
     width: 100% !important;
     margin-left: 0 !important;
     padding-left: 0 !important;
+    padding-bottom: 100px !important;
+    margin-bottom: 0 !important;
   }
 
-  .trainer-dashboard-shell .page .container-fluid {
+  .trainer-dashboard-shell .container-fluid {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
+    padding-bottom: 1rem;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-inner {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-menu {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-actions {
+    gap: 0.35rem;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-availability {
+    gap: 0.4rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-availability-label {
+    display: none;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-logout {
+    padding: 0 0.65rem;
+    min-width: 2.5rem;
+  }
+
+  #responsive-overlay {
+    z-index: 999 !important;
   }
 
   #responsive-overlay.active {
-    z-index: 998 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Bookings calendar: horizontal scroll on narrow phones */
+  .trainer-bookings-calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-inline: -0.25rem;
+    padding-inline: 0.25rem;
+  }
+
+  .trainer-bookings-calendar-grid {
+    min-width: 280px;
+  }
+
+  .trainer-bookings-calendar-grid .trainer-bookings-calendar-day {
+    min-height: 3.25rem;
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .trainer-dashboard-shell .trainer-dashboard-header-logout-text {
+    display: none;
+  }
+
+  .trainer-dashboard-shell .trainer-dashboard-header-logout {
+    padding: 0;
+    width: 2.5rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
+    transform: none !important;
   }
 }

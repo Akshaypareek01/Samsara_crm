@@ -7,7 +7,7 @@ import companyService from "@/services/companyService";
 import bookingService, { type CreateBookingRequest } from "@/services/bookingService";
 import { clearCompanyInsightsCache } from "@/services/companyInsightsClient";
 import type { EapTraining, EapDurationHours } from "@/services/eapTrainingService";
-import { getEapSyllabusPointsForDuration } from "@/shared/utils/eapTrainingUtils";
+import { getEapSyllabusDescriptionForDuration, formatEapDurationLabel } from "@/shared/utils/eapTrainingUtils";
 import {
   BOOKING_NOTES_MAX_LENGTH,
   normalizeBookingNotes,
@@ -194,7 +194,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
 
   if (!isOpen || !trainer || !training) return null;
 
-  const syllabusPoints = getEapSyllabusPointsForDuration(training, selectedDuration ?? 0);
+  const syllabusDescription = getEapSyllabusDescriptionForDuration(training, selectedDuration ?? 0);
   const canBook = isTrainerAcceptingBookings(trainer);
   const notesLength = formData.notes?.length ?? 0;
   const notesRemaining = bookingNotesRemaining(formData.notes);
@@ -279,22 +279,20 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
                 onClick={() => selectDuration(hours)}
                 aria-pressed={selectedDuration === hours}
               >
-                {hours} hr{hours === 1 ? "" : "s"}
+                {formatEapDurationLabel(hours)}
               </button>
             ))}
           </div>
         </section>
 
-        {syllabusPoints.length > 0 && (
+        {syllabusDescription && (
           <section className="company-eap-booking-section" aria-labelledby="eap-booking-outline">
             <span id="eap-booking-outline" className="company-eap-booking-section__label">
-              Session outline · {selectedDuration}h
+              Session outline · {selectedDuration != null ? formatEapDurationLabel(selectedDuration) : ""}
             </span>
-            <ul className="company-eap-booking-outline">
-              {syllabusPoints.map((point, i) => (
-                <li key={i}>{point}</li>
-              ))}
-            </ul>
+            <p className="company-eap-booking-outline company-eap-booking-outline--paragraph whitespace-pre-wrap mb-0">
+              {syllabusDescription}
+            </p>
           </section>
         )}
 

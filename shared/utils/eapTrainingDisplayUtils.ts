@@ -1,4 +1,9 @@
 import type { EapTraining } from '@/services/eapTrainingService';
+import {
+  formatEapDurationLabel,
+  getSyllabusEntryDescription,
+  normalizeEapDurationHours,
+} from '@/shared/utils/eapTrainingUtils';
 
 /** Visual theme for an EAP training browse card icon. */
 export type EapTrainingIconTheme = {
@@ -48,14 +53,18 @@ export function getEapTrainingIconTheme(title: string): EapTrainingIconTheme {
  * @param training - EAP training record.
  */
 export function getEapTrainingDescription(training: EapTraining): string {
-  const firstPoint = training.syllabus?.[0]?.points?.find((p) => String(p).trim());
-  if (firstPoint) {
-    const text = String(firstPoint).trim();
+  const firstEntry = training.syllabus?.[0];
+  const firstText = getSyllabusEntryDescription(firstEntry);
+  if (firstText) {
+    const line = firstText.split('\n').find((l) => l.trim()) ?? firstText;
+    const text = line.trim();
     return text.length > 110 ? `${text.slice(0, 107)}…` : text;
   }
-  const durations = training.durationOptions?.join(', ') || '';
-  return durations
-    ? `Structured EAP program with ${durations} hour session options for your team.`
+  const labels = (training.durationOptions ?? [])
+    .map((hours) => formatEapDurationLabel(normalizeEapDurationHours(hours)))
+    .join(', ');
+  return labels
+    ? `Structured EAP program with ${labels} session options for your team.`
     : 'Structured EAP program designed for workplace wellness.';
 }
 

@@ -3,8 +3,9 @@
 import React from "react";
 import type { Booking } from "@/services/bookingService";
 import {
+  formatEapDurationLabel,
   getBookingEapTraining,
-  getEapSyllabusPointsForDuration,
+  getEapSyllabusDescriptionForDuration,
 } from "@/shared/utils/eapTrainingUtils";
 
 type EapBookingDetailsSectionProps = {
@@ -18,7 +19,7 @@ const EapBookingDetailsSection: React.FC<EapBookingDetailsSectionProps> = ({ boo
   const eapTraining = getBookingEapTraining(booking);
   if (!eapTraining?.title) return null;
 
-  const points = getEapSyllabusPointsForDuration(eapTraining, booking.duration);
+  const description = getEapSyllabusDescriptionForDuration(eapTraining, booking.duration);
 
   return (
     <section>
@@ -27,13 +28,11 @@ const EapBookingDetailsSection: React.FC<EapBookingDetailsSectionProps> = ({ boo
       </p>
       <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3 space-y-2">
         <p className="text-sm font-semibold text-violet-900 mb-0">{eapTraining.title}</p>
-        <p className="text-xs text-muted mb-0">Duration: {booking.duration} hr{booking.duration === 1 ? "" : "s"}</p>
-        {points.length > 0 && (
-          <ul className="text-sm mb-0 ps-4 list-disc text-slate-700">
-            {points.map((point, i) => (
-              <li key={i}>{point}</li>
-            ))}
-          </ul>
+        <p className="text-xs text-muted mb-0">
+          Duration: {formatEapDurationLabel(booking.duration)}
+        </p>
+        {description && (
+          <p className="text-sm mb-0 text-slate-700 whitespace-pre-wrap">{description}</p>
         )}
       </div>
     </section>

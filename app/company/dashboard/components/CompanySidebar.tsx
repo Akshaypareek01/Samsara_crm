@@ -29,6 +29,7 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
     }
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
 
         window.addEventListener('resize', menuResizeFn);
         window.addEventListener('resize', checkHoriMenu);
@@ -43,9 +44,26 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
             }
         }
         if (mainContent) mainContent.addEventListener('click', menuClose);
+
+        const updateOverlay = () => {
+            const overlay = document.querySelector("#responsive-overlay") as HTMLElement;
+            if (overlay && window.innerWidth <= 992) {
+                const theme = store.getState();
+                if (theme.dataToggled === 'open') {
+                    overlay.classList.add('active');
+                } else {
+                    overlay.classList.remove('active');
+                }
+            }
+        };
+
+        const unsubscribe = store.subscribe(updateOverlay);
+        updateOverlay();
+
         return () => {
             window.removeEventListener("resize", menuResizeFn);
             window.removeEventListener('resize', checkHoriMenu);
+            unsubscribe();
         };
     }, []);
 
@@ -602,6 +620,13 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
     const handleClick = (event: any) => {
         event.preventDefault();
     };
+
+    const handleLinkClick = () => {
+        if (typeof window !== 'undefined' && window.innerWidth <= 992) {
+            menuClose();
+        }
+    };
+
     return (
 
         <Fragment>
@@ -616,18 +641,34 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
                 aria-label="Company navigation"
             >
                 <div className="main-sidebar-header">
-                    <Link href="/company/dashboard" className="header-logo company-sidebar-brand">
-                        <img
-                            src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
-                            alt="Samsara Wellness logo"
-                            width={36}
-                            height={36}
-                        />
-                        <span className="company-sidebar-brand-text">
-                            <span className="company-sidebar-brand-title">Samsara Wellness</span>
-                            <span className="company-sidebar-brand-sub">HR CRM</span>
-                        </span>
-                    </Link>
+                    <div className="flex items-center justify-between w-full gap-2">
+                        <Link href="/company/dashboard" className="header-logo company-sidebar-brand">
+                            <span className="company-sidebar-brand-mark">
+                                <img
+                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
+                                    alt="Samsara Wellness logo"
+                                    width={72}
+                                    height={72}
+                                />
+                            </span>
+                            <span className="company-sidebar-brand-text">
+                                <span className="company-sidebar-brand-title">Samsara Wellness</span>
+                                <span className="company-sidebar-brand-sub">HR CRM</span>
+                            </span>
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                menuClose();
+                            }}
+                            className="company-sidebar-close company-sidebar-close-mobile"
+                            aria-label="Close sidebar"
+                        >
+                            <i className="ri-close-line text-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <SimpleBar className="main-sidebar" id="sidebar-scroll">
@@ -648,7 +689,11 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
                                             </span>
                                             : ""}
                                         {levelone.type === "link" ?
-                                            <Link href={levelone.path} className={`side-menu__item ${levelone.selected ? 'active' : ''}`} >
+                                            <Link
+                                                href={levelone.path}
+                                                className={`side-menu__item ${levelone.selected ? 'active' : ''}`}
+                                                onClick={handleLinkClick}
+                                            >
                                                 <span className={`hs-tooltip inline-block [--placement:right] leading-none ${local_varaiable?.dataVerticalStyle == 'doublemenu' ? '' : 'hidden'}`}>
                                                     <button type="button" className="hs-tooltip-toggle  inline-flex justify-center items-center
 															">

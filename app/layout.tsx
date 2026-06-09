@@ -6,6 +6,7 @@ import store from "@/shared/redux/store";
 import PrelineScript from "./PrelineScript";
 import { useState } from "react";
 import { Initialload } from "@/shared/contextapi";
+import ThemeHtmlSync from "@/shared/layout-components/theme/ThemeHtmlSync";
 
 
 const RootLayout = ({ children }: any) => {
@@ -15,6 +16,7 @@ const RootLayout = ({ children }: any) => {
       <body>
         <Provider store={store}>
           <Initialload.Provider value={{ pageloading, setpageloading }}>
+            <ThemeHtmlSync />
             {children}
           </Initialload.Provider>
         </Provider>

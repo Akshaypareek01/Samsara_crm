@@ -12,7 +12,21 @@ import ApiService from "@/services/ApiService";
 import { clearCompanyInsightsCache } from "@/services/companyInsightsClient";
 import Swal from "sweetalert2";
 import CompanySettingsForm from "../components/settings/CompanySettingsForm";
+import CompanySettingsProfileView from "../components/settings/CompanySettingsProfileView";
 import "../components/settings/company-settings-page.css";
+
+/**
+ * Deep-clones company form data for cancel/reset snapshots.
+ *
+ * @param data - Company profile form state.
+ */
+function cloneFormData(data: UpdateCompanyRequest): UpdateCompanyRequest {
+    return {
+        ...data,
+        contactPerson1: { ...(data.contactPerson1 || EMPTY_CONTACT) },
+        contactPerson2: { ...(data.contactPerson2 || EMPTY_CONTACT) },
+    };
+}
 
 const EMPTY_CONTACT: ContactPerson = {
     name: "",
@@ -46,6 +60,8 @@ const SettingsPage = () => {
     const [uploadingLogo, setUploadingLogo] = useState(false);
     const logoInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<UpdateCompanyRequest>(INITIAL_FORM);
+    const [savedSnapshot, setSavedSnapshot] = useState<UpdateCompanyRequest>(INITIAL_FORM);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         void fetchCompanyProfile();
@@ -58,7 +74,7 @@ const SettingsPage = () => {
             const profile = await CompanyService.getCompanyProfile();
             setCompanyId(profile.companyId || "");
             setAccountStatus(profile.status !== false);
-            setFormData({
+            const nextForm = {
                 companyName: profile.companyName || "",
                 companyLogo: profile.companyLogo || "",
                 email: profile.email || "",
@@ -72,7 +88,10 @@ const SettingsPage = () => {
                 country: profile.country || "",
                 contactPerson1: profile.contactPerson1 || { ...EMPTY_CONTACT },
                 contactPerson2: profile.contactPerson2 || { ...EMPTY_CONTACT },
-            });
+            };
+            setFormData(nextForm);
+            setSavedSnapshot(cloneFormData(nextForm));
+            setIsEditing(false);
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to load company profile";
@@ -96,6 +115,24 @@ const SettingsPage = () => {
             const updatedCompany = await CompanyService.updateCompanyProfile(payload);
             setCompanyId(updatedCompany.companyId || "");
             setAccountStatus(updatedCompany.status !== false);
+            const nextForm = {
+                companyName: updatedCompany.companyName || "",
+                companyLogo: updatedCompany.companyLogo || "",
+                email: updatedCompany.email || "",
+                domain: updatedCompany.domain || "",
+                numberOfEmployees: updatedCompany.numberOfEmployees,
+                gstNumber: updatedCompany.gstNumber || "",
+                panNumber: updatedCompany.panNumber || "",
+                address: updatedCompany.address || "",
+                city: updatedCompany.city || "",
+                pincode: updatedCompany.pincode || "",
+                country: updatedCompany.country || "",
+                contactPerson1: updatedCompany.contactPerson1 || { ...EMPTY_CONTACT },
+                contactPerson2: updatedCompany.contactPerson2 || { ...EMPTY_CONTACT },
+            };
+            setFormData(nextForm);
+            setSavedSnapshot(cloneFormData(nextForm));
+            setIsEditing(false);
             await ApiService.setUser(updatedCompany);
             clearCompanyInsightsCache();
             Swal.fire("Success!", "Company profile updated successfully", "success");
@@ -184,6 +221,16 @@ const SettingsPage = () => {
         }));
     };
 
+    const handleCancelEdit = () => {
+        setFormData(cloneFormData(savedSnapshot));
+        setIsEditing(false);
+    };
+
+    const handleStartEdit = () => {
+        setSavedSnapshot(cloneFormData(formData));
+        setIsEditing(true);
+    };
+
     return (
         <Fragment>
             <Seo title="Settings" />
@@ -191,12 +238,26 @@ const SettingsPage = () => {
             <div className="company-settings-page">
                 <header className="company-settings-page__header">
                     <div>
-                        <h1 className="company-settings-page__title">Company settings</h1>
+                        <h1 className="company-settings-page__title">
+                            {isEditing ? "Edit company profile" : "Company profile"}
+                        </h1>
                         <p className="company-settings-page__subtitle">
-                            Update your organization profile, location, and contact details.
-                            Changes apply across your WellConnect dashboard.
+                            {isEditing
+                                ? "Update your organization profile, location, and contact details."
+                                : "View your organization details. Click Edit to make changes."}
                         </p>
                     </div>
+                    {!loading && !isEditing && (
+                        <button
+                            type="button"
+                            className="company-settings-btn company-settings-btn--primary"
+                            onClick={handleStartEdit}
+                            aria-label="Edit company profile"
+                        >
+                            <i className="ri-pencil-line" aria-hidden="true" />
+                            Edit profile
+                        </button>
+                    )}
                 </header>
 
                 {error && (
@@ -210,7 +271,7 @@ const SettingsPage = () => {
                         <span className="company-settings-loading__spinner" aria-hidden="true" />
                         <p className="mb-0">Loading company profile…</p>
                     </div>
-                ) : (
+                ) : isEditing ? (
                     <CompanySettingsForm
                         formData={formData}
                         companyId={companyId}
@@ -223,6 +284,13 @@ const SettingsPage = () => {
                         onLogoChange={handleLogoChange}
                         onLogoClear={clearCompanyLogo}
                         onSubmit={handleSubmit}
+                        onCancel={handleCancelEdit}
+                    />
+                ) : (
+                    <CompanySettingsProfileView
+                        formData={formData}
+                        companyId={companyId}
+                        accountStatus={accountStatus}
                     />
                 )}
             </div>

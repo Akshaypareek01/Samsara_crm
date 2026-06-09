@@ -134,7 +134,7 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
               >
                 <span
                   id="trainer-header-booking-label"
-                  className="trainer-dashboard-header-availability-label"
+                  className="trainer-dashboard-header-availability-label hidden sm:inline"
                 >
                   New bookings
                 </span>
@@ -171,7 +171,7 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
               aria-label="Log out"
             >
               <i className="ri-logout-box-r-line text-base" aria-hidden="true"></i>
-              <span>Logout</span>
+              <span className="trainer-dashboard-header-logout-text">Logout</span>
             </button>
           </div>
         </div>

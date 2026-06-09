@@ -9,6 +9,8 @@ import { TRAINER_ACCEPTING_BOOKINGS_EVENT, type TrainerAcceptingBookingsDetail }
 import { useTrainerDashboardStats } from '@/hooks/useTrainerDashboardStats';
 import TrainerStatCards from './components/TrainerStatCards';
 import TrainerAnalyticsCharts from './components/TrainerAnalyticsCharts';
+import TrainerRatingBadge from '@/shared/components/trainer/TrainerRatingBadge';
+import TrainerReviewsSection from './components/TrainerReviewsSection';
 
 const TrainerDashboard = () => {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
@@ -46,12 +48,6 @@ const TrainerDashboard = () => {
             setLoading(false);
         }
     };
-
-    const specialties = Array.isArray(trainer?.specialistIn)
-        ? trainer?.specialistIn
-        : trainer?.specialistIn
-            ? [trainer.specialistIn]
-            : [];
 
     return (
         <Fragment>
@@ -112,19 +108,8 @@ const TrainerDashboard = () => {
                                             {trainer.status !== false ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>
-                                    <p className="text-muted mb-2 mt-1">{trainer.title}</p>
-                                    {specialties.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
-                                            {specialties.map((spec, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="badge bg-primary/10 text-primary text-xs max-w-full truncate"
-                                                >
-                                                    {spec}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <p className="text-muted mb-0 mt-1">{trainer.title}</p>
+                                    <TrainerRatingBadge trainer={trainer} size="md" className="mt-2" />
                                 </div>
                             </div>
 
@@ -156,6 +141,8 @@ const TrainerDashboard = () => {
                     )}
                 </div>
             </div>
+
+            <TrainerReviewsSection trainer={trainer} />
 
             {/* ── KPI cards ──────────────────────────────────────── */}
             <h5 className="font-bold text-lg text-defaulttextcolor mb-4">Analytics Overview</h5>

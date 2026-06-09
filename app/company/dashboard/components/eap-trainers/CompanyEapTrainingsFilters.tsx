@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { EAP_DURATION_OPTIONS } from "@/services/eapTrainingService";
+import { EAP_DURATION_OPTIONS, formatEapDurationLabel } from "@/shared/utils/eapTrainingUtils";
 
 type CompanyEapTrainingsFiltersProps = {
   searchInput: string;
@@ -79,7 +79,7 @@ const CompanyEapTrainingsFilters: React.FC<CompanyEapTrainingsFiltersProps> = ({
           <option value="">All durations</option>
           {EAP_DURATION_OPTIONS.map((hours) => (
             <option key={hours} value={String(hours)}>
-              {hours} hour{hours === 1 ? "" : "s"}
+              {formatEapDurationLabel(hours)}
             </option>
           ))}
         </select>

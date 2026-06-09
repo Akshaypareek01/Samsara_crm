@@ -16,6 +16,7 @@ import {
 } from "@/shared/utils/bookingTrainerUtils";
 import CompanyRightDrawer from "./CompanyRightDrawer";
 import EapBookingDetailsSection from "@/shared/components/EapBookingDetailsSection";
+import { useCompanyRating } from "../context/CompanyRatingContext";
 
 export type CompanyBookingDetailsDrawerProps = {
     open: boolean;
@@ -37,15 +38,30 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     onCancel,
     onViewTrainer,
 }) => {
+    const { openRatingDrawer, pendingBookingIds } = useCompanyRating();
     const trainer = booking ? getBookingTrainer(booking) : null;
     const trainerName = booking ? getBookingTrainerName(booking) : "Trainer";
     const photoUrl = getTrainerProfilePhotoUrl(trainer);
     const locationLine = formatTrainerLocation(trainer);
     const bookingId = booking?._id || booking?.id || "";
 
+    const isCompleted = booking?.status === "completed";
+    const isUnrated = bookingId ? pendingBookingIds.has(bookingId) : false;
+
     const footer =
         booking && !loading ? (
             <div className="flex flex-col gap-2" role="group" aria-label="Booking actions">
+                {isCompleted && bookingId && (
+                    <button
+                        type="button"
+                        className="ti-btn ti-btn-primary !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold min-h-[2.5rem] rounded-lg shadow-none"
+                        onClick={() => openRatingDrawer(bookingId)}
+                        aria-label={isUnrated ? "Rate this session" : "View or update session rating"}
+                    >
+                        <i className="ri-star-line me-1" aria-hidden="true" />
+                        {isUnrated ? "Rate this session" : "View rating"}
+                    </button>
+                )}
                 {canCompanyCancelBooking(booking.status) && onCancel && bookingId && (
                     <button
                         type="button"
