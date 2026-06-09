@@ -21,8 +21,8 @@
     height: 100vh !important;
     height: 100dvh !important;
     z-index: 1000 !important;
-    width: 15rem !important;
-    max-width: 85vw !important;
+    width: 17.5rem !important;
+    max-width: 90vw !important;
     transition: transform 0.3s ease;
   }
 

@@ -3,10 +3,9 @@
 import Seo from "@/shared/layout-components/seo/seo";
 import Link from "next/link";
 import React, { Fragment, Suspense, useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import TrainerService, { type Trainer } from "@/services/trainerService";
 import CompanyTrainerCard from "../../components/CompanyTrainerCard";
-import CompanyTrainerProfileDrawer from "../../components/CompanyTrainerProfileDrawer";
 import CompanyEapTrainersBrowseFilters from "../../components/eap-trainers/CompanyEapTrainersBrowseFilters";
 import CompanyTrainersPagination from "../../components/trainers/CompanyTrainersPagination";
 import "../../components/company-trainer-card.css";
@@ -36,14 +35,13 @@ const getPageNumbers = (current: number, total: number): (number | "...")[] => {
 
 const EapTrainersBrowsePageInner = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const listReturnTo = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
-  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(false);
   const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
@@ -112,27 +110,6 @@ const EapTrainersBrowsePageInner = () => {
     void fetchTrainers();
   }, [fetchTrainers]);
 
-  /**
-   * Open trainer profile drawer and load the full trainer record.
-   *
-   * @param trainer - Trainer from the list API.
-   */
-  const openTrainerProfile = useCallback(async (trainer: Trainer) => {
-    const id = trainer._id || trainer.id;
-    setSelectedTrainer(trainer);
-    setProfileDrawerOpen(true);
-    if (!id) return;
-    try {
-      setProfileLoading(true);
-      const full = await TrainerService.getTrainerById(id);
-      setSelectedTrainer(full);
-    } catch (err: unknown) {
-      console.error("Error loading trainer profile:", err);
-    } finally {
-      setProfileLoading(false);
-    }
-  }, []);
-
   const hasActiveFilters = !!searchInput || !!filterCity || sortBy !== "createdAt:desc";
 
   const handleClearFilters = () => {
@@ -191,7 +168,7 @@ const EapTrainersBrowsePageInner = () => {
               <CompanyTrainerCard
                 key={trainer._id || trainer.id}
                 trainer={trainer}
-                onViewProfile={(t) => void openTrainerProfile(t)}
+                returnTo={listReturnTo}
               />
             ))}
           </div>
@@ -208,16 +185,6 @@ const EapTrainersBrowsePageInner = () => {
           )}
         </>
       )}
-
-      <CompanyTrainerProfileDrawer
-        open={profileDrawerOpen}
-        trainer={selectedTrainer}
-        loading={profileLoading}
-        onClose={() => {
-          setProfileDrawerOpen(false);
-          setSelectedTrainer(null);
-        }}
-      />
     </div>
   );
 };

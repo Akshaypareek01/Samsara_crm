@@ -8,11 +8,21 @@ import TrainerAccountForm from "./TrainerAccountForm";
 import "../components/trainer-account-details.css";
 
 /**
- * Trainer My Account page — save UPI and bank payout details.
+ * Trainer My Account page — PAN, UPI, and bank payout details.
  */
 export default function TrainerMyAccountPage() {
-  const { loading, saving, error, formData, patchDetails, handleSubmit } =
-    useTrainerAccountForm();
+  const {
+    loading,
+    saving,
+    uploadingPanDocument,
+    error,
+    formData,
+    panDocumentInputRef,
+    patchDetails,
+    handlePanDocumentChange,
+    clearPanDocument,
+    handleSubmit,
+  } = useTrainerAccountForm();
 
   return (
     <Fragment>
@@ -23,7 +33,7 @@ export default function TrainerMyAccountPage() {
         <header className="trainer-account-details-page__header">
           <h1 className="trainer-account-details-page__title">My Account</h1>
           <p className="trainer-account-details-page__subtitle">
-            Add your UPI and bank details so we can process session payouts.
+            Add your PAN, UPI, and bank details.
           </p>
         </header>
 
@@ -42,7 +52,11 @@ export default function TrainerMyAccountPage() {
           <TrainerAccountForm
             formData={formData}
             saving={saving}
+            uploadingPanDocument={uploadingPanDocument}
+            panDocumentInputRef={panDocumentInputRef}
             onChange={patchDetails}
+            onPanDocumentChange={handlePanDocumentChange}
+            onClearPanDocument={clearPanDocument}
             onSubmit={(e) => {
               void handleSubmit(e);
             }}

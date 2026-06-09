@@ -1,0 +1,81 @@
+.company-trainer-profile-page {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.company-trainer-profile-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6d28d9;
+  text-decoration: none;
+}
+
+.company-trainer-profile-page__back:hover {
+  color: #5b21b6;
+  text-decoration: underline;
+}
+
+.company-trainer-profile-page__header {
+  margin-bottom: 1.25rem;
+}
+
+.company-trainer-profile-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.25rem;
+}
+
+.company-trainer-profile-page__subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.company-trainer-profile-page__card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.875rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.company-trainer-profile-page__card .company-trainer-profile__hero {
+  border-radius: 0;
+}
+
+.company-trainer-profile-page__actions {
+  margin-top: 1.25rem;
+  padding: 0 0.25rem;
+}
+
+.company-trainer-profile-page__book-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: 0.625rem;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.company-trainer-profile-page__book-btn:hover:not(:disabled) {
+  background: #6d28d9;
+}
+
+.company-trainer-profile-page__book-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

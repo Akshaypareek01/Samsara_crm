@@ -1,13 +1,18 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import type { Trainer } from '@/services/trainerService';
 import { trainerSpecialtyLabel } from '../utils/trainerCardDisplayUtils';
+import { getTrainerRecordId, trainerProfilePageUrl } from '../utils/trainerProfilePageUrl';
 import TrainerRatingBadge from '@/shared/components/trainer/TrainerRatingBadge';
 
 type CompanyTrainerCardProps = {
   trainer: Trainer;
-  onViewProfile: (trainer: Trainer) => void;
+  /** Internal path used for the profile page back link. */
+  returnTo?: string;
+  /** When set, opens profile via callback instead of navigating to the profile page. */
+  onViewProfile?: (trainer: Trainer) => void;
 };
 
 /**
@@ -15,9 +20,12 @@ type CompanyTrainerCardProps = {
  */
 const CompanyTrainerCard: React.FC<CompanyTrainerCardProps> = ({
   trainer,
+  returnTo = '/company/dashboard',
   onViewProfile,
 }) => {
   const professionalTitle = trainerSpecialtyLabel(trainer);
+  const trainerId = getTrainerRecordId(trainer);
+  const profileHref = trainerId ? trainerProfilePageUrl(trainerId, returnTo) : undefined;
 
   return (
     <article className="company-trainer-card">
@@ -44,14 +52,31 @@ const CompanyTrainerCard: React.FC<CompanyTrainerCardProps> = ({
 
       <TrainerRatingBadge trainer={trainer} className="company-trainer-card__rating" />
 
-      <button
-        type="button"
-        className="company-trainer-card__btn"
-        onClick={() => onViewProfile(trainer)}
-        aria-label={`View profile for ${trainer.name}`}
-      >
-        View Profile
-      </button>
+      {onViewProfile ? (
+        <button
+          type="button"
+          className="company-trainer-card__btn"
+          aria-label={`View profile for ${trainer.name}`}
+          onClick={() => onViewProfile(trainer)}
+        >
+          View Profile
+        </button>
+      ) : profileHref ? (
+        <Link
+          href={profileHref}
+          className="company-trainer-card__btn"
+          aria-label={`View profile for ${trainer.name}`}
+        >
+          View Profile
+        </Link>
+      ) : (
+        <span
+          className="company-trainer-card__btn company-trainer-card__btn--disabled"
+          aria-disabled="true"
+        >
+          View Profile
+        </span>
+      )}
     </article>
   );
 };

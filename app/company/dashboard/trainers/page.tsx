@@ -3,13 +3,11 @@
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, Suspense, useCallback, useEffect, useState } from 'react';
 import TrainerService, { Trainer } from '@/services/trainerService';
-import CompanyBookingDrawer from '../components/CompanyBookingDrawer';
-import CompanyTrainerProfileDrawer from '../components/CompanyTrainerProfileDrawer';
 import CompanyTrainerCard from '../components/CompanyTrainerCard';
 import '../components/company-trainer-card.css';
 import CompanyTrainersFilters from '../components/trainers/CompanyTrainersFilters';
 import CompanyTrainersPagination from '../components/trainers/CompanyTrainersPagination';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { HOME_TRAINER_CATEGORY_LABELS } from '../constants/homeTrainerCategories';
 import { isValidTrainerCategory, trainersPageUrl } from '../utils/trainersPageUrl';
 import '../components/trainers/company-trainers-page.css';
@@ -38,19 +36,16 @@ const getPageNumbers = (current: number, total: number): (number | '...')[] => {
 
 const TrainersPageInner = () => {
     const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams();
     const categoryFromUrl = searchParams.get('category');
     const nameFromUrl = searchParams.get('name') ?? '';
     const urlCategory = isValidTrainerCategory(categoryFromUrl) ? categoryFromUrl : '';
+    const listReturnTo = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
 
     const [trainers, setTrainers] = useState<Trainer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
-    const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
-    const [profileLoading, setProfileLoading] = useState(false);
-    const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
-    const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const [searchInput, setSearchInput] = useState(nameFromUrl);
     const [searchTerm, setSearchTerm] = useState(nameFromUrl);
     const [filterSpecialist, setFilterSpecialist] = useState('');
@@ -153,29 +148,6 @@ const TrainersPageInner = () => {
         void fetchTrainers();
     }, [fetchTrainers]);
 
-    const openProfileDrawer = async (trainer: Trainer) => {
-        const id = trainer._id || trainer.id;
-        setSelectedTrainer(trainer);
-        setProfileDrawerOpen(true);
-        if (!id) return;
-        try {
-            setProfileLoading(true);
-            const full = await TrainerService.getTrainerById(id);
-            setSelectedTrainer(full);
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Failed to load trainer profile');
-        } finally {
-            setProfileLoading(false);
-        }
-    };
-
-    const handleBookSessionFromProfile = (trainer: Trainer) => {
-        setProfileDrawerOpen(false);
-        setSelectedTrainer(null);
-        setTrainerToBook(trainer);
-        setBookingDrawerOpen(true);
-    };
-
     return (
         <Fragment>
             <Seo title="Trainers" />
@@ -252,7 +224,7 @@ const TrainersPageInner = () => {
                                     <CompanyTrainerCard
                                         key={trainer._id || trainer.id}
                                         trainer={trainer}
-                                        onViewProfile={(t) => void openProfileDrawer(t)}
+                                        returnTo={listReturnTo}
                                     />
                                 ))
                             )}
@@ -271,30 +243,6 @@ const TrainersPageInner = () => {
                     </>
                 )}
             </div>
-
-            <CompanyTrainerProfileDrawer
-                open={profileDrawerOpen}
-                trainer={selectedTrainer}
-                loading={profileLoading}
-                onClose={() => {
-                    setProfileDrawerOpen(false);
-                    setSelectedTrainer(null);
-                }}
-                onBookSession={handleBookSessionFromProfile}
-            />
-
-            <CompanyBookingDrawer
-                trainer={trainerToBook}
-                isOpen={bookingDrawerOpen}
-                onClose={() => {
-                    setBookingDrawerOpen(false);
-                    setTrainerToBook(null);
-                }}
-                onSuccess={() => {
-                    setBookingDrawerOpen(false);
-                    setTrainerToBook(null);
-                }}
-            />
         </Fragment>
     );
 };

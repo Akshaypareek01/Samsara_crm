@@ -80,10 +80,12 @@
 }
 
 .trainer-dashboard-shell .trainer-wellconnect-sidebar .trainer-sidebar-brand-title {
+  font-family: "Times New Roman", Times, serif;
   font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
-  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .trainer-dashboard-shell .trainer-wellconnect-sidebar .trainer-sidebar-brand-sub {

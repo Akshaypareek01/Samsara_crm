@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import Swal from "sweetalert2";
+import { Base_url } from "@/Config/BaseUrl";
 import TrainerService, {
   TrainerAccountDetails,
+  TrainerImage,
   UpdateTrainerRequest,
 } from "@/services/trainerService";
+import { validateTrainerPanNumber } from "@/app/trainer/dashboard/utils/trainerAccountValidation";
 
 const emptyAccountDetails: TrainerAccountDetails = {
   upiId: "",
@@ -14,6 +18,8 @@ const emptyAccountDetails: TrainerAccountDetails = {
   accountNumber: "",
   ifscCode: "",
   accountHolderName: "",
+  panNumber: "",
+  panDocument: null,
 };
 
 /**
@@ -26,7 +32,9 @@ export function validateTrainerAccountDetails(details: TrainerAccountDetails): s
   const upiId = (details.upiId || "").trim();
   const accountNumber = (details.accountNumber || "").trim();
   const ifscCode = (details.ifscCode || "").trim();
+  const panError = validateTrainerPanNumber(details.panNumber || "");
 
+  if (panError) return panError;
   if (upiId && !/^.+@.+$/.test(upiId)) {
     return "Please enter a valid UPI ID (e.g. name@bank)";
   }
@@ -48,8 +56,10 @@ export function useTrainerAccountForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPanDocument, setUploadingPanDocument] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<TrainerAccountDetails>({ ...emptyAccountDetails });
+  const panDocumentInputRef = useRef<HTMLInputElement>(null);
 
   const patchDetails = useCallback((patch: Partial<TrainerAccountDetails>) => {
     setFormData((prev) => ({ ...prev, ...patch }));
@@ -67,6 +77,8 @@ export function useTrainerAccountForm() {
         accountNumber: account.accountNumber || "",
         ifscCode: account.ifscCode || "",
         accountHolderName: account.accountHolderName || "",
+        panNumber: account.panNumber || "",
+        panDocument: account.panDocument?.path ? account.panDocument : null,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load account details";
@@ -83,6 +95,78 @@ export function useTrainerAccountForm() {
   useEffect(() => {
     void fetchAccountDetails();
   }, [fetchAccountDetails]);
+
+  /**
+   * Uploads a PAN card image or PDF to storage and stores the URL in form state.
+   *
+   * @param file - Selected PAN document file.
+   */
+  const uploadPanDocument = useCallback(async (file: File) => {
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isPdf) {
+      Swal.fire("Error!", "Please upload a JPG, PNG, or PDF file", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire("Error!", "File must be 5MB or smaller", "error");
+      return;
+    }
+
+    try {
+      setUploadingPanDocument(true);
+      const body = new FormData();
+      body.append("file", file);
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${Base_url}/upload`, body, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.data.success || !response.data.url) {
+        throw new Error("Upload failed: Invalid response");
+      }
+
+      const imageData: TrainerImage = {
+        key: `trainer-pan/${response.data.fileName || file.name}`,
+        path: response.data.url,
+      };
+
+      patchDetails({ panDocument: imageData });
+      Swal.fire("Success!", "PAN document uploaded successfully", "success");
+    } catch (uploadErr: unknown) {
+      const axiosErr = uploadErr as { response?: { data?: { message?: string } }; message?: string };
+      Swal.fire(
+        "Error!",
+        axiosErr.response?.data?.message || axiosErr.message || "Failed to upload PAN document",
+        "error"
+      );
+    } finally {
+      setUploadingPanDocument(false);
+    }
+  }, [patchDetails]);
+
+  /**
+   * Handles PAN document file input change.
+   *
+   * @param e - File input change event.
+   */
+  const handlePanDocumentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) void uploadPanDocument(file);
+      if (panDocumentInputRef.current) panDocumentInputRef.current.value = "";
+    },
+    [uploadPanDocument]
+  );
+
+  /** Clears the uploaded PAN document from form state. */
+  const clearPanDocument = useCallback(() => {
+    patchDetails({ panDocument: null });
+    if (panDocumentInputRef.current) panDocumentInputRef.current.value = "";
+  }, [patchDetails]);
 
   /**
    * Persists payout account details via PATCH /trainers/me.
@@ -110,6 +194,13 @@ export function useTrainerAccountForm() {
           accountNumber: (formData.accountNumber || "").trim(),
           ifscCode: (formData.ifscCode || "").trim().toUpperCase(),
           accountHolderName: (formData.accountHolderName || "").trim(),
+          panNumber: (formData.panNumber || "").trim().toUpperCase(),
+          panDocument: formData.panDocument?.path
+            ? {
+                key: formData.panDocument.key || "",
+                path: formData.panDocument.path,
+              }
+            : { key: "", path: "" },
         },
       };
 
@@ -134,9 +225,13 @@ export function useTrainerAccountForm() {
   return {
     loading,
     saving,
+    uploadingPanDocument,
     error,
     formData,
+    panDocumentInputRef,
     patchDetails,
+    handlePanDocumentChange,
+    clearPanDocument,
     handleSubmit,
     fetchAccountDetails,
   };

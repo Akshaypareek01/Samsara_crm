@@ -33,13 +33,15 @@ export interface TrainerCertification {
   year?: number | null;
 }
 
-/** Trainer payout account details (UPI + bank). */
+/** Trainer payout account details (UPI + bank + PAN). */
 export interface TrainerAccountDetails {
   upiId?: string;
   bankName?: string;
   accountNumber?: string;
   ifscCode?: string;
   accountHolderName?: string;
+  panNumber?: string;
+  panDocument?: TrainerImage | null;
 }
 
 /** Aggregate session rating summary (denormalized on trainer). */

@@ -93,7 +93,16 @@
   padding: 0.35rem 0.4rem;
   line-height: 1.2;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  display: block;
   transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.company-trainer-card__btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .company-trainer-card__btn:hover {

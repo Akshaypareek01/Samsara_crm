@@ -11,7 +11,6 @@ type CompanyHomeCategorySectionProps = {
   category: string;
   trainers: Trainer[];
   loading: boolean;
-  onViewProfile: (trainer: Trainer) => void;
 };
 
 /**
@@ -22,7 +21,6 @@ const CompanyHomeCategorySection: React.FC<CompanyHomeCategorySectionProps> = ({
   category,
   trainers,
   loading,
-  onViewProfile,
 }) => {
   const viewAllHref = trainersPageUrl(category);
 
@@ -58,7 +56,6 @@ const CompanyHomeCategorySection: React.FC<CompanyHomeCategorySectionProps> = ({
             <CompanyHomeTrainerCard
               key={trainer._id || trainer.id}
               trainer={trainer}
-              onViewProfile={onViewProfile}
             />
           ))}
         </div>
