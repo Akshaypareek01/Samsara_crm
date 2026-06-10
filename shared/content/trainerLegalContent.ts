@@ -7,7 +7,7 @@ export const TRAINER_LEGAL_META = {
   operatingEntity: 'Samsaraa WellTek Pvt Ltd, Bangalore',
   brandPortal: 'Samsara Wellness CRM',
   applicability:
-    'Independent wellness professionals, including but not limited to Yoga Trainers, Sound Healers, Psychologists, and Employee Assistance Program (EAP) Trainers (hereafter referred to as "the Trainer" or "You").',
+    'Independent wellness professionals, including but not limited to Yoga Trainers, Sound Healers, Psychologists, Women Health Trainers, and Employee Assistance Program (EAP) Trainers (hereafter referred to as "the Trainer" or "You").',
   legalEmail: 'legal@samsarawellness.in',
 };
 

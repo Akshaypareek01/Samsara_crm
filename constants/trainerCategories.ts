@@ -3,6 +3,7 @@ export const TRAINER_CATEGORY_OPTIONS = [
   'Yoga Trainer',
   'Sound Healer',
   'Psychologist',
+  'Women Health Trainer',
   'EAP Trainer',
 ] as const;
 

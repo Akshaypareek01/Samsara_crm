@@ -8,6 +8,7 @@ export const HOME_TRAINER_CATEGORY_LABELS: Record<
   'Yoga Trainer': 'Yoga Teachers',
   'Sound Healer': 'Sound Healers',
   Psychologist: 'Psychologist',
+  'Women Health Trainer': 'Women Health Trainers',
   'EAP Trainer': 'EAP Trainers',
 };
 

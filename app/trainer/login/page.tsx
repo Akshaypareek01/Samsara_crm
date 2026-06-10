@@ -82,61 +82,64 @@ const TrainerLogin = () => {
     return (
         <Fragment>
             <Seo title={"Trainer Login"} />
-            <div className="h-dvh min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
-                <div className="w-full max-w-6xl h-full mx-auto min-h-0 grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
+            <div className="trainer-auth-shell h-dvh min-h-0 overflow-hidden p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-primary/5 via-white to-primary/10 dark:from-bodybg dark:via-bodybg dark:to-bodybg text-defaultsize text-defaulttextcolor">
+                <div className="trainer-auth-card w-full max-w-6xl h-full mx-auto min-h-0 grid grid-cols-1 lg:grid-cols-12 grid-rows-[minmax(0,1fr)] bg-white dark:bg-bodybg rounded-2xl shadow-2xl overflow-hidden border border-defaultborder/50">
                     <aside
-                        className="hidden lg:flex lg:col-span-5 min-h-0 flex-col justify-between relative overflow-hidden p-10 text-white bg-gradient-to-br from-primary to-primary/70"
+                        className="trainer-auth-aside hidden lg:flex lg:col-span-5 min-h-0 relative p-6 xl:p-8 2xl:p-10 text-white bg-gradient-to-br from-primary to-primary/70"
                         aria-label="Trainer login information"
                     >
-                        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10" aria-hidden="true"></div>
-                        <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5" aria-hidden="true"></div>
+                        <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-white/10 pointer-events-none" aria-hidden="true"></div>
+                        <div className="absolute -bottom-24 -left-12 w-72 h-72 rounded-full bg-white/5 pointer-events-none" aria-hidden="true"></div>
 
-                        <div className="relative z-10">
-                            <div className="inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-10 shadow-lg leading-none">
-                                <img
-                                    src="/assets/images/logo.jpeg"
-                                    alt="Samsara"
-                                    className="h-24 xl:h-28 w-auto max-w-[220px] object-contain block"
-                                />
+                        <div className="trainer-auth-aside-inner relative z-10 w-full">
+                            <div>
+                                <div className="trainer-auth-aside-logo-wrap inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-8 xl:mb-10 shadow-lg leading-none">
+                                    <img
+                                        src="/assets/images/logo.jpeg"
+                                        alt="Samsara"
+                                        className="trainer-auth-aside-logo h-20 xl:h-24 2xl:h-28 w-auto max-w-[220px] object-contain block"
+                                    />
+                                </div>
+                                <h1 className="trainer-auth-aside-title text-2xl xl:text-3xl font-bold leading-tight mb-4">
+                                    Welcome back to your trainer dashboard
+                                </h1>
+                                <p className="trainer-auth-aside-subtitle text-white/80 text-sm leading-relaxed mb-6 xl:mb-9">
+                                    Sign in to manage your profile, bookings, and corporate wellness sessions on
+                                    Samsara Wellness.
+                                </p>
+
+                                <ul className="trainer-auth-aside-features space-y-4 xl:space-y-5">
+                                    {HERO_FEATURES.map((feature) => (
+                                        <li key={feature.title} className="flex items-start gap-3">
+                                            <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                                                <i className={`${feature.icon} text-xl`} aria-hidden="true"></i>
+                                            </span>
+                                            <div>
+                                                <p className="font-semibold text-sm">{feature.title}</p>
+                                                <p className="text-white/70 text-xs">{feature.desc}</p>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <h1 className="text-2xl xl:text-3xl font-bold leading-tight mb-4">
-                                Welcome back to your trainer dashboard
-                            </h1>
-                            <p className="text-white/80 text-sm leading-relaxed mb-9">
-                                Sign in to manage your profile, bookings, and corporate wellness sessions on
-                                Samsara Wellness.
-                            </p>
 
-                            <ul className="space-y-5">
-                                {HERO_FEATURES.map((feature) => (
-                                    <li key={feature.title} className="flex items-start gap-3">
-                                        <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-                                            <i className={`${feature.icon} text-xl`} aria-hidden="true"></i>
-                                        </span>
-                                        <div>
-                                            <p className="font-semibold text-sm">{feature.title}</p>
-                                            <p className="text-white/70 text-xs">{feature.desc}</p>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-
-                        <div className="relative z-10 mt-10 space-y-3">
-                            <p className="text-white/70 text-sm mb-0">Don&apos;t have an account?</p>
-                            <Link
-                                href="/trainer/register"
-                                className="inline-flex items-center justify-center w-full min-h-[52px] px-6 py-3.5 rounded-xl bg-white text-primary font-bold text-base sm:text-lg hover:bg-white/90 transition-colors shadow-lg"
-                            >
-                                Register
-                            </Link>
-                            <p className="text-white/50 text-[0.65rem] leading-relaxed">
-                                Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
-                            </p>
+                            <div className="trainer-auth-aside-footer space-y-3 pt-2">
+                                <p className="text-white/70 text-sm mb-0">Don&apos;t have an account?</p>
+                                <Link
+                                    href="/trainer/register"
+                                    className="inline-flex items-center justify-center w-full min-h-[48px] px-6 py-3 rounded-xl bg-white text-primary font-bold text-base hover:bg-white/90 transition-colors shadow-lg"
+                                >
+                                    Register
+                                </Link>
+                                <p className="text-white/50 text-[0.65rem] leading-relaxed">
+                                    Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
+                                </p>
+                            </div>
                         </div>
                     </aside>
 
-                    <div className="lg:col-span-7 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 lg:p-10 pb-8 flex flex-col justify-center">
+                    <div className="trainer-auth-panel trainer-register-scroll lg:col-span-7 min-h-0 p-6 sm:p-8 lg:p-10 pb-8">
+                        <div className="trainer-auth-panel-inner trainer-auth-panel-inner--centered">
                         <div className="mb-6">
                             <img
                                 src="/assets/images/logo.jpeg"
@@ -262,6 +265,7 @@ const TrainerLogin = () => {
                             <p className="text-[0.65rem] text-[#8c9097] dark:text-white/50 leading-relaxed">
                                 Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
                             </p>
+                        </div>
                         </div>
                     </div>
                 </div>
