@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import type { WeeklyAvailabilityDay, WeeklyAvailabilitySlot } from "@/shared/utils/trainerAvailabilityUtils";
-import { WEEKDAY_LABELS } from "@/shared/utils/trainerAvailabilityUtils";
+import { WEEKDAY_LABELS, trainerHasWeeklySchedule } from "@/shared/utils/trainerAvailabilityUtils";
+import "./trainer-weekly-availability-editor.css";
 
 type TrainerWeeklyAvailabilityEditorProps = {
   value: WeeklyAvailabilityDay[];
@@ -11,30 +12,19 @@ type TrainerWeeklyAvailabilityEditorProps = {
   onSave: () => void | Promise<void>;
 };
 
-/**
- * Build an empty weekly schedule with one blank slot per weekday.
- */
-function createEmptySchedule(): WeeklyAvailabilityDay[] {
-  return WEEKDAY_LABELS.map((_, dayOfWeek) => ({
-    dayOfWeek,
-    slots: [],
-  }));
-}
+/** Weekdays shown first (Mon–Fri), then weekend. */
+const EDITOR_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /**
- * Normalize schedule so every weekday exists in the editor state.
+ * Build editor state with every weekday present.
  *
  * @param input - Stored weekly availability from the API.
  */
 function normalizeSchedule(input: WeeklyAvailabilityDay[] | undefined): WeeklyAvailabilityDay[] {
-  const base = createEmptySchedule();
-  if (!input?.length) {
-    return base;
-  }
-  return base.map((day) => {
-    const existing = input.find((entry) => entry.dayOfWeek === day.dayOfWeek);
+  return EDITOR_DAY_ORDER.map((dayOfWeek) => {
+    const existing = input?.find((entry) => entry.dayOfWeek === dayOfWeek);
     return {
-      dayOfWeek: day.dayOfWeek,
+      dayOfWeek,
       slots: existing?.slots?.length ? [...existing.slots] : [],
     };
   });
@@ -55,6 +45,8 @@ const TrainerWeeklyAvailabilityEditor: React.FC<TrainerWeeklyAvailabilityEditorP
     setSchedule(normalizeSchedule(value));
   }, [value]);
 
+  const hasSavedSchedule = trainerHasWeeklySchedule(value);
+
   /**
    * Update slots for a weekday and propagate to parent.
    *
@@ -70,14 +62,14 @@ const TrainerWeeklyAvailabilityEditor: React.FC<TrainerWeeklyAvailabilityEditorP
   };
 
   /**
-   * Append a blank slot row for the given weekday.
+   * Append a default slot row for the given weekday.
    *
    * @param dayOfWeek - Day index.
    */
   const addSlot = (dayOfWeek: number) => {
     const day = schedule.find((d) => d.dayOfWeek === dayOfWeek);
     if (!day) return;
-    updateDaySlots(dayOfWeek, [...day.slots, { startTime: "09:00", endTime: "17:00" }]);
+    updateDaySlots(dayOfWeek, [...day.slots, { startTime: "09:00", endTime: "18:00" }]);
   };
 
   /**
@@ -118,56 +110,62 @@ const TrainerWeeklyAvailabilityEditor: React.FC<TrainerWeeklyAvailabilityEditorP
   };
 
   return (
-    <div className="space-y-4" aria-labelledby="trainer-weekly-schedule-heading">
-      <div>
-        <h4 id="trainer-weekly-schedule-heading" className="font-semibold mb-1 text-base">
+    <div className="trainer-weekly-schedule" aria-labelledby="trainer-weekly-schedule-heading">
+      <div className="trainer-weekly-schedule__intro">
+        <h4 id="trainer-weekly-schedule-heading" className="font-semibold mb-0 text-base">
           Weekly schedule
         </h4>
         <p className="text-muted text-sm mb-0">
-          Set the hours when companies can book you. Bookings outside these windows will be
-          rejected.
+          Add your available hours for each day. Companies can only book inside these windows.
         </p>
+        {!hasSavedSchedule && (
+          <p className="text-amber-700 text-sm mb-0" role="status">
+            No schedule saved yet — add at least one time slot and click Save schedule.
+          </p>
+        )}
       </div>
 
-      <div className="space-y-3">
+      <div className="trainer-weekly-schedule__grid">
         {schedule.map((day) => (
-          <div
+          <article
             key={day.dayOfWeek}
-            className="rounded-lg border border-defaultborder p-3 bg-white dark:bg-bodybg"
+            className="trainer-weekly-schedule__day"
+            aria-label={`${WEEKDAY_LABELS[day.dayOfWeek]} availability`}
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-sm font-semibold text-defaulttextcolor">
+            <div className="trainer-weekly-schedule__day-head">
+              <span className="trainer-weekly-schedule__day-label">
                 {WEEKDAY_LABELS[day.dayOfWeek]}
               </span>
               <button
                 type="button"
-                className="ti-btn ti-btn-sm ti-btn-soft-primary"
+                className="trainer-weekly-schedule__add-btn"
                 onClick={() => addSlot(day.dayOfWeek)}
                 aria-label={`Add time slot for ${WEEKDAY_LABELS[day.dayOfWeek]}`}
               >
-                <i className="ri-add-line me-1" aria-hidden="true" />
+                <i className="ri-add-line" aria-hidden="true" />
                 Add slot
               </button>
             </div>
+
             {day.slots.length === 0 ? (
-              <p className="text-xs text-muted mb-0">Unavailable this day</p>
+              <p className="trainer-weekly-schedule__empty">Not available</p>
             ) : (
-              <ul className="space-y-2 list-none ps-0 mb-0">
+              <ul className="trainer-weekly-schedule__slots">
                 {day.slots.map((slot, index) => (
-                  <li key={`${day.dayOfWeek}-${index}`} className="flex flex-wrap items-center gap-2">
+                  <li key={`${day.dayOfWeek}-${index}`} className="trainer-weekly-schedule__slot">
                     <label className="sr-only" htmlFor={`slot-start-${day.dayOfWeek}-${index}`}>
                       Start time
                     </label>
                     <input
                       id={`slot-start-${day.dayOfWeek}-${index}`}
                       type="time"
-                      className="form-control form-control-sm w-auto"
+                      className="form-control trainer-weekly-schedule__time-input"
                       value={slot.startTime}
                       onChange={(e) =>
                         patchSlot(day.dayOfWeek, index, "startTime", e.target.value)
                       }
                     />
-                    <span className="text-muted text-sm" aria-hidden="true">
+                    <span className="trainer-weekly-schedule__slot-sep" aria-hidden="true">
                       to
                     </span>
                     <label className="sr-only" htmlFor={`slot-end-${day.dayOfWeek}-${index}`}>
@@ -176,13 +174,13 @@ const TrainerWeeklyAvailabilityEditor: React.FC<TrainerWeeklyAvailabilityEditorP
                     <input
                       id={`slot-end-${day.dayOfWeek}-${index}`}
                       type="time"
-                      className="form-control form-control-sm w-auto"
+                      className="form-control trainer-weekly-schedule__time-input"
                       value={slot.endTime}
                       onChange={(e) => patchSlot(day.dayOfWeek, index, "endTime", e.target.value)}
                     />
                     <button
                       type="button"
-                      className="ti-btn ti-btn-sm ti-btn-ghost text-danger"
+                      className="trainer-weekly-schedule__remove-btn"
                       onClick={() => removeSlot(day.dayOfWeek, index)}
                       aria-label={`Remove slot ${index + 1} on ${WEEKDAY_LABELS[day.dayOfWeek]}`}
                     >
@@ -192,13 +190,13 @@ const TrainerWeeklyAvailabilityEditor: React.FC<TrainerWeeklyAvailabilityEditorP
                 ))}
               </ul>
             )}
-          </div>
+          </article>
         ))}
       </div>
 
       <button
         type="button"
-        className="ti-btn ti-btn-primary !bg-primary !text-white"
+        className="ti-btn ti-btn-primary !bg-primary !text-white trainer-weekly-schedule__save-btn"
         disabled={saving}
         onClick={() => void onSave()}
         aria-label="Save weekly availability schedule"

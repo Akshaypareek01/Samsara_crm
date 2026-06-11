@@ -128,7 +128,7 @@ const TrainerProfile = () => {
                   </div>
                 </div>
                 {!isEditing && (
-                  <div className="rounded-xl border border-defaultborder p-4 mb-6 bg-gray-50 dark:bg-black/20">
+                  <div className="rounded-xl border border-defaultborder p-4 sm:p-5 mb-6 bg-white dark:bg-bodybg shadow-sm">
                     <TrainerWeeklyAvailabilityEditor
                       value={weeklyAvailability}
                       saving={scheduleSaving}

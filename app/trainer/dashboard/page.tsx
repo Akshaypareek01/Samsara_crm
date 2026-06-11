@@ -11,6 +11,7 @@ import TrainerStatCards from './components/TrainerStatCards';
 import TrainerAnalyticsCharts from './components/TrainerAnalyticsCharts';
 import TrainerRatingBadge from '@/shared/components/trainer/TrainerRatingBadge';
 import TrainerReviewsSection from './components/TrainerReviewsSection';
+import { trainerHasWeeklySchedule } from '@/shared/utils/trainerAvailabilityUtils';
 
 const TrainerDashboard = () => {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
@@ -64,6 +65,25 @@ const TrainerDashboard = () => {
                 <div className="alert alert-warning mb-4" role="status" aria-live="polite">
                     You are not accepting new bookings. Companies will see booking disabled until you turn this
                     back on from the header or Profile.
+                </div>
+            )}
+
+            {!loading && trainer && trainer.status !== false && !trainerHasWeeklySchedule(trainer.weeklyAvailability) && (
+                <div className="alert alert-warning mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" role="alert">
+                    <div className="flex items-start gap-2 min-w-0">
+                        <i className="ri-calendar-schedule-line text-lg shrink-0 mt-0.5" aria-hidden="true" />
+                        <p className="mb-0 text-sm leading-relaxed">
+                            Your weekly schedule is not set up or incomplete. Companies cannot see your
+                            availability until you add time slots on your Profile.
+                        </p>
+                    </div>
+                    <Link
+                        href="/trainer/dashboard/profile"
+                        className="ti-btn ti-btn-sm ti-btn-warning !m-0 shrink-0 inline-flex items-center justify-center gap-1.5 !px-4 !py-2 font-semibold"
+                    >
+                        <i className="ri-user-settings-line" aria-hidden="true" />
+                        Update schedule
+                    </Link>
                 </div>
             )}
 

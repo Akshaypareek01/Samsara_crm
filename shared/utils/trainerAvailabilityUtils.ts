@@ -164,6 +164,17 @@ export function getAvailableStartTimesForDate(
  *
  * @param schedule - Trainer weekly availability entries.
  */
+/**
+ * Whether the trainer has saved at least one weekly availability window.
+ *
+ * @param schedule - Trainer weekly availability from profile.
+ */
+export function trainerHasWeeklySchedule(
+  schedule: WeeklyAvailabilityDay[] | null | undefined
+): boolean {
+  return normalizeWeeklyAvailability(schedule).length > 0;
+}
+
 export function formatWeeklyAvailabilityLines(
   schedule: WeeklyAvailabilityDay[] | undefined
 ): string[] {

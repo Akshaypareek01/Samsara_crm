@@ -1,0 +1,166 @@
+.trainer-weekly-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trainer-weekly-schedule__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.trainer-weekly-schedule__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .trainer-weekly-schedule__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .trainer-weekly-schedule__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.trainer-weekly-schedule__day {
+  border: 1px solid var(--default-border, #e5e7eb);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-height: 7.5rem;
+}
+
+.trainer-weekly-schedule__day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.trainer-weekly-schedule__day-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--default-text-color, #111827);
+}
+
+.trainer-weekly-schedule__add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  color: var(--primary, #845adf);
+  background: rgba(132, 90, 223, 0.08);
+  border: 1px solid rgba(132, 90, 223, 0.25);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.trainer-weekly-schedule__add-btn:hover {
+  background: rgba(132, 90, 223, 0.14);
+  border-color: rgba(132, 90, 223, 0.4);
+}
+
+.trainer-weekly-schedule__add-btn:focus-visible {
+  outline: 2px solid var(--primary, #845adf);
+  outline-offset: 2px;
+}
+
+.trainer-weekly-schedule__empty {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6b7280;
+  padding: 0.5rem 0.625rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 0.5rem;
+  text-align: center;
+  background: #f9fafb;
+}
+
+.trainer-weekly-schedule__slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trainer-weekly-schedule__slot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.trainer-weekly-schedule__slot-sep {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+.trainer-weekly-schedule__time-input {
+  width: 100%;
+  min-width: 0;
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: 0.5rem;
+}
+
+.trainer-weekly-schedule__remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.trainer-weekly-schedule__remove-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.trainer-weekly-schedule__save-btn {
+  align-self: flex-start;
+  min-width: 10rem;
+}
+
+@media (max-width: 639px) {
+  .trainer-weekly-schedule__save-btn {
+    width: 100%;
+  }
+
+  .trainer-weekly-schedule__slot {
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-rows: auto auto;
+  }
+
+  .trainer-weekly-schedule__slot-sep {
+    display: none;
+  }
+
+  .trainer-weekly-schedule__remove-btn {
+    grid-row: 1 / span 2;
+    grid-column: 3;
+    align-self: center;
+  }
+}
