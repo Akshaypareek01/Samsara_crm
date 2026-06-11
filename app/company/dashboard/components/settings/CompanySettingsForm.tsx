@@ -3,6 +3,8 @@
 import React, { RefObject, useState } from "react";
 import { ContactPerson, UpdateCompanyRequest } from "@/services/companyService";
 import CompanySettingsLogoField from "./CompanySettingsLogoField";
+import { TRAINER_CITY_OPTIONS } from "@/constants/trainerCities";
+import { COMPANY_COUNTRY_OPTIONS } from "@/constants/companyCountries";
 
 type CompanySettingsFormProps = {
     formData: UpdateCompanyRequest;
@@ -252,13 +254,20 @@ export default function CompanySettingsForm({
                         <label className="company-settings-field__label" htmlFor="company-city">
                             City
                         </label>
-                        <input
+                        <select
                             id="company-city"
-                            type="text"
                             className="company-settings-field__input"
                             value={formData.city}
                             onChange={(e) => patch({ city: e.target.value })}
-                        />
+                            aria-label="Company city"
+                        >
+                            <option value="">Select city</option>
+                            {TRAINER_CITY_OPTIONS.map((city) => (
+                                <option key={city} value={city}>
+                                    {city}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                     <div>
                         <label className="company-settings-field__label" htmlFor="company-pincode">
@@ -278,13 +287,20 @@ export default function CompanySettingsForm({
                         <label className="company-settings-field__label" htmlFor="company-country">
                             Country
                         </label>
-                        <input
+                        <select
                             id="company-country"
-                            type="text"
                             className="company-settings-field__input"
                             value={formData.country}
                             onChange={(e) => patch({ country: e.target.value })}
-                        />
+                            aria-label="Company country"
+                        >
+                            <option value="">Select country</option>
+                            {COMPANY_COUNTRY_OPTIONS.map((country) => (
+                                <option key={country} value={country}>
+                                    {country}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </section>

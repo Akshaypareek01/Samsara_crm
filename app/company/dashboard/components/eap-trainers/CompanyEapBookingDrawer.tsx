@@ -15,6 +15,11 @@ import {
   bookingNotesRemaining,
 } from "@/shared/utils/bookingFormUtils";
 import Swal from "sweetalert2";
+import BookingStartTimeField, { isWithinWeeklyAvailability } from "@/shared/components/booking/BookingStartTimeField";
+import {
+  AVAILABILITY_ERROR_MESSAGE,
+  mapBookingAvailabilityError,
+} from "@/shared/utils/trainerAvailabilityUtils";
 import CompanyRightDrawer from "../CompanyRightDrawer";
 import "./company-eap-booking-drawer.css";
 
@@ -112,6 +117,17 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
       if (bookingDateTime <= new Date()) {
         nextFieldErrors.startTime = "Date and time must be in the future";
         valid = false;
+      } else if (
+        trainer?.weeklyAvailability?.length &&
+        !isWithinWeeklyAvailability(
+          trainer.weeklyAvailability,
+          formData.bookingDate,
+          formData.startTime,
+          selectedDuration ?? formData.duration
+        )
+      ) {
+        nextFieldErrors.startTime = AVAILABILITY_ERROR_MESSAGE;
+        valid = false;
       }
     }
 
@@ -180,12 +196,14 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
       void Swal.fire({
         icon: "success",
         title: "Booking Created!",
-        text: "Your booking has been submitted and is waiting for admin approval.",
+        text: "Your booking has been submitted and is waiting for trainer approval.",
       });
       onClose();
       onSuccess?.();
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to create booking.";
+      const msg =
+        mapBookingAvailabilityError(error) ||
+        (error instanceof Error ? error.message : "Failed to create booking.");
       void Swal.fire({ icon: "error", title: "Booking Failed", text: msg });
     } finally {
       setLoading(false);
@@ -324,25 +342,19 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
               )}
             </div>
             <div className="company-eap-booking-field">
-              <label htmlFor="eap-time">Start time</label>
-              <input
+              <BookingStartTimeField
                 id="eap-time"
-                type="time"
-                className={`form-control ${fieldErrors.startTime ? "is-invalid" : ""}`}
-                value={formData.startTime}
-                onChange={(e) => {
+                bookingDate={formData.bookingDate}
+                startTime={formData.startTime}
+                durationHours={selectedDuration ?? formData.duration}
+                weeklyAvailability={trainer.weeklyAvailability}
+                disabled={!canBook}
+                onChange={(time) => {
                   setFieldErrors((prev) => ({ ...prev, startTime: undefined }));
-                  setFormData((prev) => ({ ...prev, startTime: e.target.value }));
+                  setFormData((prev) => ({ ...prev, startTime: time }));
                 }}
-                required
-                aria-invalid={!!fieldErrors.startTime}
-                aria-describedby={fieldErrors.startTime ? "eap-time-error" : undefined}
+                error={fieldErrors.startTime}
               />
-              {fieldErrors.startTime && (
-                <p id="eap-time-error" className="company-eap-booking-field-error" role="alert">
-                  {fieldErrors.startTime}
-                </p>
-              )}
             </div>
           </div>
         </section>

@@ -7,6 +7,7 @@ import {
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
 import { validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
+import { validatePersonName } from '@/shared/utils/nameValidation';
 
 /** Form fields that can fail client-side validation on registration. */
 export type TrainerRegistrationField =
@@ -90,8 +91,14 @@ export function validateTrainerRegistration(
     errors.category = 'Please select a valid trainer category';
   }
 
-  if (!(data.name || '').trim()) {
+  const name = (data.name || '').trim();
+  if (!name) {
     errors.name = 'Full name is required';
+  } else {
+    const nameErr = validatePersonName(name);
+    if (nameErr) {
+      errors.name = nameErr;
+    }
   }
 
   if (!(data.title || '').trim()) {

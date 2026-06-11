@@ -5,6 +5,8 @@ import { getTrainerBookableTrainingTypes } from './companyTrainerProfileUtils';
 import companyService from '@/services/companyService';
 import bookingService, { CreateBookingRequest } from '@/services/bookingService';
 import Swal from 'sweetalert2';
+import BookingStartTimeField, { isWithinWeeklyAvailability } from '@/shared/components/booking/BookingStartTimeField';
+import { AVAILABILITY_ERROR_MESSAGE, mapBookingAvailabilityError } from '@/shared/utils/trainerAvailabilityUtils';
 
 const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
     const [formData, setFormData] = useState<CreateBookingRequest>({
@@ -67,10 +69,18 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
         }
     }, [selectedTrainer]);
 
-    const handleTrainerChange = (trainerId: string) => {
+    const handleTrainerChange = async (trainerId: string) => {
         const trainer = trainers.find(t => (t._id || t.id) === trainerId);
         setSelectedTrainer(trainer || null);
-        setFormData(prev => ({ ...prev, trainer: trainerId }));
+        setFormData(prev => ({ ...prev, trainer: trainerId, startTime: '' }));
+        if (trainerId) {
+            try {
+                const full = await trainerService.getTrainerById(trainerId);
+                setSelectedTrainer(full);
+            } catch {
+                // keep list row if detail fetch fails
+            }
+        }
     };
 
     const handleTrainingTypeToggle = (type: string) => {
@@ -118,6 +128,18 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
             Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Booking date and time must be in the future' });
             return false;
         }
+        if (
+            selectedTrainer?.weeklyAvailability?.length &&
+            !isWithinWeeklyAvailability(
+                selectedTrainer.weeklyAvailability,
+                formData.bookingDate,
+                formData.startTime,
+                formData.duration
+            )
+        ) {
+            Swal.fire({ icon: 'warning', title: 'Validation Error', text: AVAILABILITY_ERROR_MESSAGE });
+            return false;
+        }
 
         return true;
     };
@@ -134,7 +156,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
             Swal.fire({
                 icon: 'success',
                 title: 'Booking Created!',
-                text: 'Your booking has been submitted and is waiting for admin approval.',
+                text: 'Your booking has been submitted and is waiting for trainer approval.',
                 confirmButtonText: 'OK',
             });
 
@@ -156,7 +178,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
             Swal.fire({
                 icon: 'error',
                 title: 'Booking Failed',
-                text: error.message || 'Failed to create booking. Please try again.',
+                text: mapBookingAvailabilityError(error) || error.message || 'Failed to create booking. Please try again.',
             });
         } finally {
             setLoading(false);
@@ -214,16 +236,14 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="form-label">Start Time <span className="text-danger">*</span></label>
-                            <input
-                                type="time"
-                                className="form-control"
-                                value={formData.startTime}
-                                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-                                required
-                            />
-                        </div>
+                        <BookingStartTimeField
+                            id="create-booking-time"
+                            bookingDate={formData.bookingDate}
+                            startTime={formData.startTime}
+                            durationHours={formData.duration}
+                            weeklyAvailability={selectedTrainer?.weeklyAvailability}
+                            onChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
+                        />
                     </div>
 
                     {/* Duration */}

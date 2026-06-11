@@ -190,7 +190,7 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                     >
                         <option value="">All Status</option>
                         <option value="pending_approval">Pending Trainer Approval</option>
-                        <option value="approved">Pending Admin Approval</option>
+                        <option value="approved">Trainer Accepted — Awaiting Admin</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="completed">Completed</option>
                         <option value="rejected">Rejected</option>
@@ -234,7 +234,7 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                                         <th scope="col">Date &amp; Time</th>
                                         <th scope="col">Duration</th>
                                         <th scope="col">Training Types</th>
-                                        <th scope="col">Status</th>
+                                        <th scope="col">Booking status</th>
                                         <th scope="col">Payment</th>
                                         <th scope="col" className="!text-end min-w-[9rem]">
                                             Actions

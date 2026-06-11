@@ -220,7 +220,7 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
                     <div className="text-center py-8">
                         <i className="ri-calendar-line text-muted" style={{ fontSize: '48px' }}></i>
                         <p className="mt-3 text-muted">No bookings found</p>
-                        <p className="text-sm text-muted">Bookings will appear here once approved by admin</p>
+                        <p className="text-sm text-muted">Bookings appear here when companies request a session with you</p>
                     </div>
                 ) : (
                     <div className="table-responsive">
@@ -231,7 +231,7 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
                                         <th>Date & Time</th>
                                         <th>Duration</th>
                                         <th>Training Types</th>
-                                        <th>Status</th>
+                                        <th>Booking status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>

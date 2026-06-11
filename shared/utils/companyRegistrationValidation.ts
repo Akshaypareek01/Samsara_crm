@@ -1,4 +1,7 @@
 import { CreateCompanyRequest } from '@/services/companyService';
+import { COMPANY_COUNTRY_OPTIONS } from '@/constants/companyCountries';
+import { TRAINER_CITY_OPTIONS } from '@/constants/trainerCities';
+import { validatePersonName } from '@/shared/utils/nameValidation';
 
 /** Form fields that can fail client-side validation on company registration. */
 export type CompanyRegistrationField =
@@ -132,8 +135,14 @@ export function validateCompanyRegistration(
 ): CompanyRegistrationValidationResult {
   const errors: Partial<Record<CompanyRegistrationField, string>> = {};
 
-  if (!(data.companyName || '').trim()) {
+  const companyName = (data.companyName || '').trim();
+  if (!companyName) {
     errors.companyName = 'Company name is required';
+  } else {
+    const nameErr = validatePersonName(companyName);
+    if (nameErr) {
+      errors.companyName = nameErr;
+    }
   }
 
   const email = (data.email || '').trim();
@@ -183,8 +192,11 @@ export function validateCompanyRegistration(
     errors.address = 'Address is required';
   }
 
-  if (!(data.city || '').trim()) {
+  const city = (data.city || '').trim();
+  if (!city) {
     errors.city = 'City is required';
+  } else if (!TRAINER_CITY_OPTIONS.includes(city as (typeof TRAINER_CITY_OPTIONS)[number])) {
+    errors.city = 'Please select a valid city';
   }
 
   const pincode = (data.pincode || '').trim();
@@ -194,13 +206,22 @@ export function validateCompanyRegistration(
     errors.pincode = 'Pincode must be exactly 6 digits';
   }
 
-  if (!(data.country || '').trim()) {
+  const country = (data.country || '').trim();
+  if (!country) {
     errors.country = 'Country is required';
+  } else if (!COMPANY_COUNTRY_OPTIONS.includes(country as (typeof COMPANY_COUNTRY_OPTIONS)[number])) {
+    errors.country = 'Please select a valid country';
   }
 
   const c1 = data.contactPerson1;
-  if (!(c1?.name || '').trim()) {
+  const c1Name = (c1?.name || '').trim();
+  if (!c1Name) {
     errors.contact1Name = 'Primary contact name is required';
+  } else {
+    const nameErr = validatePersonName(c1Name);
+    if (nameErr) {
+      errors.contact1Name = nameErr;
+    }
   }
 
   const c1Email = (c1?.email || '').trim();
@@ -222,8 +243,14 @@ export function validateCompanyRegistration(
   }
 
   const c2 = data.contactPerson2;
-  if (!(c2?.name || '').trim()) {
+  const c2Name = (c2?.name || '').trim();
+  if (!c2Name) {
     errors.contact2Name = 'Secondary contact name is required';
+  } else {
+    const nameErr = validatePersonName(c2Name);
+    if (nameErr) {
+      errors.contact2Name = nameErr;
+    }
   }
 
   const c2Email = (c2?.email || '').trim();

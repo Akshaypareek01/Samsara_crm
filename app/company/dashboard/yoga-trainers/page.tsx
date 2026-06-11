@@ -233,13 +233,17 @@ const TrainersPage = () => {
                 <div className="box-body">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="form-label">Search by Name</label>
+                            <label className="form-label" htmlFor="yoga-trainer-search">
+                                Search
+                            </label>
                             <input
-                                type="text"
+                                id="yoga-trainer-search"
+                                type="search"
                                 className="form-control"
-                                placeholder="Search by name or specialty..."
+                                placeholder="Search by name, title, or program..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                aria-label="Search yoga trainers by name, title, or program"
                             />
                         </div>
                         <div>

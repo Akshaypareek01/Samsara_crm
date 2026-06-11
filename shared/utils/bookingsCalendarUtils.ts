@@ -59,6 +59,18 @@ export function currentYearMonth(): string {
 }
 
 /**
+ * Maximum forward month key for calendar navigation (default +12 months).
+ *
+ * @param monthsAhead - How many months ahead of today to allow.
+ */
+export function maxYearMonth(monthsAhead = 12): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + monthsAhead);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}`;
+}
+
+/**
  * ISO date string (`YYYY-MM-DD`) for a day in a month key.
  *
  * @param monthKey - `YYYY-MM`.

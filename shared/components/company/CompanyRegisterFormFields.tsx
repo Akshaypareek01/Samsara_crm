@@ -5,6 +5,9 @@ import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSect
 import TrainerFormFieldError from '@/shared/components/trainer/TrainerFormFieldError';
 import CompanyLogoUpload from '@/shared/components/company/CompanyLogoUpload';
 import { CompanyRegistrationField } from '@/shared/utils/companyRegistrationValidation';
+import { TRAINER_CITY_OPTIONS } from '@/constants/trainerCities';
+import { COMPANY_COUNTRY_OPTIONS } from '@/constants/companyCountries';
+import { sanitizePersonName } from '@/shared/utils/nameValidation';
 import '@/shared/styles/trainer-form.css';
 
 interface CompanyRegisterFormFieldsProps {
@@ -79,7 +82,7 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
               value={formData.companyName}
               onChange={(e) => {
                 clearFieldError('companyName');
-                setFormData({ ...formData, companyName: e.target.value });
+                setFormData({ ...formData, companyName: sanitizePersonName(e.target.value) });
               }}
               placeholder="Your company name"
               aria-invalid={Boolean(fieldErrors.companyName)}
@@ -236,19 +239,24 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
               <label className="trainer-form-label" htmlFor="company-city">
                 City <span className="trainer-form-req">*</span>
               </label>
-              <input
+              <select
                 id="company-city"
-                type="text"
                 className={fieldClass('city')}
                 value={formData.city}
                 onChange={(e) => {
                   clearFieldError('city');
                   setFormData({ ...formData, city: e.target.value });
                 }}
-                placeholder="Your city"
                 aria-invalid={Boolean(fieldErrors.city)}
                 aria-describedby={fieldErrors.city ? 'company-city-error' : undefined}
-              />
+              >
+                <option value="">Select city</option>
+                {TRAINER_CITY_OPTIONS.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
               <TrainerFormFieldError message={fieldErrors.city} fieldId="company-city" />
             </div>
             <div>
@@ -276,19 +284,24 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
               <label className="trainer-form-label" htmlFor="company-country">
                 Country <span className="trainer-form-req">*</span>
               </label>
-              <input
+              <select
                 id="company-country"
-                type="text"
                 className={fieldClass('country')}
                 value={formData.country}
                 onChange={(e) => {
                   clearFieldError('country');
                   setFormData({ ...formData, country: e.target.value });
                 }}
-                placeholder="Country"
                 aria-invalid={Boolean(fieldErrors.country)}
                 aria-describedby={fieldErrors.country ? 'company-country-error' : undefined}
-              />
+              >
+                <option value="">Select country</option>
+                {COMPANY_COUNTRY_OPTIONS.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
               <TrainerFormFieldError message={fieldErrors.country} fieldId="company-country" />
             </div>
           </div>
@@ -310,7 +323,7 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
                 value={formData.contactPerson1?.name || ''}
                 onChange={(e) => {
                   clearFieldError('contact1Name');
-                  updateContactPerson(1, 'name', e.target.value);
+                  updateContactPerson(1, 'name', sanitizePersonName(e.target.value));
                 }}
                 aria-invalid={Boolean(fieldErrors.contact1Name)}
                 aria-describedby={fieldErrors.contact1Name ? 'contact1-name-error' : undefined}
@@ -393,7 +406,7 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
                 value={formData.contactPerson2?.name || ''}
                 onChange={(e) => {
                   clearFieldError('contact2Name');
-                  updateContactPerson(2, 'name', e.target.value);
+                  updateContactPerson(2, 'name', sanitizePersonName(e.target.value));
                 }}
                 aria-invalid={Boolean(fieldErrors.contact2Name)}
                 aria-describedby={fieldErrors.contact2Name ? 'contact2-name-error' : undefined}

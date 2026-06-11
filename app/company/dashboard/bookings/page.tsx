@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import CompanyBookingsList from "../components/CompanyBookingsList";
 import CompanyBookingsMonthDashboard from "./CompanyBookingsMonthDashboard";
-import { currentYearMonth, shiftYearMonth } from "@/shared/utils/bookingsCalendarUtils";
+import { currentYearMonth, maxYearMonth, shiftYearMonth } from "@/shared/utils/bookingsCalendarUtils";
 import bookingService, { MyBookingsSummary } from "@/services/bookingService";
 
 type BookingsView = "calendar" | "table";
@@ -42,7 +42,7 @@ const BookingsPage: React.FC = () => {
         void loadSummary();
     };
 
-    const canGoNextMonth = monthKey < currentYearMonth();
+    const canGoNextMonth = monthKey < maxYearMonth();
 
     return (
         <div>

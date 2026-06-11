@@ -157,9 +157,17 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                     <section>
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Session</p>
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <span className="text-muted text-xs block mb-0.5">Status</span>
+                            <div className="col-span-2">
+                                <span className="text-muted text-xs block mb-0.5">Booking status</span>
                                 <StatusBadge status={booking.status} />
+                                {(booking.status === "pending_approval" ||
+                                    booking.status === "approved") && (
+                                    <p className="text-xs text-muted mt-2 mb-0 leading-relaxed">
+                                        {booking.status === "pending_approval"
+                                            ? "Awaiting trainer acceptance. You will be notified when the trainer responds."
+                                            : "Trainer accepted. Awaiting admin approval and payment — confirmation email is sent once admin confirms."}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <span className="text-muted text-xs block mb-0.5">Payment</span>

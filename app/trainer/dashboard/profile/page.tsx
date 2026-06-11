@@ -8,6 +8,7 @@ import { useTrainerProfileForm } from "@/hooks/useTrainerProfileForm";
 import CompanyTrainerProfilePanel from "@/app/company/dashboard/components/CompanyTrainerProfilePanel";
 import "@/app/company/dashboard/components/company-trainer-profile-drawer.css";
 import TrainerProfileEditForm from "./TrainerProfileEditForm";
+import TrainerWeeklyAvailabilityEditor from "../components/TrainerWeeklyAvailabilityEditor";
 
 const TrainerProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -30,6 +31,10 @@ const TrainerProfile = () => {
     clearProfilePhoto,
     handleSubmit,
     handleAcceptingBookingsToggle,
+    weeklyAvailability,
+    setWeeklyAvailability,
+    scheduleSaving,
+    handleSaveWeeklyAvailability,
     fetchProfile,
   } = useTrainerProfileForm();
 
@@ -97,30 +102,42 @@ const TrainerProfile = () => {
             </div>
 
             {trainer && trainer.status !== false && (
-              <div className="rounded-xl border border-defaultborder p-4 mb-6 bg-gray-50 dark:bg-black/20">
-                <h4 className="font-semibold mb-1 text-base">Booking availability</h4>
-                <p className="text-muted text-sm mb-3">
-                  When this is off, companies cannot book new sessions with you. Existing bookings are
-                  unchanged.
-                </p>
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="trainer-accepting-bookings"
-                    checked={isTrainerAcceptingBookings(trainer)}
-                    disabled={acceptingBookingsSaving}
-                    onChange={(e) => {
-                      void handleAcceptingBookingsToggle(e.target.checked);
-                    }}
-                    aria-label="Accept new bookings from companies"
-                  />
-                  <label className="form-check-label" htmlFor="trainer-accepting-bookings">
-                    {acceptingBookingsSaving ? "Saving…" : "Accept new bookings"}
-                  </label>
+              <>
+                <div className="rounded-xl border border-defaultborder p-4 mb-6 bg-gray-50 dark:bg-black/20">
+                  <h4 className="font-semibold mb-1 text-base">Booking availability</h4>
+                  <p className="text-muted text-sm mb-3">
+                    When this is off, companies cannot book new sessions with you. Existing bookings
+                    are unchanged.
+                  </p>
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      role="switch"
+                      id="trainer-accepting-bookings"
+                      checked={isTrainerAcceptingBookings(trainer)}
+                      disabled={acceptingBookingsSaving}
+                      onChange={(e) => {
+                        void handleAcceptingBookingsToggle(e.target.checked);
+                      }}
+                      aria-label="Accept new bookings from companies"
+                    />
+                    <label className="form-check-label" htmlFor="trainer-accepting-bookings">
+                      {acceptingBookingsSaving ? "Saving…" : "Accept new bookings"}
+                    </label>
+                  </div>
                 </div>
-              </div>
+                {!isEditing && (
+                  <div className="rounded-xl border border-defaultborder p-4 mb-6 bg-gray-50 dark:bg-black/20">
+                    <TrainerWeeklyAvailabilityEditor
+                      value={weeklyAvailability}
+                      saving={scheduleSaving}
+                      onChange={setWeeklyAvailability}
+                      onSave={handleSaveWeeklyAvailability}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {isEditing ? (

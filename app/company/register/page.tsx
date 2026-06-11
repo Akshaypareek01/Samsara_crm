@@ -54,7 +54,7 @@ const CompanyRegister = () => {
         address: '',
         city: '',
         pincode: '',
-        country: '',
+        country: 'India',
         contactPerson1: {
             name: '',
             email: '',

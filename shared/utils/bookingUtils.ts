@@ -19,7 +19,7 @@ export const STATUS_COLORS: Record<string, StatusConfig> = {
     approved: {
         bg: '#DBEAFE',
         text: '#1E40AF',
-        label: 'Pending Admin Approval',
+        label: 'Trainer Accepted — Awaiting Admin',
         icon: '✓',
     },
     confirmed: {
@@ -239,11 +239,19 @@ export function sortBookingsByDate(bookings: Booking[], ascending: boolean = fal
 // ==================== ERROR HANDLING ====================
 
 export function getBookingErrorMessage(error: any): string {
-    if (error.response?.data?.message) {
-        return error.response.data.message;
+    const serverMessage =
+        error?.response?.data?.message ||
+        (typeof error?.response?.data === 'string' ? error.response.data : null);
+
+    if (typeof serverMessage === 'string' && serverMessage.includes("trainer's availability")) {
+        return "Please select the time according to the trainer's availability";
     }
 
-    if (error.message) {
+    if (serverMessage) {
+        return serverMessage;
+    }
+
+    if (error?.message) {
         return error.message;
     }
 

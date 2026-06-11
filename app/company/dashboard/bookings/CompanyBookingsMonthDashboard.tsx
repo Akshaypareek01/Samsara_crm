@@ -13,6 +13,10 @@ import {
     toIsoDateInMonth,
 } from "@/shared/utils/bookingsCalendarUtils";
 import { formatBookingTime } from "@/shared/utils/bookingUtils";
+import {
+    COMPANY_CALENDAR_LEGEND,
+    getBookingStatusDotColor,
+} from "@/shared/utils/bookingCalendarStatus";
 import StatusBadge from "@/shared/components/StatusBadge";
 import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
 import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
@@ -280,7 +284,6 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                 const isValid = day >= 1 && day <= cal.daysInMonth;
                                 const isToday = cal.todayDay != null && day === cal.todayDay;
                                 const isHighlight = highlightedDays.includes(day);
-                                const dots = calendarDots[day] ?? [];
                                 const dayBookings = isValid ? calendarDays[day] ?? [] : [];
                                 const confirmedTimes = dayBookings.filter((b) => b.status === "confirmed");
                                 const isSelected = selectedDay === day;
@@ -322,17 +325,21 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                                             {formatBookingTime(b.startTime)}
                                                         </span>
                                                     ))}
-                                                    {dots.length > 0 && confirmedTimes.length === 0 && (
-                                                        <div className="flex gap-0.5 flex-wrap mt-auto">
-                                                            {dots.map((color, i) => (
-                                                                <span
-                                                                    key={i}
-                                                                    className="w-1.5 h-1.5 rounded-full"
-                                                                    style={{ backgroundColor: color }}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                    )}
+                                                    {dayBookings
+                                                        .filter((b) => b.status !== "confirmed")
+                                                        .slice(0, confirmedTimes.length > 0 ? 1 : 3)
+                                                        .map((b) => (
+                                                            <span
+                                                                key={b.id}
+                                                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                                                style={{
+                                                                    backgroundColor: getBookingStatusDotColor(
+                                                                        b.status
+                                                                    ),
+                                                                }}
+                                                                aria-hidden="true"
+                                                            />
+                                                        ))}
                                                 </div>
                                             </>
                                         )}
@@ -343,10 +350,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                         </div>
                         </div>
                         <div className="flex items-center gap-4 flex-wrap mt-4 pt-3 border-t border-defaultborder">
-                            {[
-                                { label: "Confirmed (shows time)", color: "#22C55E" },
-                                { label: "Other sessions", color: "#3B82F6" },
-                            ].map((l) => (
+                            {COMPANY_CALENDAR_LEGEND.map((l) => (
                                 <div key={l.label} className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                                     <span className="text-xs text-muted">{l.label}</span>

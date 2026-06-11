@@ -17,6 +17,7 @@ import {
 } from '@/shared/utils/trainerQualificationUtils';
 import { broadcastTrainerAcceptingBookings } from '@/utils/trainerAvailabilitySync';
 import { broadcastTrainerProfileUpdated } from '@/utils/trainerProfileSync';
+import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUtils';
 
 const emptyForm: UpdateTrainerRequest = {
   name: '',
@@ -49,6 +50,8 @@ export function useTrainerProfileForm() {
   const [uploadingProfilePhoto, setUploadingProfilePhoto] = useState(false);
   const [uploadingGallerySlot, setUploadingGallerySlot] = useState<number | null>(null);
   const [acceptingBookingsSaving, setAcceptingBookingsSaving] = useState(false);
+  const [weeklyAvailability, setWeeklyAvailability] = useState<WeeklyAvailabilityDay[]>([]);
+  const [scheduleSaving, setScheduleSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateTrainerRequest>(emptyForm);
   const profilePhotoInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -63,6 +66,7 @@ export function useTrainerProfileForm() {
       setError('');
       const profile = await TrainerService.getMyProfile();
       setTrainer(profile);
+      setWeeklyAvailability(profile.weeklyAvailability ?? []);
       setFormData({
         name: profile.name || '',
         title: profile.title || '',
@@ -276,6 +280,25 @@ export function useTrainerProfileForm() {
    *
    * @param next - Whether the trainer accepts new bookings.
    */
+  /**
+   * Persist the trainer's weekly availability schedule.
+   */
+  const handleSaveWeeklyAvailability = async () => {
+    if (!trainer || trainer.status === false) return;
+    try {
+      setScheduleSaving(true);
+      const updated = await TrainerService.updateMyProfile({ weeklyAvailability });
+      setTrainer(updated);
+      setWeeklyAvailability(updated.weeklyAvailability ?? []);
+      Swal.fire('Saved!', 'Weekly schedule updated.', 'success');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not save weekly schedule';
+      Swal.fire('Error!', msg, 'error');
+    } finally {
+      setScheduleSaving(false);
+    }
+  };
+
   const handleAcceptingBookingsToggle = async (next: boolean) => {
     if (!trainer || trainer.status === false) return;
     try {
@@ -310,6 +333,10 @@ export function useTrainerProfileForm() {
     clearProfilePhoto,
     handleSubmit,
     handleAcceptingBookingsToggle,
+    weeklyAvailability,
+    setWeeklyAvailability,
+    scheduleSaving,
+    handleSaveWeeklyAvailability,
     fetchProfile,
   };
 }

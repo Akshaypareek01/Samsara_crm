@@ -9,6 +9,7 @@ import {
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
 import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
+import { sanitizePersonName } from '@/shared/utils/nameValidation';
 import TrainerQualificationFields from '@/shared/components/trainer/TrainerQualificationFields';
 import TrainerPhotosFields from '@/shared/components/trainer/TrainerPhotosFields';
 import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
@@ -102,7 +103,7 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
               value={formData.name}
               onChange={(e) => {
                 clearFieldError('name');
-                setFormData((prev) => ({ ...prev, name: e.target.value }));
+                setFormData((prev) => ({ ...prev, name: sanitizePersonName(e.target.value) }));
               }}
               placeholder="Jane Doe"
               required

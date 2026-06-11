@@ -18,19 +18,14 @@ import {
     canConfirmBooking,
     formatBookingTime,
 } from "@/shared/utils/bookingUtils";
+import {
+    TRAINER_CALENDAR_LEGEND,
+    getBookingStatusDotColor,
+} from "@/shared/utils/bookingCalendarStatus";
 import Swal from "sweetalert2";
 import TrainerBookingDetailsDrawer from "../components/TrainerBookingDetailsDrawer";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-const STATUS_DOT: Record<string, string> = {
-    confirmed: "#22C55E",
-    approved: "#3B82F6",
-    completed: "#6366F1",
-    pending_approval: "#F59E0B",
-    cancelled: "#9CA3AF",
-    rejected: "#EF4444",
-};
 
 type DayActionVariant = "info" | "success" | "primary" | "danger";
 
@@ -384,7 +379,7 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                                                                 className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                                                 style={{
                                                                     backgroundColor:
-                                                                        STATUS_DOT[b.status] || "#9CA3AF",
+                                                                        getBookingStatusDotColor(b.status),
                                                                 }}
                                                                 aria-hidden="true"
                                                             />
@@ -400,11 +395,7 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                         </div>
 
                         <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-defaultborder">
-                            {[
-                                { label: "Confirmed (shows time)", color: STATUS_DOT.confirmed },
-                                { label: "Pending admin", color: STATUS_DOT.approved },
-                                { label: "Needs your accept", color: STATUS_DOT.pending_approval },
-                            ].map((l) => (
+                            {TRAINER_CALENDAR_LEGEND.map((l) => (
                                 <div key={l.label} className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: l.color }} />
                                     <span className="text-xs text-muted">{l.label}</span>

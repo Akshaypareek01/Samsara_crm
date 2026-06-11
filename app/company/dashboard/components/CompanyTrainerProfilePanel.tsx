@@ -5,11 +5,11 @@ import type { Trainer } from "@/services/trainerService";
 import { isTrainerAcceptingBookings } from "@/services/trainerService";
 import {
   displayOrDash,
-  formatTrainerDob,
   trainerSpecialistList,
   trainerTrainingList,
 } from "./companyTrainerProfileUtils";
 import TrainerQualificationsDisplay from "@/shared/components/trainer/TrainerQualificationsDisplay";
+import TrainerAvailabilityDisplay from "@/shared/components/trainer/TrainerAvailabilityDisplay";
 import TrainerRatingBadge from "@/shared/components/trainer/TrainerRatingBadge";
 import "./company-trainer-profile-drawer.css";
 
@@ -185,6 +185,11 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
                 )}
               </div>
             </section>
+            <TrainerAvailabilityDisplay
+              schedule={trainer.weeklyAvailability}
+              acceptingBookings={canBook}
+              className="mb-1"
+            />
             <section>
               <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Details</h4>
               <dl className="grid grid-cols-2 gap-3 text-sm mb-0">
@@ -195,14 +200,6 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
                 <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
                   <dt className="text-gray-500 text-xs">City</dt>
                   <dd className="font-medium text-gray-900 mb-0">{displayOrDash(trainer.city)}</dd>
-                </div>
-                <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
-                  <dt className="text-gray-500 text-xs">PIN code</dt>
-                  <dd className="font-medium text-gray-900 mb-0">{displayOrDash(trainer.pinCode)}</dd>
-                </div>
-                <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
-                  <dt className="text-gray-500 text-xs">Date of birth</dt>
-                  <dd className="font-medium text-gray-900 mb-0">{formatTrainerDob(trainer.dateOfBirth)}</dd>
                 </div>
               </dl>
             </section>

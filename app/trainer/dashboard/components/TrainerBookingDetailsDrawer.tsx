@@ -11,7 +11,6 @@ import {
     formatBookingTime,
 } from "@/shared/utils/bookingUtils";
 import {
-    formatCompanyAddress,
     getBookingCompany,
     getBookingCompanyName,
     getCompanyLogoUrl,
@@ -62,7 +61,6 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
     const company = booking ? getBookingCompany(booking) : null;
     const companyName = booking ? getBookingCompanyName(booking) : "Company";
     const logoUrl = getCompanyLogoUrl(company);
-    const addressLine = formatCompanyAddress(company);
     const bookingId = booking?._id || booking?.id || "";
 
     return (
@@ -127,19 +125,9 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                         </div>
                                     )}
                                     <div className="min-w-0 flex-1">
-                                        <h3 className="text-base font-bold text-defaulttextcolor mb-1 truncate">
+                                        <h3 className="text-base font-bold text-defaulttextcolor mb-0 truncate">
                                             {companyName}
                                         </h3>
-                                        {company?.email && (
-                                            <p className="text-xs text-muted mb-1 truncate">
-                                                <i className="ri-mail-line me-1" aria-hidden="true"></i>
-                                                {company.email}
-                                            </p>
-                                        )}
-                                        <p className="text-sm text-defaulttextcolor mb-0 leading-relaxed">
-                                            <i className="ri-map-pin-line me-1 text-muted align-top mt-0.5" aria-hidden="true"></i>
-                                            {addressLine}
-                                        </p>
                                     </div>
                                 </div>
                             </section>

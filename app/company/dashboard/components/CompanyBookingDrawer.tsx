@@ -9,6 +9,13 @@ import Swal from "sweetalert2";
 import CompanyRightDrawer from "./CompanyRightDrawer";
 import CompanyBookingTrainerPreview from "./CompanyBookingTrainerPreview";
 import { getTrainerBookableTrainingTypes } from "./companyTrainerProfileUtils";
+import BookingStartTimeField, {
+  isWithinWeeklyAvailability,
+} from "@/shared/components/booking/BookingStartTimeField";
+import {
+  AVAILABILITY_ERROR_MESSAGE,
+  mapBookingAvailabilityError,
+} from "@/shared/utils/trainerAvailabilityUtils";
 import "./company-booking-drawer.css";
 
 export type CompanyBookingDrawerProps = {
@@ -126,6 +133,23 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
             });
             return false;
         }
+        const availTrainer = displayTrainer ?? trainer;
+        if (
+            availTrainer?.weeklyAvailability?.length &&
+            !isWithinWeeklyAvailability(
+                availTrainer.weeklyAvailability,
+                formData.bookingDate,
+                formData.startTime,
+                formData.duration
+            )
+        ) {
+            void Swal.fire({
+                icon: "warning",
+                title: "Validation Error",
+                text: AVAILABILITY_ERROR_MESSAGE,
+            });
+            return false;
+        }
         return true;
     };
 
@@ -149,13 +173,15 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
             void Swal.fire({
                 icon: "success",
                 title: "Booking Created!",
-                text: "Your booking has been submitted and is waiting for admin approval.",
+                text: "Your booking has been submitted and is waiting for trainer approval.",
                 confirmButtonText: "OK",
             });
             onClose();
             onSuccess?.();
         } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : "Failed to create booking. Please try again.";
+            const msg =
+                mapBookingAvailabilityError(error) ||
+                (error instanceof Error ? error.message : "Failed to create booking. Please try again.");
             void Swal.fire({ icon: "error", title: "Booking Failed", text: msg });
         } finally {
             setLoading(false);
@@ -247,22 +273,17 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                                     required
                                 />
                             </div>
-                            <div>
-                                <label className="form-label" htmlFor="booking-time">
-                                    Start time <span className="text-danger">*</span>
-                                </label>
-                                <input
-                                    id="booking-time"
-                                    type="time"
-                                    className="form-control"
-                                    value={formData.startTime}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({ ...prev, startTime: e.target.value }))
-                                    }
-                                    disabled={!canAcceptNewBookings}
-                                    required
-                                />
-                            </div>
+                            <BookingStartTimeField
+                                id="booking-time"
+                                bookingDate={formData.bookingDate}
+                                startTime={formData.startTime}
+                                durationHours={formData.duration}
+                                weeklyAvailability={previewTrainer.weeklyAvailability}
+                                disabled={!canAcceptNewBookings}
+                                onChange={(time) =>
+                                    setFormData((prev) => ({ ...prev, startTime: time }))
+                                }
+                            />
                         </div>
 
                         <div>

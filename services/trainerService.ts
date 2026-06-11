@@ -4,6 +4,9 @@ import {
   type TrainerCategory,
 } from '@/constants/trainerCategories';
 import { TRAINER_CITY_OPTIONS, type TrainerCity } from '@/constants/trainerCities';
+import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUtils';
+
+export type { WeeklyAvailabilityDay };
 
 export { TRAINER_CATEGORY_OPTIONS, TRAINER_CITY_OPTIONS };
 export type { TrainerCategory, TrainerCity };
@@ -77,6 +80,8 @@ export interface Trainer extends TrainerProfileDetails {
   status?: boolean;
   /** When false, companies cannot create new bookings for this trainer. */
   acceptingBookings?: boolean;
+  /** Recurring weekly windows when the trainer accepts sessions. */
+  weeklyAvailability?: WeeklyAvailabilityDay[];
   accountDetails?: TrainerAccountDetails;
   ratingSummary?: TrainerRatingSummary;
   createdAt?: string;
@@ -127,6 +132,7 @@ export interface UpdateTrainerRequest extends TrainerProfileDetails {
   profilePhoto?: TrainerImage | null;
   status?: boolean;
   acceptingBookings?: boolean;
+  weeklyAvailability?: WeeklyAvailabilityDay[];
   accountDetails?: TrainerAccountDetails;
 }
 

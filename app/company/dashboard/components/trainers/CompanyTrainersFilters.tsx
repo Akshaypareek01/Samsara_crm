@@ -58,10 +58,10 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
           id="trainer-search"
           type="search"
           className="company-trainers-filters__input"
-          placeholder="Name or specialty..."
+          placeholder="Search by name, title, or program..."
           value={searchInput}
           onChange={(e) => onSearchChange(e.target.value)}
-          aria-label="Search trainers by name or specialty"
+          aria-label="Search trainers by name, title, or program"
         />
       </div>
       <div>

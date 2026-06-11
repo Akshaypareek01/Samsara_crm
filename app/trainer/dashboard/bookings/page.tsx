@@ -8,6 +8,7 @@ import TrainerBookingsCalendarView from "./TrainerBookingsCalendarView";
 import bookingService, { MyBookingsSummary } from "@/services/bookingService";
 import {
     currentYearMonth,
+    maxYearMonth,
     shiftYearMonth,
 } from "@/shared/utils/bookingsCalendarUtils";
 
@@ -47,7 +48,7 @@ const BookingsPage: React.FC = () => {
         void loadSummary();
     };
 
-    const canGoNextMonth = monthKey < currentYearMonth();
+    const canGoNextMonth = monthKey < maxYearMonth();
 
     return (
         <Fragment>
