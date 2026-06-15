@@ -47,8 +47,8 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.625rem;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary);
   font-size: 1.125rem;
 }
 
@@ -104,7 +104,7 @@
 
 .trainer-account-details-field__input:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--portal-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
@@ -126,7 +126,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: #ffffff;
-  background: #7c3aed;
+  background: var(--portal-primary);
   border: none;
   border-radius: 0.625rem;
   cursor: pointer;
@@ -134,7 +134,7 @@
 }
 
 .trainer-account-details-btn:hover:not(:disabled) {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .trainer-account-details-btn:disabled {
@@ -154,8 +154,8 @@
 .trainer-account-details-loading__spinner {
   width: 2.5rem;
   height: 2.5rem;
-  border: 3px solid #ede9fe;
-  border-top-color: #7c3aed;
+  border: 3px solid var(--portal-primary-tint);
+  border-top-color: var(--portal-primary);
   border-radius: 50%;
   animation: trainer-account-details-spin 0.7s linear infinite;
 }
@@ -209,7 +209,7 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: #7c3aed;
+  color: var(--portal-primary);
   font-size: 1.75rem;
 }
 
@@ -251,7 +251,7 @@
 }
 
 .trainer-account-pan-upload__link {
-  color: #7c3aed;
+  color: var(--portal-primary);
   text-decoration: none;
 }
 

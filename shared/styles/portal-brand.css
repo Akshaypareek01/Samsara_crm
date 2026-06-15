@@ -1,0 +1,21 @@
+/**
+ * Samsara portal brand tokens — scoped to Company + Trainer portals only.
+ * Overrides Tailwind --primary inside portal wrappers without affecting admin CRM.
+ */
+.portal-brand-theme,
+.company-dashboard-shell,
+.trainer-dashboard-shell,
+.trainer-auth-shell {
+  --portal-primary: #ed662e;
+  --portal-primary-rgb: 237, 102, 46;
+  --portal-primary-light: #ff9468;
+  --portal-primary-deep: #c95520;
+  --portal-primary-tint: #fff4ef;
+  --portal-primary-tint-border: #ffe0d0;
+  --portal-primary-focus: rgba(237, 102, 46, 0.12);
+  --portal-primary-shadow: rgba(237, 102, 46, 0.15);
+
+  /* Tailwind semantic tokens inherit inside portal */
+  --primary: 237 102 46;
+  --primary-rgb: 237, 102, 46;
+}

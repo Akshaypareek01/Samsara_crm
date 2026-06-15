@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { Fragment, useEffect, useState } from 'react';
 import TrainerService from '@/services/trainerService';
+import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/trainer-form.css';
 
 const HERO_FEATURES = [

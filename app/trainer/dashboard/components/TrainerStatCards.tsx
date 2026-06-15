@@ -31,8 +31,8 @@ const TrainerStatCards: React.FC<TrainerStatCardsProps> = ({ kpis, loading }) =>
             value: dash(kpis.totalBookings),
             hint: "All-time requests",
             icon: "bx bx-calendar",
-            iconColor: "#6366F1",
-            iconBg: "#EEF2FF",
+            iconColor: "#ed662e",
+            iconBg: "#fff4ef",
         },
         {
             label: "Upcoming Sessions",

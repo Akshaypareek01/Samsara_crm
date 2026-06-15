@@ -156,7 +156,7 @@ const WorkshopPage = () => {
         if (!newParticipant.name || !newParticipant.email) return;
         setAdding(true);
         const workshopColorMap: Record<string, string> = {
-            'Morning Group Meditation': 'bg-purple-100 text-purple-600',
+            'Morning Group Meditation': 'bg-primary/10 text-primary',
             'Stress Relief Workshop': 'bg-warning/10 text-warning',
             'Weekend Retreat': 'bg-primary/10 text-primary',
             'Nutrition Masterclass': 'bg-success/10 text-success',
@@ -274,7 +274,7 @@ const WorkshopPage = () => {
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                                className="ti-btn !bg-primary !text-white !font-medium ti-btn-wave gap-1"
                                 onClick={() => setShowModal(true)}
                                 aria-label="Register participant"
                             >
@@ -411,7 +411,7 @@ const WorkshopPage = () => {
                 </button>
                 <button
                     type="button"
-                    className="ti-btn !bg-orange-500 !text-white"
+                    className="ti-btn !bg-primary !text-white"
                     onClick={() => void handleRegisterParticipant()}
                     disabled={!newParticipant.name || !newParticipant.email || adding}
                 >

@@ -36,7 +36,7 @@ const CompanyTrainerProfileDrawer: React.FC<CompanyTrainerProfileDrawerProps> = 
         )}
         <button
           type="button"
-          className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 text-white text-sm font-semibold py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-3 hover:opacity-90 transition-colors disabled:opacity-50"
           disabled={!canBook}
           onClick={() => onBookSession(trainer)}
         >

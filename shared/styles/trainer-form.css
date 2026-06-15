@@ -10,12 +10,12 @@
 }
 
 .trainer-form-label .trainer-form-req {
-  color: #845adf;
+  color: var(--portal-primary);
 }
 
 .trainer-form-control,
 .trainer-form-control.form-control {
-  border: 1.5px solid #e4dfff !important;
+  border: 1.5px solid var(--portal-primary-tint-border) !important;
   border-radius: 10px !important;
   padding: 9px 13px !important;
   font-size: 14px !important;
@@ -30,15 +30,15 @@
 
 .trainer-form-control:focus,
 .trainer-form-control.form-control:focus {
-  border-color: #845adf !important;
-  box-shadow: 0 0 0 3px rgba(132, 90, 223, 0.1) !important;
+  border-color: var(--portal-primary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--portal-primary-rgb), 0.1) !important;
 }
 
 .trainer-form-select,
 .trainer-form-select.form-control {
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23845ADF' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ed662e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 34px !important;
@@ -60,8 +60,8 @@
 }
 
 .trainer-form-sub-card {
-  background: #faf9ff;
-  border: 1px solid #ede8ff;
+  background: var(--portal-primary-tint);
+  border: 1px solid var(--portal-primary-tint-border);
   border-radius: 12px;
   padding: 1.1rem 1.2rem;
 }
@@ -74,7 +74,7 @@
 }
 
 .trainer-form-chip {
-  border: 1.5px solid #e4dfff;
+  border: 1.5px solid var(--portal-primary-tint-border);
   border-radius: 30px;
   padding: 5px 13px;
   font-size: 12px;
@@ -87,14 +87,14 @@
 }
 
 .trainer-form-chip:hover {
-  border-color: #845adf;
-  color: #845adf;
-  background: #f4f0ff;
+  border-color: var(--portal-primary);
+  color: var(--portal-primary);
+  background: var(--portal-primary-tint);
 }
 
 .trainer-form-chip.selected {
-  border-color: #845adf;
-  background: #845adf;
+  border-color: var(--portal-primary);
+  background: var(--portal-primary);
   color: #fff;
 }
 
@@ -102,8 +102,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #faf9ff;
-  border: 1px solid #ede8ff;
+  background: var(--portal-primary-tint);
+  border: 1px solid var(--portal-primary-tint-border);
   border-radius: 14px;
   padding: 1.1rem 1.2rem;
 }
@@ -112,7 +112,7 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 2px dashed #c9bef8;
+  border: 2px dashed var(--portal-primary-light);
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -126,8 +126,8 @@
 }
 
 .trainer-form-profile-circle:hover {
-  border-color: #845adf;
-  background: #f4f0ff;
+  border-color: var(--portal-primary);
+  background: var(--portal-primary-tint);
 }
 
 .trainer-form-profile-circle img {
@@ -140,7 +140,7 @@
 }
 
 .trainer-form-profile-info strong {
-  color: #845adf;
+  color: var(--portal-primary);
   font-size: 13px;
 }
 
@@ -159,22 +159,22 @@
 
 .trainer-form-gallery-box {
   aspect-ratio: 4 / 3;
-  border: 2px dashed #c9bef8;
+  border: 2px dashed var(--portal-primary-light);
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #faf9ff;
+  background: var(--portal-primary-tint);
   transition: all 0.18s;
   position: relative;
   overflow: hidden;
 }
 
 .trainer-form-gallery-box:hover {
-  border-color: #845adf;
-  background: #f4f0ff;
+  border-color: var(--portal-primary);
+  background: var(--portal-primary-tint);
 }
 
 .trainer-form-gallery-box img {
@@ -188,7 +188,7 @@
 
 .trainer-form-gallery-box .g-icon {
   font-size: 20px;
-  color: #c9bef8;
+  color: var(--portal-primary-light);
   margin-bottom: 4px;
 }
 
@@ -230,8 +230,8 @@
   align-items: flex-start;
   gap: 12px;
   padding: 1.1rem 1.2rem;
-  background: #faf9ff;
-  border: 1px solid #ede8ff;
+  background: var(--portal-primary-tint);
+  border: 1px solid var(--portal-primary-tint-border);
   border-radius: 12px;
 }
 
@@ -241,8 +241,8 @@
   min-width: 17px;
   flex-shrink: 0;
   border-radius: 5px;
-  border: 1.5px solid #c9bef8;
-  accent-color: #845adf;
+  border: 1.5px solid var(--portal-primary-light);
+  accent-color: var(--portal-primary);
   margin-top: 3px;
   cursor: pointer;
   padding: 0;
@@ -267,7 +267,7 @@
 }
 
 .trainer-form-terms-text a {
-  color: #845adf;
+  color: var(--portal-primary);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -328,12 +328,12 @@
 }
 
 .trainer-register-scroll::-webkit-scrollbar-thumb {
-  background: rgba(132, 90, 223, 0.25);
+  background: rgba(var(--portal-primary-rgb), 0.25);
   border-radius: 999px;
 }
 
 .trainer-register-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(132, 90, 223, 0.45);
+  background: rgba(var(--portal-primary-rgb), 0.45);
 }
 
 .trainer-register-form > section + section {

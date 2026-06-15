@@ -1,7 +1,7 @@
 .eap-training-page {
-  --eap-purple: #5b21b6;
-  --eap-purple-light: #ede9fe;
-  --eap-purple-muted: #7c3aed;
+  --eap-purple: var(--portal-primary-deep);
+  --eap-purple-light: var(--portal-primary-tint);
+  --eap-purple-muted: var(--portal-primary);
   max-width: 72rem;
   margin: 0 auto;
 }
@@ -53,7 +53,7 @@
 .eap-training-btn--ghost {
   background: transparent;
   color: var(--eap-purple);
-  border: 1px solid #ddd6fe;
+  border: 1px solid var(--portal-primary-tint-border);
 }
 
 .eap-training-btn--danger {
@@ -101,7 +101,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  color: #7c3aed;
+  color: var(--portal-primary);
   font-size: 0.75rem;
   font-weight: 600;
 }

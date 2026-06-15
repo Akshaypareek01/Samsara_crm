@@ -157,7 +157,7 @@ const TrainersPage = () => {
                                 <p className="text-[0.7rem] text-muted mt-1">Platform catalog</p>
                             </div>
                             <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#EEF2FF' }}>
-                                <i className="bx bx-user text-xl" style={{ color: '#6366F1' }}></i>
+                                <i className="bx bx-user text-xl" style={{ color: '#ed662e' }}></i>
                             </div>
                         </div>
                     </div>

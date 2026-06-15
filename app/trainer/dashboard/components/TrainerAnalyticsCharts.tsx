@@ -11,7 +11,7 @@ interface TrainerAnalyticsChartsProps {
     loading: boolean;
 }
 
-const PRIMARY = "#6366F1";
+const PRIMARY = "#ed662e";
 const STATUS_COLORS = ["#0EA5E9", "#8B5CF6", "#10B981", "#EF4444", "#EAB308", "#94A3B8"];
 
 /**

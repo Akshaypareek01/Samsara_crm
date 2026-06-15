@@ -16,6 +16,7 @@ import {
     normalizeCompanyDomain,
     validateCompanyRegistration,
 } from '@/shared/utils/companyRegistrationValidation';
+import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/trainer-form.css';
 
 const HERO_FEATURES = [
@@ -202,7 +203,7 @@ const CompanyRegister = () => {
                 icon: 'warning',
                 title: 'Please check your form',
                 text: validation.firstError || 'Some required fields are missing or invalid.',
-                confirmButtonColor: '#845ADF',
+                confirmButtonColor: '#ed662e',
             });
             scrollToField(validation.firstField);
             return;
@@ -257,7 +258,7 @@ const CompanyRegister = () => {
                     icon: 'error',
                     title: 'Registration failed',
                     text: message,
-                    confirmButtonColor: '#845ADF',
+                    confirmButtonColor: '#ed662e',
                 });
             }
         } finally {

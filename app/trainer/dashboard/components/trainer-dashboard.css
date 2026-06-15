@@ -109,7 +109,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: #ffffff !important;
-  background: #7c3aed !important;
+  background: var(--portal-primary) !important;
   border: none !important;
   border-radius: 0.625rem;
   cursor: pointer;
@@ -118,7 +118,7 @@
 }
 
 .trainer-dashboard-shell .trainer-dashboard-header-logout:hover {
-  background: #6d28d9 !important;
+  background: var(--portal-primary-deep) !important;
 }
 
 html[data-toggled="close-menu-close"] .trainer-dashboard-shell .trainer-dashboard-header.app-header {

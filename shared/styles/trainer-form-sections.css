@@ -1,7 +1,7 @@
 .trainer-form-section-title {
   font-size: 11px;
   font-weight: 700;
-  color: #845adf;
+  color: var(--portal-primary);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 1.6rem 0 0.9rem;
@@ -18,7 +18,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, #e4dfff, transparent);
+  background: linear-gradient(to right, var(--portal-primary-tint-border), transparent);
 }
 
 .trainer-form-section-title i {
@@ -32,27 +32,27 @@
   gap: 10px;
   margin-bottom: 1.5rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid #f0ecff;
+  border-bottom: 1px solid var(--portal-primary-tint-border);
 }
 
 .trainer-form-step-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(132, 90, 223, 0.45);
+  color: rgba(var(--portal-primary-rgb), 0.45);
   font-size: 12px;
   font-weight: 500;
 }
 
 .trainer-form-step-item.active {
-  color: #845adf;
+  color: var(--portal-primary);
 }
 
 .trainer-form-step-dot {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  border: 1.5px solid rgba(132, 90, 223, 0.25);
+  border: 1.5px solid rgba(var(--portal-primary-rgb), 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -63,9 +63,9 @@
 }
 
 .trainer-form-step-item.active .trainer-form-step-dot {
-  background: #845adf;
+  background: var(--portal-primary);
   color: #fff;
-  border-color: #845adf;
+  border-color: var(--portal-primary);
 }
 
 @media (min-width: 640px) {

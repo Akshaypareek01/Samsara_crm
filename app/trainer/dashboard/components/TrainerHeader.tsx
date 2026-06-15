@@ -84,7 +84,7 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
       text: 'Are you sure you want to log out of your trainer account?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#7c3aed',
+      confirmButtonColor: '#ed662e',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, log out',
       cancelButtonText: 'Cancel',
@@ -147,7 +147,7 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
                   onClick={() => {
                     void handleHeaderAvailabilityToggle(!acceptingBookings);
                   }}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ed662e] disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-emerald-500' : 'bg-gray-300'}`}
                 >
                   <span
                     className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${acceptingBookings ? 'translate-x-5' : 'translate-x-0'}`}

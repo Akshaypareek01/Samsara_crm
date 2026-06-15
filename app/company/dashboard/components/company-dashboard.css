@@ -101,7 +101,7 @@
 }
 
 .company-dashboard-shell .company-dashboard-header-user:hover {
-  background: #f5f3ff;
+  background: var(--portal-primary-tint);
 }
 
 .company-dashboard-shell .company-dashboard-header-avatar,
@@ -110,7 +110,7 @@
   height: 2.5rem;
   border-radius: 9999px;
   object-fit: cover;
-  border: 2px solid #c4b5fd;
+  border: 2px solid var(--portal-primary-light);
   flex-shrink: 0;
 }
 
@@ -118,8 +118,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -156,7 +156,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: #ffffff !important;
-  background: #7c3aed !important;
+  background: var(--portal-primary) !important;
   border: none !important;
   border-radius: 0.625rem;
   cursor: pointer;
@@ -170,7 +170,7 @@
 }
 
 .company-dashboard-shell .company-dashboard-header-logout:hover {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .company-dashboard-shell .content {
@@ -200,8 +200,8 @@ html[data-toggled="close-menu-close"] .company-dashboard-shell .company-dashboar
 }
 
 .company-home-welcome {
-  background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 45%, #f5f3ff 100%);
-  border: 1px solid #e9d5ff;
+  background: linear-gradient(135deg, var(--portal-primary-tint) 0%, #ffe8dc 45%, #fff8f4 100%);
+  border: 1px solid var(--portal-primary-tint-border);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
   overflow: hidden;
@@ -297,7 +297,7 @@ html[data-toggled="close-menu-close"] .company-dashboard-shell .company-dashboar
   object-position: center;
   border-radius: 0.875rem;
   border: 1px solid rgba(233, 213, 255, 0.9);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);
+  box-shadow: 0 4px 14px var(--portal-primary-shadow);
   background: rgba(255, 255, 255, 0.5);
 }
 
@@ -323,12 +323,12 @@ html[data-toggled="close-menu-close"] .company-dashboard-shell .company-dashboar
 .company-home-view-all {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #7c3aed;
+  color: var(--portal-primary);
   text-decoration: none;
 }
 
 .company-home-view-all:hover {
-  color: #6d28d9;
+  color: var(--portal-primary-deep);
 }
 
 .company-home-cta-banner {

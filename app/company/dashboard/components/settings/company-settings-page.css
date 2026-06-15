@@ -53,8 +53,8 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 0.625rem;
-  background: #ede9fe;
-  color: #7c3aed;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary);
   font-size: 1.125rem;
   flex-shrink: 0;
 }
@@ -156,7 +156,7 @@
 }
 
 .company-settings-tabs__btn--active {
-  background: #7c3aed;
+  background: var(--portal-primary);
   color: #fff;
   box-shadow: 0 1px 3px rgba(124, 58, 237, 0.25);
 }
@@ -180,7 +180,7 @@
   border-radius: 1rem;
   overflow: hidden;
   border: 2px solid #e9d5ff;
-  background: #faf5ff;
+  background: var(--portal-primary-tint);
   flex-shrink: 0;
 }
 
@@ -225,8 +225,8 @@
 
 .company-settings-logo__dropzone:hover:not(:disabled) {
   border-color: #a78bfa;
-  background: #f5f3ff;
-  color: #7c3aed;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary);
 }
 
 .company-settings-logo__dropzone:disabled {
@@ -305,12 +305,12 @@
 }
 
 .company-settings-btn--primary {
-  background: #7c3aed;
+  background: var(--portal-primary);
   color: #fff;
 }
 
 .company-settings-btn--primary:hover:not(:disabled) {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .company-settings-btn--primary:disabled {
@@ -362,8 +362,8 @@
 .company-settings-loading__spinner {
   width: 2.5rem;
   height: 2.5rem;
-  border: 3px solid #ede9fe;
-  border-top-color: #7c3aed;
+  border: 3px solid var(--portal-primary-tint);
+  border-top-color: var(--portal-primary);
   border-radius: 50%;
   animation: company-settings-spin 0.7s linear infinite;
 }

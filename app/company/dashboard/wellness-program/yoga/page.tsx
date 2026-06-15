@@ -217,7 +217,7 @@ const YogaPage = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave"
+                                        className="ti-btn !bg-primary !text-white !font-medium ti-btn-wave"
                                         onClick={() => setShowModal(true)}
                                         aria-label="Add participant"
                                     >
@@ -347,7 +347,7 @@ const YogaPage = () => {
                 </button>
                 <button
                     type="button"
-                    className="ti-btn !bg-orange-500 !text-white"
+                    className="ti-btn !bg-primary !text-white"
                     onClick={() => void handleAddParticipant()}
                     disabled={!newParticipant.name || !newParticipant.email || adding}
                 >

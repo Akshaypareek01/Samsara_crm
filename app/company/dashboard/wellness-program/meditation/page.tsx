@@ -137,7 +137,7 @@ const MeditationPage = () => {
         if (!newClient.name || !newClient.email) return;
         setAdding(true);
         const treatmentColorMap: Record<string, string> = {
-            'Mindfulness Basics': 'bg-purple-100 text-purple-600',
+            'Mindfulness Basics': 'bg-primary/10 text-primary',
             'Stress Reduction': 'bg-warning/10 text-warning',
             'Deep Meditation': 'bg-primary/10 text-primary',
             'Sleep Therapy': 'bg-success/10 text-success',
@@ -252,7 +252,7 @@ const MeditationPage = () => {
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                                className="ti-btn !bg-primary !text-white !font-medium ti-btn-wave gap-1"
                                 onClick={() => setShowModal(true)}
                                 aria-label="Add client"
                             >
@@ -287,8 +287,8 @@ const MeditationPage = () => {
                                     <tr key={c.id}>
                                         <td>
                                             <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-purple-600 font-semibold text-[0.75rem]">{c.initials}</span>
+                                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-primary font-semibold text-[0.75rem]">{c.initials}</span>
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-[0.875rem] text-defaulttextcolor mb-0">{c.name}</p>
@@ -391,7 +391,7 @@ const MeditationPage = () => {
                 </button>
                 <button
                     type="button"
-                    className="ti-btn !bg-orange-500 !text-white"
+                    className="ti-btn !bg-primary !text-white"
                     onClick={() => void handleAddClient()}
                     disabled={!newClient.name || !newClient.email || adding}
                 >

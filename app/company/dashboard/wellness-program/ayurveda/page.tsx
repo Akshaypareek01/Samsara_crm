@@ -142,7 +142,7 @@ const AyurvedaPage = () => {
             'Detox Program': 'bg-success/10 text-success',
             'Stress Relief': 'bg-warning/10 text-warning',
             'Digestive Health': 'bg-primary/10 text-primary',
-            'Immunity Boost': 'bg-purple-100 text-purple-600',
+            'Immunity Boost': 'bg-primary/10 text-primary',
         };
         const initials = newClient.name
             .trim()
@@ -254,7 +254,7 @@ const AyurvedaPage = () => {
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                                className="ti-btn !bg-primary !text-white !font-medium ti-btn-wave gap-1"
                                 onClick={() => setShowModal(true)}
                                 aria-label="Add client"
                             >
@@ -392,7 +392,7 @@ const AyurvedaPage = () => {
                 </button>
                 <button
                     type="button"
-                    className="ti-btn !bg-orange-500 !text-white"
+                    className="ti-btn !bg-primary !text-white"
                     onClick={() => void handleAddClient()}
                     disabled={!newClient.name || !newClient.email || adding}
                 >

@@ -61,9 +61,9 @@
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.25rem;
-  color: var(--primary, #845adf);
-  background: rgba(132, 90, 223, 0.08);
-  border: 1px solid rgba(132, 90, 223, 0.25);
+  color: var(--primary, var(--portal-primary));
+  background: rgba(var(--portal-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--portal-primary-rgb), 0.25);
   border-radius: 9999px;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -71,12 +71,12 @@
 }
 
 .trainer-weekly-schedule__add-btn:hover {
-  background: rgba(132, 90, 223, 0.14);
-  border-color: rgba(132, 90, 223, 0.4);
+  background: rgba(var(--portal-primary-rgb), 0.14);
+  border-color: rgba(var(--portal-primary-rgb), 0.4);
 }
 
 .trainer-weekly-schedule__add-btn:focus-visible {
-  outline: 2px solid var(--primary, #845adf);
+  outline: 2px solid var(--primary, var(--portal-primary));
   outline-offset: 2px;
 }
 

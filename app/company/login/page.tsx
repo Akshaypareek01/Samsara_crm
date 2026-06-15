@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { Fragment, Suspense, useEffect, useState } from 'react';
 import CompanyService from '@/services/companyService';
+import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/trainer-form.css';
 
 const HERO_FEATURES = [

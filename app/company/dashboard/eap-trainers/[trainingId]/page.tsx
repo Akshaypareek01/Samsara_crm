@@ -75,7 +75,7 @@ const EapTrainingDetailPage = () => {
       <div className="company-eap-trainers-page">
         {loading ? (
           <div className="text-center py-16">
-            <div className="spinner-border text-violet-600" role="status">
+            <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Loading program…</span>
             </div>
           </div>

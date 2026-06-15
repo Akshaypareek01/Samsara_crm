@@ -16,7 +16,7 @@ const TRAINING_ICON_THEMES: { keywords: string[]; theme: EapTrainingIconTheme }[
   { keywords: ['stress', 'workplace'], theme: { icon: 'ri-mental-health-line', bg: '#dbeafe', color: '#2563eb' } },
   { keywords: ['mental', 'health', 'awareness'], theme: { icon: 'ri-heart-pulse-line', bg: '#dcfce7', color: '#16a34a' } },
   { keywords: ['work', 'life', 'balance'], theme: { icon: 'ri-scales-3-line', bg: '#ffedd5', color: '#ea580c' } },
-  { keywords: ['emotional', 'intelligence'], theme: { icon: 'ri-team-line', bg: '#ede9fe', color: '#7c3aed' } },
+  { keywords: ['emotional', 'intelligence'], theme: { icon: 'ri-team-line', bg: '#fff4ef', color: '#ed662e' } },
   { keywords: ['resilience', 'resilient'], theme: { icon: 'ri-mountain-line', bg: '#fce7f3', color: '#db2777' } },
 ];
 
@@ -24,7 +24,7 @@ const FALLBACK_THEMES: EapTrainingIconTheme[] = [
   { icon: 'ri-graduation-cap-line', bg: '#dbeafe', color: '#2563eb' },
   { icon: 'ri-presentation-line', bg: '#dcfce7', color: '#16a34a' },
   { icon: 'ri-lightbulb-line', bg: '#ffedd5', color: '#ea580c' },
-  { icon: 'ri-group-line', bg: '#ede9fe', color: '#7c3aed' },
+  { icon: 'ri-group-line', bg: '#fff4ef', color: '#ed662e' },
   { icon: 'ri-shield-check-line', bg: '#fce7f3', color: '#db2777' },
 ];
 

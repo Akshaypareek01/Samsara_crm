@@ -14,7 +14,7 @@
 .company-eap-trainers-page__title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   margin: 0;
 }
 
@@ -30,7 +30,7 @@
   gap: 0.35rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   text-decoration: none;
   margin-bottom: 1.25rem;
 }
@@ -97,7 +97,7 @@
 .company-eap-filters__input:focus,
 .company-eap-filters__select:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--portal-primary);
   box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
 }
 
@@ -133,22 +133,22 @@
 }
 
 .company-eap-btn--primary {
-  background: #5b21b6;
+  background: var(--portal-primary-deep);
   color: #fff;
 }
 
 .company-eap-btn--primary:hover {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .company-eap-btn--ghost {
   background: #fff;
-  color: #5b21b6;
-  border: 1px solid #ddd6fe;
+  color: var(--portal-primary-deep);
+  border: 1px solid var(--portal-primary-tint-border);
 }
 
 .company-eap-btn--ghost:hover:not(:disabled) {
-  background: #f5f3ff;
+  background: var(--portal-primary-tint);
 }
 
 .company-eap-btn:disabled {
@@ -184,7 +184,7 @@
   width: 100%;
   padding: 0;
   border: none;
-  background: #ede9fe;
+  background: var(--portal-primary-tint);
   cursor: pointer;
 }
 
@@ -229,8 +229,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -251,8 +251,8 @@
   font-weight: 600;
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
 }
 
 .company-eap-browse-card__cta {
@@ -265,7 +265,7 @@
   padding: 0.625rem 1rem;
   border: none;
   border-radius: 0.5rem;
-  background: #5b21b6;
+  background: var(--portal-primary-deep);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -273,7 +273,7 @@
 }
 
 .company-eap-browse-card__cta:hover {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 /* Pagination */
@@ -321,8 +321,8 @@
 }
 
 .company-eap-pagination__page--active {
-  background: #5b21b6;
-  border-color: #5b21b6;
+  background: var(--portal-primary-deep);
+  border-color: var(--portal-primary-deep);
   color: #fff;
 }
 
@@ -338,13 +338,13 @@
   gap: 0.375rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   text-decoration: none;
   margin-bottom: 1.25rem;
 }
 
 .company-eap-detail__back:hover {
-  color: #6d28d9;
+  color: var(--portal-primary-deep);
 }
 
 .company-eap-detail__hero {
@@ -380,7 +380,7 @@
   height: 11rem;
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #ede9fe 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, var(--portal-primary-tint) 0%, #f8fafc 100%);
   overflow: hidden;
 }
 
@@ -413,7 +413,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  color: #7c3aed;
+  color: var(--portal-primary);
   font-size: 0.8125rem;
   font-weight: 600;
 }
@@ -450,8 +450,8 @@
   font-weight: 600;
   padding: 0.3rem 0.65rem;
   border-radius: 9999px;
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
 }
 
 .company-eap-detail__hero-trainer {
@@ -495,7 +495,7 @@
 
 .company-eap-detail__tab--active {
   background: #fff;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
 }
 
@@ -673,8 +673,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ede9fe;
-  color: #5b21b6;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
   font-size: 1.25rem;
   font-weight: 700;
 }
@@ -753,7 +753,7 @@
   min-height: 3rem;
   border: none;
   border-radius: 0.625rem;
-  background: #5b21b6;
+  background: var(--portal-primary-deep);
   color: #fff;
   font-size: 0.9375rem;
   font-weight: 700;
@@ -761,7 +761,7 @@
 }
 
 .company-eap-detail__book-btn:hover:not(:disabled) {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .company-eap-detail__book-btn:disabled {

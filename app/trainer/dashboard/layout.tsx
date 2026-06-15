@@ -8,6 +8,7 @@ import { connect } from "react-redux";
 import { ThemeChanger } from "@/shared/redux/action";
 import Switcher from "@/shared/layout-components/switcher/switcher";
 import store from "@/shared/redux/store";
+import '@/shared/styles/portal-brand.css';
 import './components/trainer-dashboard.css';
 import './trainer-mobile-fix.css';
 

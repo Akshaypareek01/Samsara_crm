@@ -2,6 +2,7 @@
 import React, { Fragment } from 'react';
 import CompanySidebar from './components/CompanySidebar';
 import CompanyDashboardHeader from './components/CompanyDashboardHeader';
+import '@/shared/styles/portal-brand.css';
 import './components/company-dashboard.css';
 import './company-mobile-fix.css';
 import Footer from '@/shared/layout-components/footer/footer';

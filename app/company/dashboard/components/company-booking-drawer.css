@@ -17,7 +17,7 @@
   max-height: 50vh;
   overflow-y: auto;
   border-bottom: 1px solid #f3f4f6;
-  background: linear-gradient(180deg, #faf5ff 0%, #fff 40%);
+  background: linear-gradient(180deg, var(--portal-primary-tint) 0%, #fff 40%);
 }
 
 @media (min-width: 1024px) {
@@ -60,8 +60,8 @@
   width: 4rem;
   height: 4rem;
   border-radius: 9999px;
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
   font-size: 1.35rem;
   font-weight: 700;
   display: flex;
@@ -89,8 +89,8 @@
   font-weight: 600;
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
 }
 
 .company-booking-preview__section {
@@ -150,8 +150,8 @@
 }
 
 .company-booking-preview__chip--violet {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
 }
 
 .company-booking-preview__gallery {

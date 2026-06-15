@@ -207,7 +207,7 @@ const TrainersPageInner = () => {
 
                 {loading ? (
                     <div className="text-center py-16" role="status">
-                        <div className="spinner-border text-violet-600" style={{ color: '#7c3aed' }}>
+                        <div className="spinner-border text-primary" style={{ color: '#ed662e' }}>
                             <span className="visually-hidden">Loading trainers</span>
                         </div>
                         <p className="mt-3 text-sm text-gray-500">Loading trainers…</p>
@@ -251,7 +251,7 @@ const TrainersPage = () => (
     <Suspense
         fallback={
             <div className="company-trainers-page text-center py-16" role="status">
-                <div className="spinner-border" style={{ color: '#7c3aed' }}>
+                <div className="spinner-border" style={{ color: '#ed662e' }}>
                     <span className="visually-hidden">Loading…</span>
                 </div>
             </div>

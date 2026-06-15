@@ -199,7 +199,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
             <button
                 type="submit"
                 form="company-booking-drawer-form"
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-violet-600 text-white text-sm font-semibold py-3 hover:bg-violet-700 transition-colors disabled:opacity-50"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold py-3 hover:opacity-90 transition-colors disabled:opacity-50"
                 disabled={loading || !canAcceptNewBookings}
             >
                 {loading ? (
@@ -237,7 +237,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                 <div className="company-booking-drawer__preview-col">
                     {loadingTrainer ? (
                         <div className="flex justify-center py-16">
-                            <div className="spinner-border text-violet-600" style={{ color: "#7c3aed" }} role="status">
+                            <div className="spinner-border text-primary" style={{ color: "#ed662e" }} role="status">
                                 <span className="visually-hidden">Loading trainer…</span>
                             </div>
                         </div>

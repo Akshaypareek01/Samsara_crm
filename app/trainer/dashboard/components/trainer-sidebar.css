@@ -1,22 +1,22 @@
 /**
- * WellConnect-style purple sidebar for trainer dashboard.
+ * Samsara orange sidebar for trainer dashboard.
  * Scoped to `.trainer-wellconnect-sidebar`.
  */
 
 .trainer-dashboard-shell .app-sidebar.trainer-wellconnect-sidebar {
-  --trainer-sidebar-bg: #7c3aed;
-  --trainer-sidebar-bg-deep: #6d28d9;
+  --trainer-sidebar-bg: var(--portal-primary);
+  --trainer-sidebar-bg-deep: var(--portal-primary-deep);
   --trainer-sidebar-text: rgba(255, 255, 255, 0.88);
   --trainer-sidebar-text-muted: rgba(255, 255, 255, 0.65);
   --trainer-sidebar-active-bg: #ffffff;
-  --trainer-sidebar-active-text: #6d28d9;
+  --trainer-sidebar-active-text: var(--portal-primary);
   --trainer-sidebar-hover-bg: rgba(255, 255, 255, 0.12);
   --trainer-sidebar-width: 15rem;
 
   width: var(--trainer-sidebar-width) !important;
   background: var(--trainer-sidebar-bg) !important;
   border-inline-end: none !important;
-  box-shadow: 4px 0 24px rgba(109, 40, 217, 0.15);
+  box-shadow: 4px 0 24px var(--portal-primary-shadow);
   display: flex;
   flex-direction: column;
 }

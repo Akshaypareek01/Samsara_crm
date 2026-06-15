@@ -23,8 +23,8 @@
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 0.75rem;
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--portal-primary-tint);
+  color: var(--portal-primary-deep);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,7 +76,7 @@
 
 .company-trainer-rating-drawer__feedback:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--portal-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
@@ -168,7 +168,7 @@
 }
 
 .company-rating-bell__item:hover {
-  background: #f5f3ff;
+  background: var(--portal-primary-tint);
 }
 
 .company-rating-bell__item-title {

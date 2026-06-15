@@ -4,7 +4,7 @@
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #f3f4f6;
-  background: linear-gradient(135deg, #faf5ff 0%, #fff 60%);
+  background: linear-gradient(135deg, var(--portal-primary-tint) 0%, #fff 60%);
 }
 
 .company-trainer-profile__avatar {
@@ -20,13 +20,13 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 9999px;
-  background: linear-gradient(145deg, #ede9fe, #c4b5fd);
+  background: linear-gradient(145deg, var(--portal-primary-tint), var(--portal-primary-light));
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #6d28d9;
+  color: var(--portal-primary-deep);
   flex-shrink: 0;
 }
 
@@ -58,12 +58,12 @@
 }
 
 .company-trainer-profile__tab:hover {
-  color: #6d28d9;
+  color: var(--portal-primary-deep);
 }
 
 .company-trainer-profile__tab--active {
-  color: #6d28d9;
-  border-bottom-color: #7c3aed;
+  color: var(--portal-primary-deep);
+  border-bottom-color: var(--portal-primary);
 }
 
 .company-trainer-profile__panel {

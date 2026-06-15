@@ -87,7 +87,7 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <div className="spinner-border text-violet-600" role="status">
+        <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading trainer profile…</span>
         </div>
         <p className="text-sm text-gray-500 mb-0">Loading trainer profile…</p>
@@ -122,7 +122,7 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
           <TrainerRatingBadge trainer={trainer} size="md" className="mb-2" />
           <div className="flex flex-wrap gap-1.5">
             {trainer.category ? (
-              <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">
+              <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                 {trainer.category}
               </span>
             ) : null}
@@ -176,7 +176,7 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
               <div className="flex flex-wrap gap-1.5">
                 {trainings.length > 0 ? (
                   trainings.map((t) => (
-                    <span key={t} className="text-xs px-2 py-1 rounded-md bg-violet-50 text-violet-800">
+                    <span key={t} className="text-xs px-2 py-1 rounded-md bg-primary/5 text-primary">
                       {t}
                     </span>
                   ))

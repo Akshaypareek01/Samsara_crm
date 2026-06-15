@@ -43,8 +43,8 @@ const FALLBACK_OVERVIEW: WellnessOverviewStat[] = [
         change: '—',
         changePositive: true,
         icon: 'ri-checkbox-circle-line',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
     },
     {
         label: 'Overall Satisfaction',
@@ -64,8 +64,8 @@ const FALLBACK_CARDS: WellnessProgramCard[] = [
         participants: 0,
         completionRate: 0,
         icon: 'ri-mental-health-line',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-500',
+        iconBg: 'bg-primary/10',
+        iconColor: 'text-primary',
         href: '/company/dashboard/wellness-program/yoga',
     },
     {

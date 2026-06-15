@@ -3,6 +3,7 @@ import Seo from '@/shared/layout-components/seo/seo';
 import Link from 'next/link';
 import React, { Fragment } from 'react';
 import CompanyLegalDocument from '@/shared/components/company/CompanyLegalDocument';
+import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/company-legal.css';
 import '@/shared/styles/trainer-form.css';
 

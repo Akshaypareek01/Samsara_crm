@@ -7,6 +7,7 @@ import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import Swal from 'sweetalert2';
 import TrainerRegisterFormFields from '@/shared/components/trainer/TrainerRegisterFormFields';
+import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/trainer-form.css';
 import {
   filterFilledCertificationEntries,
@@ -220,7 +221,7 @@ const TrainerRegister = () => {
                 icon: 'warning',
                 title: 'Please check your form',
                 text: validation.firstError || 'Some required fields are missing or invalid.',
-                confirmButtonColor: '#845ADF',
+                confirmButtonColor: '#ed662e',
             });
             scrollToField(validation.firstField);
             return;
@@ -282,7 +283,7 @@ const TrainerRegister = () => {
                     icon: 'error',
                     title: 'Registration failed',
                     text: message,
-                    confirmButtonColor: '#845ADF',
+                    confirmButtonColor: '#ed662e',
                 });
             }
         } finally {

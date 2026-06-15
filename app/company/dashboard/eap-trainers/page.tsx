@@ -212,7 +212,7 @@ const EapTrainersPageInner = () => {
 
       {loading ? (
         <div className="text-center py-16">
-          <div className="spinner-border text-violet-600" role="status">
+          <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading programs…</span>
           </div>
         </div>
@@ -264,7 +264,7 @@ const EapTrainersPage = () => (
     <Suspense
       fallback={
         <div className="text-center py-16">
-          <div className="spinner-border text-violet-600" role="status">
+          <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading…</span>
           </div>
         </div>

@@ -119,7 +119,7 @@ const CompanyTrainerProfilePage = () => (
   <Suspense
     fallback={
       <div className="company-trainer-profile-page text-center py-16" role="status">
-        <div className="spinner-border" style={{ color: '#7c3aed' }}>
+        <div className="spinner-border" style={{ color: '#ed662e' }}>
           <span className="visually-hidden">Loading…</span>
         </div>
       </div>

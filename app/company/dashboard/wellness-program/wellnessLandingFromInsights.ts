@@ -59,7 +59,7 @@ export interface RecentActivityItem {
 const STAT_ICONS: Pick<WellnessOverviewStat, "icon" | "iconBg" | "iconColor">[] = [
     { icon: "ri-user-line", iconBg: "bg-primary/10", iconColor: "text-primary" },
     { icon: "ri-pulse-line", iconBg: "bg-success/10", iconColor: "text-success" },
-    { icon: "ri-checkbox-circle-line", iconBg: "bg-purple-100", iconColor: "text-purple-500" },
+    { icon: "ri-checkbox-circle-line", iconBg: "bg-primary/10", iconColor: "text-primary" },
     { icon: "ri-star-line", iconBg: "bg-warning/10", iconColor: "text-warning" },
 ];
 
@@ -77,8 +77,8 @@ const PROGRAM_META: Array<{
         title: "Yoga Programs",
         shortLabel: "Yoga",
         icon: "ri-mental-health-line",
-        iconBg: "bg-purple-100",
-        iconColor: "text-purple-500",
+        iconBg: "bg-primary/10",
+        iconColor: "text-primary",
         href: "/company/dashboard/wellness-program/yoga",
     },
     {

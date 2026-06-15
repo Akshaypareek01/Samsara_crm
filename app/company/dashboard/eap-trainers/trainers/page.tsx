@@ -155,7 +155,7 @@ const EapTrainersBrowsePageInner = () => {
 
       {loading ? (
         <div className="text-center py-16" role="status">
-          <div className="spinner-border text-violet-600">
+          <div className="spinner-border text-primary">
             <span className="visually-hidden">Loading trainers…</span>
           </div>
         </div>
@@ -198,7 +198,7 @@ const EapTrainersBrowsePage = () => (
     <Suspense
       fallback={
         <div className="text-center py-16">
-          <div className="spinner-border text-violet-600" role="status">
+          <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading…</span>
           </div>
         </div>

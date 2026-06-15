@@ -152,7 +152,7 @@ const ThyroidPage = () => {
                 <div className="box-header flex justify-between items-center">
                     <h6 className="box-title font-bold !mb-0">Thyroid Specialists</h6>
                     <button
-                        className="ti-btn !bg-orange-500 !text-white !font-medium ti-btn-wave gap-1"
+                        className="ti-btn !bg-primary !text-white !font-medium ti-btn-wave gap-1"
                         onClick={() => setShowModal(true)}
                     >
                         <i className="ri-add-line"></i> Add New Doctor
@@ -332,7 +332,7 @@ const ThyroidPage = () => {
                             </button>
                             <button
                                 type="button"
-                                className="ti-btn !bg-orange-500 !text-white"
+                                className="ti-btn !bg-primary !text-white"
                                 onClick={handleAddDoctor}
                                 disabled={!newDoctor.name || !newDoctor.qualification || !newDoctor.nextAvailable}
                             >

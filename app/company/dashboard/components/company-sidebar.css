@@ -1,22 +1,22 @@
 /**
- * WellConnect-style purple sidebar for company dashboard.
+ * Samsara orange sidebar for company dashboard.
  * Scoped to `.company-wellconnect-sidebar` to avoid affecting admin/trainer layouts.
  */
 
 .company-dashboard-shell .app-sidebar.company-wellconnect-sidebar {
-  --company-sidebar-bg: #7c3aed;
-  --company-sidebar-bg-deep: #6d28d9;
+  --company-sidebar-bg: var(--portal-primary);
+  --company-sidebar-bg-deep: var(--portal-primary-deep);
   --company-sidebar-text: rgba(255, 255, 255, 0.88);
   --company-sidebar-text-muted: rgba(255, 255, 255, 0.65);
   --company-sidebar-active-bg: #ffffff;
-  --company-sidebar-active-text: #6d28d9;
+  --company-sidebar-active-text: var(--portal-primary);
   --company-sidebar-hover-bg: rgba(255, 255, 255, 0.12);
   --company-sidebar-width: 15rem;
 
   width: var(--company-sidebar-width) !important;
   background: var(--company-sidebar-bg) !important;
   border-inline-end: none !important;
-  box-shadow: 4px 0 24px rgba(109, 40, 217, 0.15);
+  box-shadow: 4px 0 24px var(--portal-primary-shadow);
   display: flex;
   flex-direction: column;
 }

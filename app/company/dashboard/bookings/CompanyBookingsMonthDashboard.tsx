@@ -29,7 +29,7 @@ const QUICK_ACTIONS = [
     {
         icon: "bx-calendar-check",
         iconBg: "#EEF2FF",
-        iconColor: "#6366F1",
+        iconColor: "#ed662e",
         title: "All bookings",
         sub: "Open table view",
         action: "open-table" as const,
@@ -181,7 +181,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                             className="w-11 h-11 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: "#EEF2FF" }}
                         >
-                            <i className="bx bx-calendar text-xl" style={{ color: "#6366F1" }}></i>
+                            <i className="bx bx-calendar text-xl" style={{ color: "#ed662e" }}></i>
                         </div>
                     </div>
                 </div>

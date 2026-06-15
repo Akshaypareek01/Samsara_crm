@@ -135,7 +135,7 @@ const CompanyProfile = () => {
                                     </div>
                                     <Link
                                         href="/company/dashboard/settings"
-                                        className="ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave !bg-orange-500 !text-white shrink-0"
+                                        className="ti-btn !py-2 !px-4 !text-[0.875rem] !font-medium ti-btn-wave !bg-primary !text-white shrink-0"
                                         aria-label="Edit company details in settings"
                                     >
                                         <i className="ri-settings-3-line me-1"></i>

@@ -19,7 +19,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   margin: 0 0 0.875rem;
 }
 
@@ -61,7 +61,7 @@
 .eap-training-drawer-field .form-control:focus,
 .eap-training-drawer-field input[type="text"]:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--portal-primary);
   box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
 }
 
@@ -84,9 +84,9 @@
 
 .eap-training-drawer-cover {
   position: relative;
-  border: 2px dashed #ddd6fe;
+  border: 2px dashed var(--portal-primary-tint-border);
   border-radius: 0.75rem;
-  background: #faf5ff;
+  background: var(--portal-primary-tint);
   overflow: hidden;
   min-height: 10rem;
 }
@@ -116,7 +116,7 @@
 
 .eap-training-drawer-cover__empty i {
   font-size: 2rem;
-  color: #7c3aed;
+  color: var(--portal-primary);
   opacity: 0.85;
 }
 
@@ -156,22 +156,22 @@
 }
 
 .eap-training-drawer-btn--primary {
-  background: #5b21b6;
+  background: var(--portal-primary-deep);
   color: #fff;
 }
 
 .eap-training-drawer-btn--primary:hover:not(:disabled) {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .eap-training-drawer-btn--ghost {
   background: #fff;
-  color: #5b21b6;
-  border: 1px solid #ddd6fe;
+  color: var(--portal-primary-deep);
+  border: 1px solid var(--portal-primary-tint-border);
 }
 
 .eap-training-drawer-btn--ghost:hover:not(:disabled) {
-  background: #f5f3ff;
+  background: var(--portal-primary-tint);
 }
 
 .eap-training-drawer-btn--danger {
@@ -198,7 +198,7 @@
 .eap-training-drawer-chip {
   padding: 0.4375rem 0.875rem;
   border-radius: 9999px;
-  border: 1px solid #ddd6fe;
+  border: 1px solid var(--portal-primary-tint-border);
   background: #fff;
   font-size: 0.8125rem;
   font-weight: 600;
@@ -208,13 +208,13 @@
 }
 
 .eap-training-drawer-chip:hover {
-  border-color: #7c3aed;
-  color: #5b21b6;
+  border-color: var(--portal-primary);
+  color: var(--portal-primary-deep);
 }
 
 .eap-training-drawer-chip--selected {
-  background: #5b21b6;
-  border-color: #5b21b6;
+  background: var(--portal-primary-deep);
+  border-color: var(--portal-primary-deep);
   color: #fff;
 }
 
@@ -263,7 +263,7 @@
 
 .eap-training-drawer-point input:focus {
   outline: none;
-  border-color: #7c3aed;
+  border-color: var(--portal-primary);
   box-shadow: 0 0 0 3px rgb(124 58 237 / 0.12);
 }
 
@@ -300,14 +300,14 @@
   padding: 0.375rem 0.625rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #5b21b6;
+  color: var(--portal-primary-deep);
   background: transparent;
   border: none;
   cursor: pointer;
 }
 
 .eap-training-drawer-add-point:hover {
-  color: #7c3aed;
+  color: var(--portal-primary);
 }
 
 .eap-training-drawer-footer {
@@ -332,7 +332,7 @@
   padding: 0.625rem 1rem;
   border: none;
   border-radius: 0.5rem;
-  background: #5b21b6;
+  background: var(--portal-primary-deep);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -341,7 +341,7 @@
 }
 
 .eap-training-drawer-footer__submit:hover:not(:disabled) {
-  background: #6d28d9;
+  background: var(--portal-primary-deep);
 }
 
 .eap-training-drawer-footer__submit:disabled {
