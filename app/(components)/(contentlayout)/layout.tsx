@@ -9,6 +9,7 @@ import { ThemeChanger } from "@/shared/redux/action"
 import { Fragment, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import AuthGuard from "@/shared/components/AuthGuard"
+import "@/shared/styles/admin-crm-brand.css"
 
 const Layout = ({ children, }: any) => {
 
@@ -36,7 +37,7 @@ const Layout = ({ children, }: any) => {
             <Header />
             <Sidebar />
             <div className='content'>
-              <div className='main-content'
+              <div className='main-content admin-crm-shell'
                 onClick={Bodyclickk}
               >
                 {children}

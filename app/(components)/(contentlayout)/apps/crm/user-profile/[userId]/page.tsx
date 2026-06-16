@@ -271,6 +271,10 @@ const UserProfile = () => {
                         <button
                           type="button"
                           className="ti-btn ti-btn-light !font-medium !gap-0"
+                          onClick={() =>
+                            router.push(`/apps/crm/users?edit=${userId}`)
+                          }
+                          aria-label="Edit user profile"
                         >
                           <i className="ri-edit-line me-1 align-middle inline-block"></i>
                           Edit

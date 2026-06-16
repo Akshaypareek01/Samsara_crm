@@ -3,6 +3,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import CompanyService, { Company, CreateCompanyRequest, ContactPerson } from '@/services/companyService';
+import { formatCompanyAddress, getCompanyLogoUrl } from '@/shared/utils/companyDisplayUtils';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
 import {
@@ -42,6 +43,7 @@ const Companies = () => {
     domain: '',
     numberOfEmployees: undefined,
     gstNumber: '',
+    panNumber: '',
     address: '',
     city: '',
     pincode: '',
@@ -107,6 +109,23 @@ const Companies = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.companyName?.trim()) {
+      Swal.fire('Error!', 'Company name is required', 'error');
+      return;
+    }
+    if (!formData.email?.trim()) {
+      Swal.fire('Error!', 'Email is required', 'error');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      Swal.fire('Error!', 'Please enter a valid email address', 'error');
+      return;
+    }
+    if (!formData.contactPerson1?.name?.trim()) {
+      Swal.fire('Error!', 'Primary contact name is required', 'error');
+      return;
+    }
     try {
       if (editingCompany) {
         const companyId = editingCompany._id || editingCompany.id;
@@ -143,6 +162,7 @@ const Companies = () => {
       domain: company.domain || '',
       numberOfEmployees: company.numberOfEmployees,
       gstNumber: company.gstNumber || '',
+      panNumber: company.panNumber || '',
       address: company.address || '',
       city: company.city || '',
       pincode: company.pincode || '',
@@ -194,6 +214,7 @@ const Companies = () => {
       domain: '',
       numberOfEmployees: undefined,
       gstNumber: '',
+      panNumber: '',
       address: '',
       city: '',
       pincode: '',
@@ -443,6 +464,16 @@ const Companies = () => {
                       setFormData({ ...formData, companyLogo: e.target.value })
                     }
                   />
+                  {formData.companyLogo ? (
+                    <img
+                      src={getCompanyLogoUrl({ companyLogo: formData.companyLogo } as Company) || formData.companyLogo}
+                      alt="Company logo preview"
+                      className="mt-2 w-16 h-16 rounded object-contain border border-defaultborder"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
                 </div>
                 <div>
                   <label className="form-label">Domain</label>
@@ -479,6 +510,17 @@ const Companies = () => {
                     value={formData.gstNumber}
                     onChange={(e) =>
                       setFormData({ ...formData, gstNumber: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="form-label">PAN Number</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.panNumber || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, panNumber: e.target.value })
                     }
                   />
                 </div>
@@ -675,6 +717,24 @@ const Companies = () => {
               </button>
             </div>
             <div className="space-y-4">
+              <div className="text-center pb-4 border-b border-defaultborder/60">
+                {getCompanyLogoUrl(viewingCompany) ? (
+                  <img
+                    src={getCompanyLogoUrl(viewingCompany)!}
+                    alt=""
+                    className="w-20 h-20 rounded-xl mx-auto mb-3 object-contain border border-defaultborder bg-white p-2"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : null}
+                <h4 className="font-semibold text-lg mb-0">{viewingCompany.companyName || '-'}</h4>
+                <span
+                  className={`badge mt-2 ${viewingCompany.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}
+                >
+                  {viewingCompany.status !== false ? 'Active' : 'Inactive'}
+                </span>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-semibold text-muted">Company ID</label>
@@ -709,20 +769,16 @@ const Companies = () => {
                   </p>
                 </div>
                 <div>
+                  <label className="text-sm font-semibold text-muted">PAN Number</label>
+                  <p className="text-defaulttextcolor">
+                    {viewingCompany.panNumber || '-'}
+                  </p>
+                </div>
+                <div className="col-span-2">
                   <label className="text-sm font-semibold text-muted">Address</label>
-                  <p className="text-defaulttextcolor">{viewingCompany.address || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-muted">City</label>
-                  <p className="text-defaulttextcolor">{viewingCompany.city || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-muted">Pincode</label>
-                  <p className="text-defaulttextcolor">{viewingCompany.pincode || '-'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-muted">Country</label>
-                  <p className="text-defaulttextcolor">{viewingCompany.country || '-'}</p>
+                  <p className="text-defaulttextcolor">
+                    {formatCompanyAddress(viewingCompany) || '-'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-muted">Status</label>

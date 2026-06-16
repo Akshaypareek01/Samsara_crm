@@ -1,0 +1,18 @@
+/**
+ * Samsara orange brand tokens for admin CRM wellness/trainer UI.
+ * Scoped to .admin-crm-shell so admin purple chrome stays unchanged elsewhere.
+ */
+.admin-crm-shell {
+  --portal-primary: #ed662e;
+  --portal-primary-rgb: 237, 102, 46;
+  --portal-primary-light: #ff9468;
+  --portal-primary-deep: #c95520;
+  --portal-primary-tint: #fff4ef;
+  --portal-primary-tint-border: #ffe0d0;
+  --portal-primary-focus: rgba(237, 102, 46, 0.12);
+  --portal-primary-shadow: rgba(237, 102, 46, 0.15);
+}
+
+.admin-crm-shell .main-profile-cover::before {
+  background-color: rgba(237, 102, 46, 0.85) !important;
+}

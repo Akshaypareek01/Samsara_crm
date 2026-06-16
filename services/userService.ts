@@ -228,6 +228,20 @@ class UserService {
   }
 
   /**
+   * Bulk delete users (admin CRM).
+   *
+   * @param userIds - MongoDB user ids to delete.
+   */
+  async bulkDeleteUsers(userIds: string[]): Promise<{ deleted: number; failed: Array<{ userId: string; message: string }> }> {
+    try {
+      return await ApiService.post('/users/bulk-delete', { userIds });
+    } catch (error) {
+      console.error('❌ Bulk delete users error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all users (role: user)
    */
   async getAllUsers(params: Omit<GetUsersParams, 'role'> = {}): Promise<UsersResponse> {

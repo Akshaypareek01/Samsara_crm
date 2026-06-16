@@ -10,19 +10,28 @@ import TrainerService, {
   TRAINER_CATEGORY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
   TrainerImage,
+  isTrainerAcceptingBookings,
 } from '@/services/trainerService';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
-import MultiSelect from '@/shared/components/MultiSelect';
-import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
 import TrainerQualificationsDisplay from '@/shared/components/trainer/TrainerQualificationsDisplay';
 import TrainerCategoryBadges from '@/shared/components/trainer/TrainerCategoryBadges';
+import AdminTrainerFormSections from './AdminTrainerFormSections';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import {
   normalizeTrainerCategories,
   trainerCategoryLabels,
 } from '@/shared/utils/trainerCategoryUtils';
+import {
+  filterFilledCertificationEntries,
+  filterFilledEducationEntries,
+  normalizeCertificationList,
+  normalizeEducationList,
+} from '@/shared/utils/trainerQualificationUtils';
+import { formatTrainerCities, normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
+import { formatTrainerDob } from '@/app/company/dashboard/components/companyTrainerProfileUtils';
+import '@/shared/styles/trainer-form.css';
 
 const Trainers = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -42,9 +51,16 @@ const Trainers = () => {
     mobile: '',
     specialistIn: [],
     typeOfTraining: [],
+    dateOfBirth: null,
+    cities: [],
+    pinCode: '',
+    experience: '',
+    education: [],
+    certification: [],
     images: [],
     profilePhoto: null,
     status: true,
+    acceptingBookings: true,
   });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -161,7 +177,14 @@ const Trainers = () => {
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
           typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
+          dateOfBirth: formData.dateOfBirth || null,
+          cities: normalizeTrainerCities(formData),
+          pinCode: formData.pinCode || '',
+          experience: formData.experience || '',
+          education: filterFilledEducationEntries(formData.education),
+          certification: filterFilledCertificationEntries(formData.certification),
           status: formData.status,
+          acceptingBookings: formData.acceptingBookings,
         };
 
         // Only include images if they exist
@@ -188,7 +211,14 @@ const Trainers = () => {
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
           typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
+          dateOfBirth: formData.dateOfBirth || null,
+          cities: normalizeTrainerCities(formData),
+          pinCode: formData.pinCode || '',
+          experience: formData.experience || '',
+          education: filterFilledEducationEntries(formData.education),
+          certification: filterFilledCertificationEntries(formData.certification),
           status: formData.status,
+          acceptingBookings: formData.acceptingBookings,
         };
 
         // Only include images if they exist
@@ -227,9 +257,16 @@ const Trainers = () => {
       mobile: '',
       specialistIn: [],
       typeOfTraining: [],
+      dateOfBirth: null,
+      cities: [],
+      pinCode: '',
+      experience: '',
+      education: [],
+      certification: [],
       images: [],
       profilePhoto: null,
       status: true,
+      acceptingBookings: true,
     });
   };
 
@@ -249,9 +286,16 @@ const Trainers = () => {
       mobile: (trainer as any).mobile || '',
       specialistIn: Array.isArray(trainer.specialistIn) ? trainer.specialistIn : (trainer.specialistIn ? [trainer.specialistIn] : []),
       typeOfTraining: Array.isArray(trainer.typeOfTraining) ? trainer.typeOfTraining : (trainer.typeOfTraining ? [trainer.typeOfTraining] : []),
+      dateOfBirth: trainer.dateOfBirth || null,
+      cities: normalizeTrainerCities(trainer),
+      pinCode: trainer.pinCode || '',
+      experience: trainer.experience || '',
+      education: normalizeEducationList(trainer.education),
+      certification: normalizeCertificationList(trainer.certification),
       images: trainer.images || [],
       profilePhoto: trainer.profilePhoto || null,
       status: trainer.status !== false,
+      acceptingBookings: trainer.acceptingBookings !== false,
     });
     setShowModal(true);
   };
@@ -730,18 +774,6 @@ const Trainers = () => {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <TrainerChipSelect
-                    label="Category"
-                    options={[...TRAINER_CATEGORY_OPTIONS]}
-                    value={normalizeTrainerCategories(formData.category)}
-                    onChange={(selected) =>
-                      setFormData((prev) => ({ ...prev, category: selected }))
-                    }
-                    required
-                    fieldId="admin-trainer-category"
-                  />
-                </div>
-                <div className="md:col-span-2">
                   <label className="form-label">Bio * (Max 2000 characters)</label>
                   <textarea
                     className="form-control"
@@ -757,26 +789,11 @@ const Trainers = () => {
                     {(formData.bio || '').length}/2000 characters
                   </small>
                 </div>
-                <div>
-                  <MultiSelect
-                    label="Specialist In"
-                    options={SPECIALIST_OPTIONS}
-                    value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
-                    onChange={(selected) => setFormData((prev) => ({ ...prev, specialistIn: selected }))}
-                    placeholder="Select specialties..."
-                    required
-                    maxHeight="200px"
-                  />
-                </div>
-                <div>
-                  <MultiSelect
-                    label="Type of Training"
-                    options={TYPE_OF_TRAINING_OPTIONS}
-                    value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
-                    onChange={(selected) => setFormData((prev) => ({ ...prev, typeOfTraining: selected }))}
-                    placeholder="Select training types..."
-                    required
-                    maxHeight="300px"
+                <div className="md:col-span-2">
+                  <AdminTrainerFormSections
+                    formData={formData}
+                    setFormData={setFormData}
+                    editingTrainer={editingTrainer}
                   />
                 </div>
                 <div>
@@ -1030,6 +1047,17 @@ const Trainers = () => {
                   >
                     {viewingTrainer.status !== false ? 'Active' : 'Inactive'}
                   </span>
+                  <span
+                    className={`badge mt-2 ms-1 ${
+                      isTrainerAcceptingBookings(viewingTrainer)
+                        ? 'bg-success/10 text-success'
+                        : 'bg-warning/10 text-warning'
+                    }`}
+                  >
+                    {isTrainerAcceptingBookings(viewingTrainer)
+                      ? 'Accepting bookings'
+                      : 'Not accepting bookings'}
+                  </span>
                 </div>
               </div>
 
@@ -1044,7 +1072,7 @@ const Trainers = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-muted text-sm">Specialist In</label>
+                    <label className="text-muted text-sm">Training For</label>
                     <p className="font-medium">
                       {Array.isArray(viewingTrainer.specialistIn) ? (
                         <div className="flex flex-wrap gap-1">
@@ -1062,7 +1090,7 @@ const Trainers = () => {
                     </p>
                   </div>
                   <div>
-                    <label className="text-muted text-sm">Type of Training</label>
+                    <label className="text-muted text-sm">Specializations</label>
                     <p className="font-medium">
                       {Array.isArray(viewingTrainer.typeOfTraining) ? (
                         <div className="flex flex-col gap-1">
@@ -1084,6 +1112,20 @@ const Trainers = () => {
                   <div>
                     <label className="text-muted text-sm">Mobile</label>
                     <p className="font-medium">{(viewingTrainer as any).mobile || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="text-muted text-sm">Cities</label>
+                    <p className="font-medium">
+                      {formatTrainerCities(normalizeTrainerCities(viewingTrainer)) || '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-muted text-sm">Date of birth</label>
+                    <p className="font-medium">{formatTrainerDob(viewingTrainer.dateOfBirth) || '-'}</p>
+                  </div>
+                  <div>
+                    <label className="text-muted text-sm">Experience</label>
+                    <p className="font-medium">{viewingTrainer.experience || '-'}</p>
                   </div>
                   <div>
                     <label className="text-muted text-sm">Bio</label>

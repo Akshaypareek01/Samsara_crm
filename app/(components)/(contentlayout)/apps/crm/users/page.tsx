@@ -1,74 +1,153 @@
 "use client";
 
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import UserService, { User, CreateUserRequest } from '@/services/userService';
 import membershipService, { UserMembership } from '@/services/membershipService';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
 
+type UserFormState = CreateUserRequest & {
+  mobile?: string;
+  gender?: string;
+  dob?: string;
+  age?: string;
+  height?: string;
+  weight?: string;
+  targetWeight?: string;
+  bodyshape?: string;
+  userCategory?: 'Personal' | 'Corporate';
+  practicetime?: string;
+  focusarea?: string[];
+  goal?: string[];
+  PriorExperience?: string;
+  Address?: string;
+  city?: string;
+  pincode?: string;
+  country?: string;
+  description?: string;
+  active?: boolean;
+};
+
+const emptyUserForm = (): UserFormState => ({
+  name: '',
+  email: '',
+  password: '',
+  role: 'user',
+  mobile: '',
+  gender: '',
+  dob: '',
+  age: '',
+  height: '',
+  weight: '',
+  targetWeight: '',
+  bodyshape: '',
+  userCategory: 'Personal',
+  practicetime: '',
+  focusarea: [],
+  goal: [],
+  PriorExperience: '',
+  Address: '',
+  city: '',
+  pincode: '',
+  country: '',
+  description: '',
+  active: true,
+});
+
+/**
+ * Whether a user account is considered active in admin lists.
+ *
+ * @param user - User record from the API.
+ */
+function isUserAccountActive(user: User): boolean {
+  if (user.active === false || user.status === false || user.isActive === false) {
+    return false;
+  }
+  return true;
+}
+
 const Users = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [adminUser, setAdminUser] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [userMemberships, setUserMemberships] = useState<Map<string, UserMembership | null>>(new Map());
-  const [formData, setFormData] = useState<CreateUserRequest & {
-    mobile?: string;
-    gender?: string;
-    age?: string;
-    height?: string;
-    weight?: string;
-    targetWeight?: string;
-    bodyshape?: string;
-    userCategory?: 'Personal' | 'Corporate';
-    practicetime?: string;
-    focusarea?: string[];
-    goal?: string[];
-    PriorExperience?: string;
-    Address?: string;
-    city?: string;
-    pincode?: string;
-    country?: string;
-  }>({
-    name: '',
-    email: '',
-    password: '',
-    role: 'user',
-    mobile: '',
-    gender: '',
-    age: '',
-    height: '',
-    weight: '',
-    targetWeight: '',
-    bodyshape: '',
-    userCategory: 'Personal',
-    practicetime: '',
-    focusarea: [],
-    goal: [],
-    PriorExperience: '',
-    Address: '',
-    city: '',
-    pincode: '',
-    country: '',
-  });
+  const [formData, setFormData] = useState<UserFormState>(emptyUserForm());
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      setAdminUser(JSON.parse(userStr));
-    }
-    fetchUsers();
+    setSelectedUserIds(new Set());
   }, [page, searchTerm]);
+
+  const openEditForUser = useCallback((user: User) => {
+    setEditingUser(user);
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      password: '',
+      role: user.role || 'user',
+      mobile: user.mobile || '',
+      gender: user.gender || '',
+      dob: user.dob || '',
+      age: user.age || '',
+      height: user.height || '',
+      weight: user.weight || '',
+      targetWeight: user.targetWeight || '',
+      bodyshape: user.bodyshape || '',
+      userCategory: user.userCategory || 'Personal',
+      practicetime: user.practicetime || '',
+      focusarea: user.focusarea || [],
+      goal: user.goal || [],
+      PriorExperience: user.PriorExperience || '',
+      Address: user.Address || '',
+      city: user.city || '',
+      pincode: user.pincode || '',
+      country: user.country || '',
+      description: user.description || user.AboutMe || '',
+      active: isUserAccountActive(user),
+    });
+    setShowModal(true);
+  }, []);
+
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId) return;
+
+    const match = users.find((u) => (u._id || u.id) === editId);
+    if (match) {
+      openEditForUser(match);
+      router.replace('/apps/crm/users', { scroll: false });
+      return;
+    }
+
+    let cancelled = false;
+    void UserService.getUserById(editId)
+      .then((user) => {
+        if (!cancelled) {
+          openEditForUser(user);
+          router.replace('/apps/crm/users', { scroll: false });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          Swal.fire('Error!', 'Could not load user for editing', 'error');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, users, openEditForUser, router]);
 
   const fetchUsers = async () => {
     try {
@@ -121,47 +200,51 @@ const Users = () => {
     setUserMemberships(membershipsMap);
   };
 
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setAdminUser(JSON.parse(userStr));
+    }
+    void fetchUsers();
+  }, [page, searchTerm]);
+
+  /**
+   * Build API payload from form state (omit empty password on update).
+   */
+  const buildUserPayload = (): Record<string, unknown> => {
+    const payload: Record<string, unknown> = { ...formData };
+    if (editingUser && !payload.password) {
+      delete payload.password;
+    }
+    payload.status = formData.active !== false;
+    payload.active = formData.active !== false;
+    return payload;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = buildUserPayload();
       if (editingUser) {
         const userId = editingUser._id || editingUser.id;
         if (!userId) {
           setError('User ID not found');
           return;
         }
-        await UserService.updateUser(userId, formData);
+        await UserService.updateUser(userId, payload);
+        Swal.fire('Success!', 'User updated successfully', 'success');
       } else {
-        await UserService.createUser(formData);
+        await UserService.createUser(payload as CreateUserRequest);
+        Swal.fire('Success!', 'User created successfully', 'success');
       }
       setShowModal(false);
       setEditingUser(null);
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        role: 'user',
-        mobile: '',
-        gender: '',
-        age: '',
-        height: '',
-        weight: '',
-        targetWeight: '',
-        bodyshape: '',
-        userCategory: 'Personal',
-        practicetime: '',
-        focusarea: [],
-        goal: [],
-        PriorExperience: '',
-        Address: '',
-        city: '',
-        pincode: '',
-        country: '',
-      });
+      setFormData(emptyUserForm());
       fetchUsers();
     } catch (err: any) {
-      setError(err.message || 'Failed to save user');
+      const msg = err.message || 'Failed to save user';
+      setError(msg);
+      Swal.fire('Error!', msg, 'error');
     }
   };
 
@@ -170,30 +253,60 @@ const Users = () => {
   };
 
   const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      password: '',
-      role: user.role as 'user' | 'teacher',
-      mobile: user.mobile || '',
-      gender: user.gender || '',
-      age: user.age || '',
-      height: user.height || '',
-      weight: user.weight || '',
-      targetWeight: user.targetWeight || '',
-      bodyshape: user.bodyshape || '',
-      userCategory: user.userCategory || 'Personal',
-      practicetime: user.practicetime || '',
-      focusarea: user.focusarea || [],
-      goal: user.goal || [],
-      PriorExperience: user.PriorExperience || '',
-      Address: user.Address || '',
-      city: user.city || '',
-      pincode: user.pincode || '',
-      country: user.country || '',
+    openEditForUser(user);
+  };
+
+  const toggleUserSelection = (userId: string, checked: boolean) => {
+    setSelectedUserIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(userId);
+      else next.delete(userId);
+      return next;
     });
-    setShowModal(true);
+  };
+
+  const toggleSelectAllOnPage = (checked: boolean) => {
+    if (!checked) {
+      setSelectedUserIds(new Set());
+      return;
+    }
+    const ids = users
+      .map((u) => u._id || u.id)
+      .filter((id): id is string => Boolean(id));
+    setSelectedUserIds(new Set(ids));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUserIds.size === 0) return;
+    const result = await Swal.fire({
+      title: `Delete ${selectedUserIds.size} user(s)?`,
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete them',
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      setBulkDeleting(true);
+      const res = await UserService.bulkDeleteUsers([...selectedUserIds]);
+      setSelectedUserIds(new Set());
+      if (res.failed.length > 0) {
+        Swal.fire(
+          'Partial success',
+          `Deleted ${res.deleted}. Failed: ${res.failed.length}`,
+          'warning'
+        );
+      } else {
+        Swal.fire('Deleted!', `${res.deleted} user(s) removed.`, 'success');
+      }
+      fetchUsers();
+    } catch (err: any) {
+      Swal.fire('Error!', err.message || 'Bulk delete failed', 'error');
+    } finally {
+      setBulkDeleting(false);
+    }
   };
 
   const handleDelete = async (userId: string) => {
@@ -221,34 +334,14 @@ const Users = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingUser(null);
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      role: 'user',
-      mobile: '',
-      gender: '',
-      age: '',
-      height: '',
-      weight: '',
-      targetWeight: '',
-      bodyshape: '',
-      userCategory: 'Personal',
-      practicetime: '',
-      focusarea: [],
-      goal: [],
-      PriorExperience: '',
-      Address: '',
-      city: '',
-      pincode: '',
-      country: '',
-    });
+    setFormData(emptyUserForm());
   };
 
-  const handleCloseViewModal = () => {
-    setShowViewModal(false);
-    setViewingUser(null);
-  };
+  const pageUserIds = users
+    .map((u) => u._id || u.id)
+    .filter((id): id is string => Boolean(id));
+  const allOnPageSelected =
+    pageUserIds.length > 0 && pageUserIds.every((id) => selectedUserIds.has(id));
 
   return (
     <Fragment>
@@ -285,10 +378,10 @@ const Users = () => {
 
       <div className="box">
         <div className="box-body">
-          <div className="mb-4">
+          <div className="mb-4 flex flex-wrap items-center gap-3">
             <input
               type="text"
-              className="form-control text-sm py-1.5"
+              className="form-control text-sm py-1.5 flex-1 min-w-[200px]"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => {
@@ -296,6 +389,17 @@ const Users = () => {
                 setPage(1);
               }}
             />
+            {selectedUserIds.size > 0 && hasPermission(adminUser, 'userManagement.users', 'delete') && (
+              <button
+                type="button"
+                className="ti-btn ti-btn-danger !text-xs !py-2 !px-3"
+                onClick={() => void handleBulkDelete()}
+                disabled={bulkDeleting}
+                aria-label={`Delete ${selectedUserIds.size} selected users`}
+              >
+                {bulkDeleting ? 'Deleting…' : `Delete selected (${selectedUserIds.size})`}
+              </button>
+            )}
           </div>
 
           {loading ? (
@@ -305,6 +409,14 @@ const Users = () => {
               <table className="table table-bordered table-hover whitespace-nowrap min-w-full text-sm">
                 <thead>
                   <tr className="text-xs">
+                    <th className="w-10">
+                      <input
+                        type="checkbox"
+                        checked={allOnPageSelected}
+                        onChange={(e) => toggleSelectAllOnPage(e.target.checked)}
+                        aria-label="Select all users on this page"
+                      />
+                    </th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Mobile</th>
@@ -317,7 +429,7 @@ const Users = () => {
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-4 text-sm">
+                      <td colSpan={8} className="text-center py-4 text-sm">
                         No users found
                       </td>
                     </tr>
@@ -328,6 +440,16 @@ const Users = () => {
 
                       return (
                         <tr key={userId}>
+                          <td>
+                            {userId ? (
+                              <input
+                                type="checkbox"
+                                checked={selectedUserIds.has(userId)}
+                                onChange={(e) => toggleUserSelection(userId, e.target.checked)}
+                                aria-label={`Select ${user.name}`}
+                              />
+                            ) : null}
+                          </td>
                           <td>
                             <div className="flex items-center">
                               {user.profileImage ? (
@@ -372,12 +494,12 @@ const Users = () => {
                           </td>
                           <td>
                             <span
-                              className={`badge ${(user.active !== false && user.status !== false) || user.isActive !== false
+                              className={`badge ${isUserAccountActive(user)
                                 ? 'bg-success/10 text-success'
                                 : 'bg-danger/10 text-danger'
                                 }`}
                             >
-                              {(user.active !== false && user.status !== false) || user.isActive !== false ? 'Active' : 'Inactive'}
+                              {isUserAccountActive(user) ? 'Active' : 'Inactive'}
                             </span>
                           </td>
                           <td>
@@ -534,6 +656,15 @@ const Users = () => {
                   </select>
                 </div>
                 <div>
+                  <label className="form-label text-xs">Date of birth</label>
+                  <input
+                    type="date"
+                    className="form-control text-sm py-1.5"
+                    value={formData.dob || ''}
+                    onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  />
+                </div>
+                <div>
                   <label className="form-label text-xs">Age</label>
                   <input
                     type="text"
@@ -680,6 +811,32 @@ const Users = () => {
                   />
                 </div>
                 <div className="col-span-2">
+                  <label className="form-label text-xs">Description</label>
+                  <textarea
+                    className="form-control text-sm py-1.5"
+                    rows={3}
+                    value={formData.description || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </div>
+                {editingUser && (
+                  <div className="col-span-2">
+                    <label className="form-label text-xs flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.active !== false}
+                        onChange={(e) =>
+                          setFormData({ ...formData, active: e.target.checked })
+                        }
+                        aria-label="Account active"
+                      />
+                      Account active
+                    </label>
+                  </div>
+                )}
+                <div className="col-span-2">
                   <label className="form-label text-xs">Focus Area</label>
                   <div className="flex flex-wrap gap-2 text-xs">
                     {['Full Body', 'Strength', 'Flexibility', 'Weight Management', 'Stress Relief', 'Meditation'].map(
@@ -758,176 +915,6 @@ const Users = () => {
             </div>
           </div>
         </>
-      )}
-
-      {showViewModal && viewingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">User Details</h3>
-              <button
-                onClick={handleCloseViewModal}
-                className="ti-btn ti-btn-sm ti-btn-ghost"
-              >
-                <i className="ri-close-line"></i>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12 md:col-span-4">
-                <div className="text-center">
-                  {viewingUser.profileImage ? (
-                    <img
-                      src={viewingUser.profileImage}
-                      alt={viewingUser.name}
-                      className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                    />
-                  ) : (
-                    <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <span className="text-primary font-semibold text-4xl">
-                        {viewingUser.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <h4 className="font-semibold text-lg">{viewingUser.name}</h4>
-                  <p className="text-muted">{viewingUser.email}</p>
-                  <span
-                    className={`badge mt-2 ${(viewingUser.active !== false && viewingUser.status !== false) || viewingUser.isActive !== false
-                      ? 'bg-success/10 text-success'
-                      : 'bg-danger/10 text-danger'
-                      }`}
-                  >
-                    {(viewingUser.active !== false && viewingUser.status !== false) || viewingUser.isActive !== false
-                      ? 'Active'
-                      : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="col-span-12 md:col-span-8">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-muted text-sm">Mobile</label>
-                    <p className="font-medium">{viewingUser.mobile || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Gender</label>
-                    <p className="font-medium">{viewingUser.gender || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Age</label>
-                    <p className="font-medium">{viewingUser.age || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">User Category</label>
-                    <p className="font-medium">
-                      {viewingUser.userCategory || 'Personal'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Height</label>
-                    <p className="font-medium">{viewingUser.height || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Weight</label>
-                    <p className="font-medium">{viewingUser.weight || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Target Weight</label>
-                    <p className="font-medium">
-                      {viewingUser.targetWeight || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Body Shape</label>
-                    <p className="font-medium">
-                      {viewingUser.bodyshape || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Practice Time</label>
-                    <p className="font-medium">
-                      {viewingUser.practicetime || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Prior Experience</label>
-                    <p className="font-medium">
-                      {viewingUser.PriorExperience || '-'}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-muted text-sm">Address</label>
-                    <p className="font-medium">
-                      {viewingUser.Address || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">City</label>
-                    <p className="font-medium">{viewingUser.city || '-'}</p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Pincode</label>
-                    <p className="font-medium">
-                      {viewingUser.pincode || '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-muted text-sm">Country</label>
-                    <p className="font-medium">
-                      {viewingUser.country || '-'}
-                    </p>
-                  </div>
-                  {viewingUser.focusarea && viewingUser.focusarea.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Focus Areas</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {viewingUser.focusarea.map((area, idx) => (
-                          <span
-                            key={idx}
-                            className="badge bg-primary/10 text-primary"
-                          >
-                            {area}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {viewingUser.goal && viewingUser.goal.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Goals</label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {viewingUser.goal.map((goalItem, idx) => (
-                          <span
-                            key={idx}
-                            className="badge bg-success/10 text-success"
-                          >
-                            {goalItem}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {viewingUser.images && viewingUser.images.length > 0 && (
-                    <div className="col-span-2">
-                      <label className="text-muted text-sm">Additional Images</label>
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {viewingUser.images.map((img: any, idx: number) => (
-                          <img
-                            key={idx}
-                            src={typeof img === 'string' ? img : img.url || img.path}
-                            alt={`Image ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </Fragment>
   );
