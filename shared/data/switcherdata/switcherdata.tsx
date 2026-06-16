@@ -5,21 +5,7 @@ import store from "@/shared/redux/store";
 import { ClassAttributes, InputHTMLAttributes, JSX, useState } from "react";
 
 export function Dark(actionfunction:any) {
-    const theme :any = store.getState()
-    actionfunction({
-        ...theme,
-        "class": "dark",
-        "dataHeaderStyles": "dark",
-        "dataMenuStyles": "dark",
-        "bodyBg": "",
-        "darkBg": "",
-        "inputBorder": "",
-        "Light": "",
-        
-    })
-    localStorage.setItem("ynexdarktheme", "dark");
-    localStorage.removeItem("ynexlighttheme");
-    localStorage.removeItem('darkBgRGB');
+    Light(actionfunction);
 }
 export function Light(actionfunction:any) {
     const theme = store.getState()
@@ -608,16 +594,16 @@ export const backgroundColor1 = (actionfunction:any) => {
         "darkBg": "20 30 96",
         "inputBorder": "25 35 102",
         "Light": "25 35 102",
-        "class": "dark",
-        "dataMenuStyles": "dark",
-        "dataHeaderStyles": "dark",
+        "class": "light",
+        "dataMenuStyles": "light",
+        "dataHeaderStyles": "light",
         
     });
     localStorage.setItem('darkBgRGB', "20 30 96");
     localStorage.setItem('bodyBgRGB', "34 44 110");
     localStorage.setItem('Light', "25 35 102");
-    localStorage.setItem('ynexMenu', "dark");
-    localStorage.setItem('ynexHeader', "dark");
+    localStorage.setItem('ynexMenu', "light");
+    localStorage.setItem('ynexHeader', "light");
 
 
 };
@@ -629,16 +615,16 @@ export const backgroundColor2 = (actionfunction:any) => {
         "Light": "13 83 120",
         "darkBg": "8 78 115",
         "inputBorder": "13 83 120",
-        "class": "dark",
-        "dataMenuStyles": "dark",
-        "dataHeaderStyles": "dark",
+        "class": "light",
+        "dataMenuStyles": "light",
+        "dataHeaderStyles": "light",
         
     });
     localStorage.setItem('darkBgRGB', "8 78 115");
     localStorage.setItem('bodyBgRGB', "22 92 129");
     localStorage.setItem('Light', "13 83 120",);
-    localStorage.setItem('ynexMenu', "dark");
-    localStorage.setItem('ynexHeader', "dark");
+    localStorage.setItem('ynexMenu', "light");
+    localStorage.setItem('ynexHeader', "light");
 };
 export const backgroundColor3 = (actionfunction:any) => {
     const theme = store.getState();
@@ -648,16 +634,16 @@ export const backgroundColor3 = (actionfunction:any) => {
         "Light": "95 42 140",
         "darkBg": "90 37 135",
         "inputBorder": "95 42 140",
-        "class": "dark",
-        "dataMenuStyles": "dark",
-        "dataHeaderStyles": "dark",
+        "class": "light",
+        "dataMenuStyles": "light",
+        "dataHeaderStyles": "light",
         
     });
     localStorage.setItem('darkBgRGB', "90 37 135");
     localStorage.setItem('bodyBgRGB', "104 51 149");
     localStorage.setItem('Light', "95 42 140");
-    localStorage.setItem('ynexMenu', "dark");
-    localStorage.setItem('ynexHeader', "dark");
+    localStorage.setItem('ynexMenu', "light");
+    localStorage.setItem('ynexHeader', "light");
 };
 export const backgroundColor4 = (actionfunction:any) => {
     const theme = store.getState();
@@ -667,16 +653,16 @@ export const backgroundColor4 = (actionfunction:any) => {
         "bodyBg": "38 115 64",
         "darkBg": "24 101 51",
         "inputBorder": "29 106 56;",
-        "class": "dark",
-        "dataMenuStyles": "dark",
-        "dataHeaderStyles": "dark",
+        "class": "light",
+        "dataMenuStyles": "light",
+        "dataHeaderStyles": "light",
         
     });
     localStorage.setItem('darkBgRGB', "24 101 51");
     localStorage.setItem('bodyBgRGB', "38 115 64");
     localStorage.setItem('Light', "29 106 56");
-    localStorage.setItem('ynexMenu', "dark");
-    localStorage.setItem('ynexHeader', "dark");
+    localStorage.setItem('ynexMenu', "light");
+    localStorage.setItem('ynexHeader', "light");
 };
 export const backgroundColor5 = (actionfunction:any) => {
     const theme = store.getState();
@@ -686,16 +672,16 @@ export const backgroundColor5 = (actionfunction:any) => {
         "Light": "125 71 25",
         "darkBg": "120 66 20",
         "inputBorder": "125 71 25",
-        "class": "dark",
-        "dataMenuStyles": "dark",
-        "dataHeaderStyles": "dark",
+        "class": "light",
+        "dataMenuStyles": "light",
+        "dataHeaderStyles": "light",
         
     });
     localStorage.setItem('darkBgRGB', "120 66 20");
     localStorage.setItem('bodyBgRGB', "134 80 34");
     localStorage.setItem('Light', "125 71 25");
-    localStorage.setItem('ynexMenu', "dark");
-    localStorage.setItem('ynexHeader', "dark");
+    localStorage.setItem('ynexMenu', "light");
+    localStorage.setItem('ynexHeader', "light");
 };
 
 const ColorPicker = (props: JSX.IntrinsicAttributes & ClassAttributes<HTMLInputElement> & InputHTMLAttributes<HTMLInputElement>) => {
@@ -756,9 +742,9 @@ export const Themebackgroundcolor = ({ actionfunction }:any) => {
             "darkBg": `${r} ${g} ${b}`,
             "inputBorder": `${r + 5} ${g + 5} ${b + 5}`,
             "Light": `${r + 5} ${g + 5} ${b + 5}`,
-            "class": "dark",
-            "dataHeaderStyles": "dark",
-            "dataMenuStyles": "dark",
+            "class": "light",
+            "dataHeaderStyles": "light",
+            "dataMenuStyles": "light",
         });
         localStorage.setItem("bodyBgRGB", `${r + 14} ${g + 14} ${b + 14}`);
         localStorage.setItem('darkBgRGB', `${r} ${g} ${b}`);
@@ -862,8 +848,12 @@ export const Reset = (actionfunction: any) => {
 
 export const LocalStorageBackup = (actionfunction:any, setpageloading:any) => {
 
-    (localStorage.ynexdarktheme) ? Dark(actionfunction) : "";
-    (localStorage.ynexlighttheme) ? Light(actionfunction) : "";
+    try {
+        localStorage.removeItem("ynexdarktheme");
+    } catch {
+        // ignore
+    }
+    Light(actionfunction);
     (localStorage.ynexrtl) ? Rtl(actionfunction) : "";
     (localStorage.ynexregular) ? Regular(actionfunction) : "";
     (localStorage.ynexclassic) ? Classic(actionfunction) : "";
@@ -1076,8 +1066,8 @@ export const LocalStorageBackup = (actionfunction:any, setpageloading:any) => {
             ...theme,
             "bodyBg": updateddarkBg,
             "darkBg": localStorage.bodyBgRGB,
-            "class": "dark",
-            "dataHeaderStyles": "dark",
+            "class": "light",
+            "dataHeaderStyles": "light",
             "Light": localStorage.Light,
             "inputBorder": localStorage.inputBorder,
             

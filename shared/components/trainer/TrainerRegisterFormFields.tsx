@@ -32,7 +32,8 @@ interface TrainerRegisterFormFieldsProps {
   galleryInputRefs: RefObject<(HTMLInputElement | null)[]>;
   uploadingProfilePhoto: boolean;
   uploadingGallerySlot: number | null;
-  onProfilePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onProfilePhotoFileReady: (file: File) => void | Promise<void>;
+  onProfilePhotoValidationError?: (message: string) => void;
   onGallerySlotChange: (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearProfilePhoto: () => void;
   onRemoveGalleryImage: (index: number) => void;
@@ -56,7 +57,8 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
   galleryInputRefs,
   uploadingProfilePhoto,
   uploadingGallerySlot,
-  onProfilePhotoChange,
+  onProfilePhotoFileReady,
+  onProfilePhotoValidationError,
   onGallerySlotChange,
   onClearProfilePhoto,
   onRemoveGalleryImage,
@@ -67,30 +69,21 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
         <TrainerFormSectionTitle title="Trainer Information" iconClass="ri-user-line" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <label className="trainer-form-label" htmlFor="trainer-category">
-              Trainer Category <span className="trainer-form-req">*</span>
-            </label>
-            <select
-              id="trainer-category"
-              className={`${fieldClass('category')} trainer-form-select`}
-              value={formData.category}
-              onChange={(e) => {
+            <TrainerChipSelect
+              label="Trainer Category"
+              options={[...TRAINER_CATEGORY_OPTIONS]}
+              value={Array.isArray(formData.category) ? formData.category : formData.category ? [formData.category] : []}
+              onChange={(selected) => {
                 clearFieldError('category');
-                setFormData((prev) => ({ ...prev, category: e.target.value }));
+                setFormData((prev) => ({ ...prev, category: selected }));
               }}
               required
-              aria-required="true"
-              aria-invalid={Boolean(fieldErrors.category)}
-              aria-describedby={fieldErrors.category ? 'trainer-category-error' : undefined}
-            >
-              <option value="">— Select trainer type —</option>
-              {TRAINER_CATEGORY_OPTIONS.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <TrainerFormFieldError message={fieldErrors.category} fieldId="trainer-category" />
+              error={fieldErrors.category}
+              fieldId="trainer-category"
+            />
+            <p className="text-muted text-xs mt-1 mb-0">
+              Select all categories you practice — you&apos;ll appear in each matching company section.
+            </p>
           </div>
           <div>
             <label className="trainer-form-label" htmlFor="reg-name">
@@ -203,30 +196,19 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
             />
             <TrainerFormFieldError message={fieldErrors.email} fieldId="reg-email" />
           </div>
-          <div>
-            <label className="trainer-form-label" htmlFor="trainer-city">
-              City <span className="trainer-form-req">*</span>
-            </label>
-            <select
-              id="trainer-city"
-              className={fieldClass('city')}
-              value={formData.city || ''}
-              onChange={(e) => {
+          <div className="sm:col-span-2">
+            <TrainerChipSelect
+              label="Cities"
+              options={[...TRAINER_CITY_OPTIONS]}
+              value={formData.cities ?? []}
+              onChange={(selected) => {
                 clearFieldError('city');
-                patchDetails({ city: e.target.value });
+                patchDetails({ cities: selected });
               }}
               required
-              aria-invalid={Boolean(fieldErrors.city)}
-              aria-describedby={fieldErrors.city ? 'trainer-city-error' : undefined}
-            >
-              <option value="">Select city</option>
-              {TRAINER_CITY_OPTIONS.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-            <TrainerFormFieldError message={fieldErrors.city} fieldId="trainer-city" />
+              error={fieldErrors.city}
+              fieldId="trainer-city"
+            />
           </div>
           <div>
             <label className="trainer-form-label" htmlFor="trainer-pincode">
@@ -351,7 +333,8 @@ const TrainerRegisterFormFields: React.FC<TrainerRegisterFormFieldsProps> = ({
           galleryInputRefs={galleryInputRefs}
           uploadingProfilePhoto={uploadingProfilePhoto}
           uploadingGallerySlot={uploadingGallerySlot}
-          onProfilePhotoChange={onProfilePhotoChange}
+          onProfilePhotoFileReady={onProfilePhotoFileReady}
+          onProfilePhotoValidationError={onProfilePhotoValidationError}
           onGallerySlotChange={onGallerySlotChange}
           onClearProfilePhoto={onClearProfilePhoto}
           onRemoveGalleryImage={onRemoveGalleryImage}

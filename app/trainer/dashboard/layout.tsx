@@ -1,5 +1,5 @@
 "use client";
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import TrainerSidebar from './components/TrainerSidebar';
 import TrainerHeader from './components/TrainerHeader';
 import Footer from '@/shared/layout-components/footer/footer';
@@ -11,8 +11,17 @@ import store from "@/shared/redux/store";
 import '@/shared/styles/portal-brand.css';
 import './components/trainer-dashboard.css';
 import './trainer-mobile-fix.css';
+import { applyLightModeToDocument } from "@/shared/utils/forceLightMode";
 
 const TrainerLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
+
+    useEffect(() => {
+        applyLightModeToDocument();
+        document.documentElement.removeAttribute("data-icon-overlay");
+        document.querySelectorAll("#responsive-overlay").forEach((el) => {
+            el.classList.remove("active");
+        });
+    }, []);
 
     const Bodyclickk = () => {
         const theme = store.getState();

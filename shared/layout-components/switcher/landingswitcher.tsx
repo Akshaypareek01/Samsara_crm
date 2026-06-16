@@ -37,16 +37,10 @@ const Landingswitcher = ({ local_varaiable, ThemeChanger }:any) => {
                 <p className="switcher-style-head">Theme Color Mode:</p>
                 <div className="grid grid-cols-3 switcher-style">
                   <div className="flex items-center">
-                    <input type="radio" name="theme-style" className="ti-form-radio" id="switcher-light-theme" checked={local_varaiable.class != "dark"} onChange={e => { }}
+                    <input type="radio" name="theme-style" className="ti-form-radio" id="switcher-light-theme" checked readOnly onChange={e => { }}
                       onClick={() => landingswitcherdata.Light(ThemeChanger)} />
                     <label htmlFor="switcher-light-theme"
                       className="text-defaultsize text-defaulttextcolor dark:text-defaulttextcolor/70 ms-2  font-semibold">Light</label>
-                  </div>
-                  <div className="flex items-center">
-                    <input type="radio" name="theme-style" className="ti-form-radio" id="switcher-dark-theme" checked={local_varaiable.class == "dark"} onChange={e => { }}
-                      onClick={() => landingswitcherdata.Dark(ThemeChanger)} />
-                    <label htmlFor="switcher-dark-theme"
-                      className="text-defaultsize text-defaulttextcolor dark:text-defaulttextcolor/70 ms-2  font-semibold">Dark</label>
                   </div>
                 </div>
               </div>

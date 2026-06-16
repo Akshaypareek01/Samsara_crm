@@ -89,16 +89,6 @@
     min-width: 2.5rem;
   }
 
-  #responsive-overlay {
-    z-index: 999 !important;
-  }
-
-  #responsive-overlay.active {
-    visibility: visible !important;
-    pointer-events: auto !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
-  }
-
   .company-bookings-calendar-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;

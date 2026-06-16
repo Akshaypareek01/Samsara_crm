@@ -128,26 +128,27 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
                 className="trainer-dashboard-header-availability"
                 title={
                   acceptingBookings
-                    ? 'You are online — companies can book new sessions'
-                    : 'You are offline — new bookings are paused'
+                    ? 'Profile is on — companies can book new sessions'
+                    : 'Profile is off — new bookings are paused'
                 }
               >
                 <span
-                  id="trainer-header-booking-label"
+                  id="trainer-header-profile-label"
                   className="trainer-dashboard-header-availability-label hidden sm:inline"
                 >
-                  New bookings
+                  Profile
                 </span>
                 <button
                   type="button"
                   role="switch"
+                  id="trainer-header-accepting-bookings"
                   aria-checked={acceptingBookings}
-                  aria-labelledby="trainer-header-booking-label trainer-header-status-label"
+                  aria-labelledby="trainer-header-profile-label trainer-header-status-label"
                   disabled={availabilitySaving}
                   onClick={() => {
                     void handleHeaderAvailabilityToggle(!acceptingBookings);
                   }}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ed662e] disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                  className={`trainer-dashboard-header-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ed662e] disabled:cursor-not-allowed disabled:opacity-60 ${acceptingBookings ? 'bg-emerald-500' : 'bg-gray-300'}`}
                 >
                   <span
                     className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${acceptingBookings ? 'translate-x-5' : 'translate-x-0'}`}
@@ -159,7 +160,7 @@ const TrainerHeader: React.FC<TrainerHeaderProps> = () => {
                   className={`text-[0.7rem] font-semibold uppercase tracking-wide whitespace-nowrap ${acceptingBookings ? 'text-emerald-600' : 'text-amber-600'}`}
                   aria-live="polite"
                 >
-                  {acceptingBookings ? 'Online' : 'Offline'}
+                  {availabilitySaving ? 'Saving…' : acceptingBookings ? 'On' : 'Off'}
                 </span>
               </div>
             )}

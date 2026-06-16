@@ -11,6 +11,9 @@ import {
     trainerTrainingList,
 } from "@/app/company/dashboard/components/companyTrainerProfileUtils";
 import TrainerQualificationsDisplay from "@/shared/components/trainer/TrainerQualificationsDisplay";
+import TrainerCategoryBadges from "@/shared/components/trainer/TrainerCategoryBadges";
+import { trainerCategoryLabels } from "@/shared/utils/trainerCategoryUtils";
+import { formatTrainerCities, normalizeTrainerCities } from "@/shared/utils/trainerCityUtils";
 
 export type AdminTrainerProfileDrawerProps = {
     open: boolean;
@@ -77,9 +80,7 @@ const AdminTrainerProfileDrawer: React.FC<AdminTrainerProfileDrawerProps> = ({
                         <h3 className="text-xl font-bold text-defaulttextcolor mb-0">{trainer.name}</h3>
                         <p className="text-muted text-sm mt-1 mb-2">{trainer.title}</p>
                         <div className="flex flex-wrap gap-2 justify-center">
-                            {trainer.category ? (
-                                <span className="badge bg-primary/10 text-primary text-xs">{trainer.category}</span>
-                            ) : null}
+                            <TrainerCategoryBadges labels={trainerCategoryLabels(trainer)} />
                             <span
                                 className={`badge text-xs ${trainer.status !== false ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
                             >
@@ -154,8 +155,10 @@ const AdminTrainerProfileDrawer: React.FC<AdminTrainerProfileDrawerProps> = ({
                                 </dd>
                             </div>
                             <div>
-                                <dt className="text-muted text-xs mb-0.5">City</dt>
-                                <dd className="font-medium text-defaulttextcolor mb-0">{displayOrDash(trainer.city)}</dd>
+                                <dt className="text-muted text-xs mb-0.5">Cities</dt>
+                                <dd className="font-medium text-defaulttextcolor mb-0">
+                                    {displayOrDash(formatTrainerCities(normalizeTrainerCities(trainer)))}
+                                </dd>
                             </div>
                             <div>
                                 <dt className="text-muted text-xs mb-0.5">Date of birth</dt>

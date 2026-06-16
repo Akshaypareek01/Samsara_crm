@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import * as switcherdata from "@/shared/data/switcherdata/switcherdata";
 import { ThemeChanger } from "@/shared/redux/action";
 import { Initialload } from "@/shared/contextapi";
+import { applyLightModeToDocument } from "@/shared/utils/forceLightMode";
 
 type ThemeState = {
   dir?: string;
@@ -63,12 +64,18 @@ const ThemeHtmlSync: React.FC = () => {
     };
 
     html.dir = theme.dir ?? "ltr";
-    html.className = theme.class ?? "";
+    html.classList.remove("dark");
+    html.classList.add("light");
+    html.style.colorScheme = "light only";
 
-    setOrRemove("data-header-styles", theme.dataHeaderStyles);
+    const headerStyles =
+      theme.dataHeaderStyles === "dark" ? "light" : theme.dataHeaderStyles ?? "light";
+    const menuStyles =
+      theme.dataMenuStyles === "dark" ? "light" : theme.dataMenuStyles ?? "light";
+    setOrRemove("data-header-styles", headerStyles);
     setOrRemove("data-vertical-style", theme.dataVerticalStyle);
     setOrRemove("data-nav-layout", theme.dataNavLayout);
-    setOrRemove("data-menu-styles", theme.dataMenuStyles);
+    setOrRemove("data-menu-styles", menuStyles);
     setOrRemove("data-toggled", theme.dataToggled);
     setOrRemove("data-nav-style", theme.dataNavStyle);
     setOrRemove("hor-style", theme.horStyle);
@@ -95,6 +102,9 @@ const ThemeHtmlSync: React.FC = () => {
     Object.entries(customStyles).forEach(([key, value]) => {
       html.style.setProperty(key, value);
     });
+
+    html.style.setProperty("--body-bg", "255 255 255");
+    applyLightModeToDocument();
   }, [
     theme.dir,
     theme.class,

@@ -44,7 +44,7 @@ const BASE_MENU_ITEMS: any[] = [
         active: false,
         selected: false,
         dirchange: false,
-        title: "My Account",
+        title: "Bank Details",
     },
 ];
 

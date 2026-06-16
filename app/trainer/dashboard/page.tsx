@@ -12,6 +12,7 @@ import TrainerAnalyticsCharts from './components/TrainerAnalyticsCharts';
 import TrainerRatingBadge from '@/shared/components/trainer/TrainerRatingBadge';
 import TrainerReviewsSection from './components/TrainerReviewsSection';
 import { trainerHasWeeklySchedule } from '@/shared/utils/trainerAvailabilityUtils';
+import SamsaraWellnessCtaBanner from '@/shared/components/SamsaraWellnessCtaBanner';
 
 const TrainerDashboard = () => {
     const [trainer, setTrainer] = useState<Trainer | null>(null);
@@ -88,11 +89,11 @@ const TrainerDashboard = () => {
             )}
 
             {/* ── Welcome / profile banner ───────────────────────── */}
-            <div className="box mb-6 overflow-hidden">
-                <div className="box-body p-5">
+            <section className="trainer-dashboard-welcome mb-6" aria-label="Welcome">
+                <div className="trainer-dashboard-welcome-body">
                     {loading ? (
                         <div className="text-center py-6">
-                            <div className="spinner-border text-primary" role="status">
+                            <div className="spinner-border trainer-dashboard-welcome-spinner" role="status">
                                 <span className="visually-hidden">Loading...</span>
                             </div>
                         </div>
@@ -103,17 +104,17 @@ const TrainerDashboard = () => {
                                     <img
                                         src={trainer.profilePhoto.path}
                                         alt={trainer.name}
-                                        className="w-20 h-20 rounded-full object-cover border-2 border-primary/20 flex-shrink-0"
+                                        className="trainer-dashboard-welcome-avatar w-20 h-20 rounded-full object-cover flex-shrink-0"
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
                                         }}
                                     />
                                 ) : (
                                     <div
-                                        className="w-20 h-20 rounded-full bg-gradient-to-b from-primary/20 to-primary/40 flex items-center justify-center flex-shrink-0"
+                                        className="trainer-dashboard-welcome-avatar-fallback w-20 h-20 rounded-full flex items-center justify-center flex-shrink-0"
                                         aria-hidden="true"
                                     >
-                                        <span className="text-primary font-semibold text-3xl">
+                                        <span className="font-semibold text-3xl">
                                             {trainer.name.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
@@ -121,46 +122,41 @@ const TrainerDashboard = () => {
 
                                 <div className="flex-1 min-w-0 text-center sm:text-left">
                                     <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                                        <h3 className="text-xl font-bold mb-0">Welcome back, {trainer.name}</h3>
+                                        <h3 className="trainer-dashboard-welcome-title text-xl font-bold mb-0">
+                                            Welcome back, {trainer.name}
+                                        </h3>
                                         <span
-                                            className={`badge shrink-0 ${trainer.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}
+                                            className={`trainer-dashboard-welcome-badge shrink-0 badge ${trainer.status !== false ? 'trainer-dashboard-welcome-badge--active' : 'trainer-dashboard-welcome-badge--inactive'}`}
                                         >
                                             {trainer.status !== false ? 'Active' : 'Inactive'}
                                         </span>
                                     </div>
-                                    <p className="text-muted mb-0 mt-1">{trainer.title}</p>
-                                    <TrainerRatingBadge trainer={trainer} size="md" className="mt-2" />
+                                    <p className="trainer-dashboard-welcome-subtitle mb-0 mt-1">{trainer.title}</p>
+                                    <TrainerRatingBadge trainer={trainer} size="md" className="trainer-dashboard-welcome-rating mt-2" />
                                 </div>
                             </div>
 
                             <div
-                                className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-start lg:justify-end gap-3 pt-4 border-t border-defaultborder/60 lg:pt-0 lg:border-t-0 lg:flex-shrink-0"
+                                className="trainer-dashboard-welcome-actions flex flex-col sm:flex-row items-stretch sm:items-center justify-center sm:justify-start lg:justify-end gap-3 pt-4 lg:pt-0 lg:flex-shrink-0"
                                 role="group"
                                 aria-label="Quick navigation"
                             >
                                 <Link
                                     href="/trainer/dashboard/bookings"
-                                    className="ti-btn ti-btn-primary !m-0 inline-flex items-center justify-center gap-2 !px-5 !py-2.5 text-sm font-semibold whitespace-nowrap min-h-[2.75rem] rounded-lg shadow-sm"
+                                    className="trainer-dashboard-welcome-cta ti-btn !m-0 inline-flex items-center justify-center gap-2 !px-5 !py-2.5 text-sm font-semibold whitespace-nowrap min-h-[2.75rem] rounded-lg shadow-sm"
                                 >
                                     <i className="ri-calendar-check-line text-base leading-none" aria-hidden="true"></i>
                                     <span>Bookings</span>
-                                </Link>
-                                <Link
-                                    href="/trainer/dashboard/profile"
-                                    className="ti-btn ti-btn-outline-primary !m-0 inline-flex items-center justify-center gap-2 !px-5 !py-2.5 text-sm font-semibold whitespace-nowrap min-h-[2.75rem] rounded-lg bg-white dark:bg-bodybg"
-                                >
-                                    <i className="ri-user-line text-base leading-none" aria-hidden="true"></i>
-                                    <span>Profile</span>
                                 </Link>
                             </div>
                         </div>
                     ) : (
                         <div className="text-center py-6">
-                            <p className="text-muted mb-0">Unable to load profile</p>
+                            <p className="trainer-dashboard-welcome-subtitle mb-0">Unable to load profile</p>
                         </div>
                     )}
                 </div>
-            </div>
+            </section>
 
             <TrainerReviewsSection trainer={trainer} />
 
@@ -170,6 +166,10 @@ const TrainerDashboard = () => {
 
             {/* ── Charts ─────────────────────────────────────────── */}
             <TrainerAnalyticsCharts charts={charts} loading={statsLoading} />
+
+            <div className="mt-8">
+                <SamsaraWellnessCtaBanner />
+            </div>
         </Fragment>
     );
 };

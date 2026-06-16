@@ -1,0 +1,15 @@
+.samsara-wellness-cta-banner,
+.company-home-cta-banner {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+
+.samsara-wellness-cta-banner-img,
+.company-home-cta-banner-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1rem;
+}

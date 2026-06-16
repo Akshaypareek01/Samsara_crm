@@ -6,6 +6,7 @@ import { useCompanySession } from '@/hooks/useCompanySession';
 import { useCompanyHomeTrainers } from '@/hooks/useCompanyHomeTrainers';
 import { HOME_TRAINER_CATEGORIES } from './constants/homeTrainerCategories';
 import CompanyHomeWelcomeBanner from './components/home/CompanyHomeWelcomeBanner';
+import CompanyHomeFeedbackFormLink from './components/home/CompanyHomeFeedbackFormLink';
 import CompanyHomeCategorySection from './components/home/CompanyHomeCategorySection';
 import CompanyHomeCtaBanner from './components/home/CompanyHomeCtaBanner';
 import './components/company-trainer-card.css';
@@ -28,6 +29,8 @@ const CompanyDashboard = () => {
 
       <div className="company-home-page flex flex-col gap-8 pb-6">
         <CompanyHomeWelcomeBanner userName={welcomeName} />
+
+        <CompanyHomeFeedbackFormLink />
 
         {error && (
           <div className="alert alert-warning mb-0" role="alert">

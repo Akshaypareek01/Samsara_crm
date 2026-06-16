@@ -1,13 +1,15 @@
 "use client";
 import React from 'react';
 import type { TrainerImage } from '@/services/trainerService';
+import TrainerCategoryBadges from '@/shared/components/trainer/TrainerCategoryBadges';
+import { formatTrainerCategoryLabels } from '@/shared/utils/trainerCategoryUtils';
 
 interface TrainerProfileBannerProps {
   name: string;
   title?: string;
   email?: string;
   mobile?: string;
-  category?: string;
+  category?: string | string[];
   profilePhoto?: TrainerImage | null;
 }
 
@@ -26,6 +28,7 @@ const TrainerProfileBanner: React.FC<TrainerProfileBannerProps> = ({
   profilePhoto,
 }) => {
   const initials = (name || 'T').charAt(0).toUpperCase();
+  const categoryLabels = formatTrainerCategoryLabels(category);
 
   return (
     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 p-4 sm:p-5 mb-6 rounded-xl border border-defaultborder bg-gradient-to-r from-primary/5 via-white to-primary/5 dark:from-primary/10 dark:via-bodybg dark:to-primary/10">
@@ -63,11 +66,8 @@ const TrainerProfileBanner: React.FC<TrainerProfileBannerProps> = ({
               <span>{mobile}</span>
             </span>
           ) : null}
-          {category ? (
-            <span className="inline-flex items-center gap-1.5">
-              <i className="ri-price-tag-3-line text-primary flex-shrink-0" aria-hidden="true"></i>
-              <span>{category}</span>
-            </span>
+          {categoryLabels.length > 0 ? (
+            <TrainerCategoryBadges labels={categoryLabels} size="md" />
           ) : null}
         </div>
       </div>

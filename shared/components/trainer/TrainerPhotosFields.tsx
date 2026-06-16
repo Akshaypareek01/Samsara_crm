@@ -1,11 +1,13 @@
 "use client";
-import React, { RefObject } from 'react';
+import React, { RefObject, useEffect, useRef, useState } from 'react';
 import type { TrainerImage } from '@/services/trainerService';
-import '@/shared/styles/trainer-form.css';
+import ProfilePhotoCropModal from '@/shared/components/trainer/ProfilePhotoCropModal';
 import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
+import { validateProfilePhotoFile } from '@/shared/utils/imageCropUtils';
+import '@/shared/styles/trainer-form.css';
 
 /** Maximum gallery images allowed on trainer profile / registration. */
-export const MAX_TRAINER_GALLERY_IMAGES = 3;
+export const MAX_TRAINER_GALLERY_IMAGES = 6;
 
 interface TrainerPhotosFieldsProps {
   profilePhoto: TrainerImage | null | undefined;
@@ -14,15 +16,18 @@ interface TrainerPhotosFieldsProps {
   galleryInputRefs: RefObject<(HTMLInputElement | null)[]>;
   uploadingProfilePhoto: boolean;
   uploadingGallerySlot: number | null;
-  onProfilePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Called with the cropped profile photo file ready for upload. */
+  onProfilePhotoFileReady: (file: File) => void | Promise<void>;
   onGallerySlotChange: (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearProfilePhoto: () => void;
   onRemoveGalleryImage: (index: number) => void;
+  /** Optional validation error shown via Swal in the parent. */
+  onProfilePhotoValidationError?: (message: string) => void;
 }
 
 /**
  * Profile photo and training gallery upload UI shared by registration and profile edit.
- * Matches trainer_registration_form_v2.html layout (circle profile + 3-slot gallery grid).
+ * Profile photos open a square crop dialog before upload.
  *
  * @param props - Image state, refs and upload handlers.
  * @returns Hidden file inputs plus profile and gallery upload controls.
@@ -34,23 +39,104 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
   galleryInputRefs,
   uploadingProfilePhoto,
   uploadingGallerySlot,
-  onProfilePhotoChange,
+  onProfilePhotoFileReady,
   onGallerySlotChange,
   onClearProfilePhoto,
   onRemoveGalleryImage,
+  onProfilePhotoValidationError,
 }) => {
+  const internalInputRef = useRef<HTMLInputElement | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [pendingFileName, setPendingFileName] = useState('profile-photo.jpg');
+
   const galleryCount = (images || []).filter((img) => Boolean(img)).length;
   const gallerySlots = Array.from({ length: MAX_TRAINER_GALLERY_IMAGES }, (_, i) => images?.[i]);
+
+  useEffect(() => {
+    return () => {
+      if (cropImageSrc?.startsWith('blob:')) {
+        URL.revokeObjectURL(cropImageSrc);
+      }
+    };
+  }, [cropImageSrc]);
+
+  /**
+   * Sync the hidden file input with optional parent ref.
+   *
+   * @param element - File input element or null on unmount.
+   */
+  const setProfilePhotoInputRef = (element: HTMLInputElement | null) => {
+    internalInputRef.current = element;
+    if (profilePhotoInputRef && 'current' in profilePhotoInputRef) {
+      (profilePhotoInputRef as React.MutableRefObject<HTMLInputElement | null>).current = element;
+    }
+  };
+
+  /**
+   * Close the crop dialog and release any temporary object URL.
+   */
+  const closeCropModal = () => {
+    setCropOpen(false);
+    if (cropImageSrc?.startsWith('blob:')) {
+      URL.revokeObjectURL(cropImageSrc);
+    }
+    setCropImageSrc(null);
+    const input = profilePhotoInputRef.current ?? internalInputRef.current;
+    if (input) input.value = '';
+  };
+
+  /**
+   * Open the crop dialog after basic file validation.
+   *
+   * @param event - File input change event for the profile photo.
+   */
+  const handleProfilePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validationError = validateProfilePhotoFile(file);
+    if (validationError) {
+      onProfilePhotoValidationError?.(validationError);
+      event.target.value = '';
+      return;
+    }
+
+    if (cropImageSrc?.startsWith('blob:')) {
+      URL.revokeObjectURL(cropImageSrc);
+    }
+
+    setPendingFileName(file.name);
+    setCropImageSrc(URL.createObjectURL(file));
+    setCropOpen(true);
+  };
+
+  /**
+   * Upload the cropped profile photo file via the parent handler.
+   *
+   * @param file - Cropped JPEG file from the crop modal.
+   */
+  const handleCropConfirm = async (file: File) => {
+    await onProfilePhotoFileReady(file);
+  };
 
   return (
     <div className="space-y-6">
       <input
         type="file"
-        ref={profilePhotoInputRef as RefObject<HTMLInputElement>}
+        ref={setProfilePhotoInputRef}
         accept="image/*"
-        onChange={onProfilePhotoChange}
+        onChange={handleProfilePhotoSelect}
         className="hidden"
         aria-hidden="true"
+      />
+
+      <ProfilePhotoCropModal
+        open={cropOpen}
+        imageSrc={cropImageSrc}
+        fileName={pendingFileName}
+        onClose={closeCropModal}
+        onConfirm={handleCropConfirm}
       />
 
       {/* Profile photo */}
@@ -60,8 +146,8 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
           <button
             type="button"
             className="trainer-form-profile-circle"
-            onClick={() => profilePhotoInputRef.current?.click()}
-            disabled={uploadingProfilePhoto}
+            onClick={() => (profilePhotoInputRef.current ?? internalInputRef.current)?.click()}
+            disabled={uploadingProfilePhoto || cropOpen}
             aria-label="Upload profile photo"
           >
             {profilePhoto?.path ? (
@@ -75,8 +161,8 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
           <div className="trainer-form-profile-info flex-1 min-w-0">
             <strong>Upload your profile photo</strong>
             <p>
-              Click the circle to upload. Use a clear, professional headshot. JPG or PNG, min
-              300×300px recommended.
+              Click the circle to choose a photo, crop it to a headshot, then upload. JPG or PNG,
+              min 300×300px recommended.
             </p>
             {profilePhoto?.path && (
               <button

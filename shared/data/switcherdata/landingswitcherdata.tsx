@@ -3,15 +3,7 @@ import store from "@/shared/redux/store";
 import {useState } from "react";
 
 export function Dark(actionfunction:any) {
-    const theme  = store.getState()
-    actionfunction({
-        ...theme,
-        "class": "dark",
-        "dataHeaderStyles": "dark",
-        "dataMenuStyles": "dark",
-    })
-    localStorage.setItem("ynexdarktheme", "dark");
-    localStorage.removeItem("ynexlighttheme");
+    Light(actionfunction);
 }
 export function Light(actionfunction:any) {
     const theme = store.getState()
@@ -166,8 +158,12 @@ export const LandingpageReset = (actionfunction:any) => {
 };
 
 export const LocalStorageBackup1 = (actionfunction: any) => {
-    (localStorage.ynexdarktheme) ? Dark(actionfunction) : "";
-    (localStorage.ynexlighttheme) ? Light(actionfunction) : "";
+    try {
+        localStorage.removeItem("ynexdarktheme");
+    } catch {
+        // ignore
+    }
+    Light(actionfunction);
     (localStorage.ynexrtl) ? Rtl(actionfunction) : "";
   
     // Theme Primary: Colors: Start

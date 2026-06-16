@@ -31,7 +31,8 @@ function Layout({children}: {children: React.ReactNode}) {
          <html
             suppressHydrationWarning={true} 
             dir={local_varaiable.dir}
-            className={local_varaiable.class}
+            className="light"
+            style={{ colorScheme: "light only" }}
             data-header-styles={local_varaiable.dataHeaderStyles}
             data-vertical-style={local_varaiable.dataVerticalStyle}
             data-nav-layout={local_varaiable.dataNavLayout}

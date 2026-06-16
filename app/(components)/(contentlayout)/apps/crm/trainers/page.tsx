@@ -15,8 +15,14 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import MultiSelect from '@/shared/components/MultiSelect';
+import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
 import TrainerQualificationsDisplay from '@/shared/components/trainer/TrainerQualificationsDisplay';
+import TrainerCategoryBadges from '@/shared/components/trainer/TrainerCategoryBadges';
 import { hasPermission } from '@/shared/utils/permissionUtils';
+import {
+  normalizeTrainerCategories,
+  trainerCategoryLabels,
+} from '@/shared/utils/trainerCategoryUtils';
 
 const Trainers = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -31,7 +37,7 @@ const Trainers = () => {
     name: '',
     title: '',
     bio: '',
-    category: '',
+    category: [],
     email: '',
     mobile: '',
     specialistIn: [],
@@ -108,11 +114,13 @@ const Trainers = () => {
       const specialistInArray = Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean);
       const typeOfTrainingArray = Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean);
       
+      const categoryArray = normalizeTrainerCategories(formData.category);
+
       if (
         !formData.name ||
         !formData.title ||
         !formData.bio ||
-        !formData.category ||
+        categoryArray.length === 0 ||
         !formData.email ||
         !formData.mobile ||
         specialistInArray.length === 0 ||
@@ -148,7 +156,7 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
-          category: formData.category,
+          category: categoryArray,
           email: formData.email.trim(),
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
@@ -175,7 +183,7 @@ const Trainers = () => {
           name: formData.name.trim(),
           title: formData.title.trim(),
           bio: formData.bio.trim(),
-          category: formData.category,
+          category: categoryArray,
           email: formData.email.trim(),
           mobile: formData.mobile.replace(/\D/g, ''),
           specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
@@ -214,7 +222,7 @@ const Trainers = () => {
       name: '',
       title: '',
       bio: '',
-      category: '',
+      category: [],
       email: '',
       mobile: '',
       specialistIn: [],
@@ -236,7 +244,7 @@ const Trainers = () => {
       name: trainer.name || '',
       title: trainer.title || '',
       bio: trainer.bio || '',
-      category: trainer.category || '',
+      category: normalizeTrainerCategories(trainer.category),
       email: (trainer as any).email || '',
       mobile: (trainer as any).mobile || '',
       specialistIn: Array.isArray(trainer.specialistIn) ? trainer.specialistIn : (trainer.specialistIn ? [trainer.specialistIn] : []),
@@ -562,9 +570,10 @@ const Trainers = () => {
                           </td>
                           <td>{trainer.title}</td>
                           <td>
-                            <span className="badge bg-primary/10 text-primary">
-                              {trainer.category || '-'}
-                            </span>
+                            <TrainerCategoryBadges
+                              labels={trainerCategoryLabels(trainer)}
+                              className="min-w-[8rem]"
+                            />
                           </td>
                           <td className="max-w-xs truncate">{(trainer as any).email || '-'}</td>
                           <td>{(trainer as any).mobile || '-'}</td>
@@ -720,27 +729,17 @@ const Trainers = () => {
                     required
                   />
                 </div>
-                <div>
-                  <label className="form-label" htmlFor="admin-trainer-category">
-                    Category *
-                  </label>
-                  <select
-                    id="admin-trainer-category"
-                    className="form-control"
-                    value={formData.category || ''}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, category: e.target.value }))
+                <div className="md:col-span-2">
+                  <TrainerChipSelect
+                    label="Category"
+                    options={[...TRAINER_CATEGORY_OPTIONS]}
+                    value={normalizeTrainerCategories(formData.category)}
+                    onChange={(selected) =>
+                      setFormData((prev) => ({ ...prev, category: selected }))
                     }
                     required
-                    aria-required="true"
-                  >
-                    <option value="">Select category</option>
-                    {TRAINER_CATEGORY_OPTIONS.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                    fieldId="admin-trainer-category"
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className="form-label">Bio * (Max 2000 characters)</label>
@@ -1038,7 +1037,11 @@ const Trainers = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="text-muted text-sm">Category</label>
-                    <p className="font-medium">{viewingTrainer.category || '-'}</p>
+                    <TrainerCategoryBadges
+                      labels={trainerCategoryLabels(viewingTrainer)}
+                      className="mt-1"
+                      size="md"
+                    />
                   </div>
                   <div>
                     <label className="text-muted text-sm">Specialist In</label>

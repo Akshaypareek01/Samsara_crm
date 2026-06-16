@@ -2,12 +2,12 @@ import {
   CreateTrainerRequest,
   EXPERIENCE_OPTIONS,
   SPECIALIST_OPTIONS,
-  TRAINER_CATEGORY_OPTIONS,
   TRAINER_CITY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
 import { validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
 import { validatePersonName } from '@/shared/utils/nameValidation';
+import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
 
 /** Form fields that can fail client-side validation on registration. */
 export type TrainerRegistrationField =
@@ -84,11 +84,9 @@ export function validateTrainerRegistration(
 ): TrainerRegistrationValidationResult {
   const errors: Partial<Record<TrainerRegistrationField, string>> = {};
 
-  const category = (data.category || '').trim();
-  if (!category) {
-    errors.category = 'Trainer category is required';
-  } else if (!TRAINER_CATEGORY_OPTIONS.includes(category as (typeof TRAINER_CATEGORY_OPTIONS)[number])) {
-    errors.category = 'Please select a valid trainer category';
+  const categories = normalizeTrainerCategories(data.category);
+  if (categories.length === 0) {
+    errors.category = 'Select at least one trainer category';
   }
 
   const name = (data.name || '').trim();
@@ -124,11 +122,13 @@ export function validateTrainerRegistration(
     errors.email = 'Please enter a valid email address';
   }
 
-  const city = (data.city || '').trim();
-  if (!city) {
-    errors.city = 'City is required';
-  } else if (!TRAINER_CITY_OPTIONS.includes(city as (typeof TRAINER_CITY_OPTIONS)[number])) {
-    errors.city = 'Please select a valid city';
+  const cities = Array.isArray(data.cities)
+    ? [...new Set(data.cities.map((c) => String(c).trim()).filter(Boolean))]
+    : [];
+  if (cities.length === 0) {
+    errors.city = 'Select at least one city';
+  } else if (cities.some((item) => !TRAINER_CITY_OPTIONS.includes(item as (typeof TRAINER_CITY_OPTIONS)[number]))) {
+    errors.city = 'One or more selected cities are invalid';
   }
 
   const pin = (data.pinCode || '').trim();

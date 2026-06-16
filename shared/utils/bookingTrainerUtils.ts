@@ -1,5 +1,6 @@
 import type { Booking } from "@/services/bookingService";
 import type { Trainer } from "@/services/trainerService";
+import { trainerCitiesDisplayLine } from "@/shared/utils/trainerCityUtils";
 
 /**
  * Returns populated trainer from a booking when available.
@@ -54,8 +55,5 @@ export function getTrainerProfilePhotoUrl(trainer: Trainer | null): string | nul
  */
 export function formatTrainerLocation(trainer: Trainer | null): string {
     if (!trainer) return "—";
-    const parts = [trainer.city, trainer.pinCode].filter(
-        (part) => typeof part === "string" && part.trim().length > 0
-    ) as string[];
-    return parts.length > 0 ? parts.join(", ") : "—";
+    return trainerCitiesDisplayLine(trainer) || "—";
 }

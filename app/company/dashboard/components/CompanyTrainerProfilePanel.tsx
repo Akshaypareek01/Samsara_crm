@@ -11,6 +11,9 @@ import {
 import TrainerQualificationsDisplay from "@/shared/components/trainer/TrainerQualificationsDisplay";
 import TrainerAvailabilityDisplay from "@/shared/components/trainer/TrainerAvailabilityDisplay";
 import TrainerRatingBadge from "@/shared/components/trainer/TrainerRatingBadge";
+import TrainerCategoryBadges from "@/shared/components/trainer/TrainerCategoryBadges";
+import { trainerCategoryLabels } from "@/shared/utils/trainerCategoryUtils";
+import { formatTrainerCities, normalizeTrainerCities } from "@/shared/utils/trainerCityUtils";
 import "./company-trainer-profile-drawer.css";
 
 type ProfileTab = "overview" | "education" | "certifications" | "gallery";
@@ -80,6 +83,7 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
   }, [trainer?._id, trainer?.id]);
 
   const canBook = trainer ? isTrainerAcceptingBookings(trainer) : false;
+  const categoryLabels = trainer ? trainerCategoryLabels(trainer) : [];
   const specialists = trainer ? trainerSpecialistList(trainer.specialistIn) : [];
   const trainings = trainer ? trainerTrainingList(trainer.typeOfTraining) : [];
   const galleryImages = trainer?.images?.filter((img) => img.path) ?? [];
@@ -120,12 +124,8 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
           <h3 className="text-lg font-bold text-gray-900 mb-0 truncate">{trainer.name}</h3>
           <p className="text-sm text-gray-600 mb-1 truncate">{trainer.title}</p>
           <TrainerRatingBadge trainer={trainer} size="md" className="mb-2" />
-          <div className="flex flex-wrap gap-1.5">
-            {trainer.category ? (
-              <span className="text-[0.65rem] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                {trainer.category}
-              </span>
-            ) : null}
+          <div className="flex flex-wrap gap-1.5 items-center">
+            <TrainerCategoryBadges labels={categoryLabels} />
             <span
               className={`text-[0.65rem] font-semibold px-2 py-0.5 rounded-full ${
                 canBook ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
@@ -198,8 +198,10 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
                   <dd className="font-medium text-gray-900 mb-0">{displayOrDash(trainer.experience)}</dd>
                 </div>
                 <div className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
-                  <dt className="text-gray-500 text-xs">City</dt>
-                  <dd className="font-medium text-gray-900 mb-0">{displayOrDash(trainer.city)}</dd>
+                  <dt className="text-gray-500 text-xs">Cities</dt>
+                  <dd className="font-medium text-gray-900 mb-0">
+                    {displayOrDash(formatTrainerCities(normalizeTrainerCities(trainer)))}
+                  </dd>
                 </div>
               </dl>
             </section>

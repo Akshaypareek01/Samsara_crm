@@ -7,6 +7,7 @@ import axios from 'axios';
 import { Base_url } from '@/Config/BaseUrl';
 import Swal from 'sweetalert2';
 import TrainerRegisterFormFields from '@/shared/components/trainer/TrainerRegisterFormFields';
+import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
 import '@/shared/styles/portal-brand.css';
 import '@/shared/styles/trainer-form.css';
 import {
@@ -20,6 +21,7 @@ import {
   TrainerRegistrationField,
   validateTrainerRegistration,
 } from '@/shared/utils/trainerRegistrationValidation';
+import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
 const HERO_FEATURES = [
     { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by corporate clients seeking wellness experts.' },
     { icon: 'ri-calendar-check-line', title: 'Effortless scheduling', desc: 'Manage all your bookings from one dashboard.' },
@@ -50,13 +52,13 @@ const TrainerRegister = () => {
         name: '',
         title: '',
         bio: '',
-        category: '',
+        category: [],
         email: '',
         mobile: '',
         specialistIn: [],
         typeOfTraining: [],
         dateOfBirth: null,
-        city: '',
+        cities: [],
         pinCode: '',
         experience: '',
         education: [],
@@ -158,22 +160,12 @@ const TrainerRegister = () => {
         }
     };
 
-    const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                Swal.fire('Error!', 'Please select an image file', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire('Error!', 'File size should be less than 5MB', 'error');
-                return;
-            }
-            handleFileUpload(file, true);
-        }
-        if (profilePhotoInputRef.current) {
-            profilePhotoInputRef.current.value = '';
-        }
+    const handleProfilePhotoFileReady = async (file: File) => {
+        await handleFileUpload(file, true);
+    };
+
+    const handleProfilePhotoValidationError = (message: string) => {
+        Swal.fire('Error!', message, 'error');
     };
 
     const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,13 +224,15 @@ const TrainerRegister = () => {
                 name: formData.name.trim(),
                 title: formData.title.trim(),
                 bio: formData.bio.trim(),
-                category: formData.category,
+                category: normalizeTrainerCategories(formData.category),
                 email: formData.email.trim(),
                 mobile: formData.mobile.replace(/\D/g, ''),
                 specialistIn: Array.isArray(formData.specialistIn) ? formData.specialistIn : [formData.specialistIn].filter(Boolean),
                 typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
                 dateOfBirth: formData.dateOfBirth,
-                city: (formData.city || '').trim(),
+                cities: Array.isArray(formData.cities)
+                    ? [...new Set(formData.cities.map((c) => c.trim()).filter(Boolean))]
+                    : [],
                 pinCode: formData.pinCode,
                 experience: formData.experience,
                 status: formData.status,
@@ -256,7 +250,16 @@ const TrainerRegister = () => {
 
             // Only include images if they exist
             if (formData.images && formData.images.length > 0) {
-                submitData.images = formData.images.filter((img): img is TrainerImage => Boolean(img));
+                const filledImages = formData.images.filter((img): img is TrainerImage => Boolean(img));
+                if (filledImages.length > MAX_TRAINER_GALLERY_IMAGES) {
+                    Swal.fire(
+                        'Error!',
+                        `You can upload at most ${MAX_TRAINER_GALLERY_IMAGES} gallery photos`,
+                        'error'
+                    );
+                    return;
+                }
+                submitData.images = filledImages;
             }
 
             // Only include profilePhoto if it exists
@@ -430,7 +433,8 @@ const TrainerRegister = () => {
                                 galleryInputRefs={galleryInputRefs}
                                 uploadingProfilePhoto={uploadingProfilePhoto}
                                 uploadingGallerySlot={uploadingGallerySlot}
-                                onProfilePhotoChange={handleProfilePhotoChange}
+                                onProfilePhotoFileReady={handleProfilePhotoFileReady}
+                                onProfilePhotoValidationError={handleProfilePhotoValidationError}
                                 onGallerySlotChange={handleGallerySlotChange}
                                 onClearProfilePhoto={clearProfilePhoto}
                                 onRemoveGalleryImage={removeImage}

@@ -1,5 +1,5 @@
 "use client";
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import CompanySidebar from './components/CompanySidebar';
 import CompanyDashboardHeader from './components/CompanyDashboardHeader';
 import '@/shared/styles/portal-brand.css';
@@ -14,8 +14,17 @@ import Switcher from "@/shared/layout-components/switcher/switcher";
 import store from "@/shared/redux/store";
 import CompanyDashboardAuthGate from "./components/CompanyDashboardAuthGate";
 import { CompanyRatingProvider } from "./context/CompanyRatingContext";
+import { applyLightModeToDocument } from "@/shared/utils/forceLightMode";
 
 const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
+
+    useEffect(() => {
+        applyLightModeToDocument();
+        document.documentElement.removeAttribute("data-icon-overlay");
+        document.querySelectorAll("#responsive-overlay").forEach((el) => {
+            el.classList.remove("active");
+        });
+    }, []);
 
     const Bodyclickk = () => {
         const theme = store.getState();

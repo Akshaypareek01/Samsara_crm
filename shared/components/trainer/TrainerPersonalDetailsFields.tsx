@@ -5,20 +5,23 @@ import {
   TRAINER_CITY_OPTIONS,
   TrainerProfileDetails,
 } from '@/services/trainerService';
+import TrainerChipSelect from '@/shared/components/trainer/TrainerChipSelect';
 import { getTrainerDobMaxDate, validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
 import '@/shared/styles/trainer-form.css';
 
 interface TrainerPersonalDetailsFieldsProps {
   /** Current values for the personal-detail fields. */
-  values: Pick<TrainerProfileDetails, 'dateOfBirth' | 'city' | 'pinCode' | 'experience'>;
+  values: Pick<TrainerProfileDetails, 'dateOfBirth' | 'cities' | 'pinCode' | 'experience'>;
   /** Emit a partial patch to merge into the parent form state. */
   onChange: (patch: Partial<TrainerProfileDetails>) => void;
   /** Render asterisks and mark inputs as required (registration flow). */
   requiredFields?: boolean;
+  /** Validation error for the cities chip group. */
+  citiesError?: string;
 }
 
 /**
- * Reusable group of trainer personal-detail inputs: date of birth, city,
+ * Reusable group of trainer personal-detail inputs: date of birth, cities,
  * PIN code and years-of-experience range. Shared by the registration and
  * profile-edit screens to avoid duplicating markup.
  *
@@ -29,6 +32,7 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
   values,
   onChange,
   requiredFields = false,
+  citiesError,
 }) => {
   const star = requiredFields ? <span className="trainer-form-req"> *</span> : null;
 
@@ -73,25 +77,16 @@ const TrainerPersonalDetailsFields: React.FC<TrainerPersonalDetailsFieldsProps> 
           ))}
         </select>
       </div>
-      <div>
-        <label className="trainer-form-label" htmlFor="trainer-city">
-          City {star}
-        </label>
-        <select
-          id="trainer-city"
-          className="form-control trainer-form-control"
-          value={values.city || ''}
-          onChange={(e) => onChange({ city: e.target.value })}
+      <div className="sm:col-span-2">
+        <TrainerChipSelect
+          label="Cities"
+          options={[...TRAINER_CITY_OPTIONS]}
+          value={values.cities ?? []}
+          onChange={(selected) => onChange({ cities: selected })}
           required={requiredFields}
-          aria-label="City"
-        >
-          <option value="">Select city</option>
-          {TRAINER_CITY_OPTIONS.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
+          error={citiesError}
+          fieldId="trainer-city"
+        />
       </div>
       <div>
         <label className="trainer-form-label" htmlFor="trainer-pincode">

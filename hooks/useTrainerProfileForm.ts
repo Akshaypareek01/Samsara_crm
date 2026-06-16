@@ -18,16 +18,19 @@ import {
 import { broadcastTrainerAcceptingBookings } from '@/utils/trainerAvailabilitySync';
 import { broadcastTrainerProfileUpdated } from '@/utils/trainerProfileSync';
 import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUtils';
+import { normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
+import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
+import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
 
 const emptyForm: UpdateTrainerRequest = {
   name: '',
   title: '',
   bio: '',
-  category: '',
+  category: [],
   specialistIn: [],
   typeOfTraining: [],
   dateOfBirth: null,
-  city: '',
+  cities: [],
   pinCode: '',
   experience: '',
   education: [],
@@ -71,7 +74,7 @@ export function useTrainerProfileForm() {
         name: profile.name || '',
         title: profile.title || '',
         bio: profile.bio || '',
-        category: profile.category || '',
+        category: normalizeTrainerCategories(profile.category),
         specialistIn: Array.isArray(profile.specialistIn)
           ? profile.specialistIn
           : profile.specialistIn
@@ -83,7 +86,7 @@ export function useTrainerProfileForm() {
             ? [profile.typeOfTraining]
             : [],
         dateOfBirth: profile.dateOfBirth || null,
-        city: profile.city || '',
+        cities: normalizeTrainerCities(profile),
         pinCode: profile.pinCode || '',
         experience: profile.experience || '',
         education: normalizeEducationList(profile.education),
@@ -155,19 +158,12 @@ export function useTrainerProfileForm() {
     }
   };
 
-  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      Swal.fire('Error!', 'Please select an image file', 'error');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      Swal.fire('Error!', 'File size should be less than 5MB', 'error');
-      return;
-    }
-    void handleFileUpload(file, true);
-    if (profilePhotoInputRef.current) profilePhotoInputRef.current.value = '';
+  const handleProfilePhotoFileReady = async (file: File) => {
+    await handleFileUpload(file, true);
+  };
+
+  const handleProfilePhotoValidationError = (message: string) => {
+    Swal.fire('Error!', message, 'error');
   };
 
   const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,11 +211,13 @@ export function useTrainerProfileForm() {
           ? [formData.typeOfTraining]
           : [];
 
+      const categoryArray = normalizeTrainerCategories(formData.category);
+
       if (
         !formData.name ||
         !formData.title ||
         !formData.bio ||
-        !formData.category ||
+        categoryArray.length === 0 ||
         specialistInArray.length === 0 ||
         typeOfTrainingArray.length === 0
       ) {
@@ -234,6 +232,10 @@ export function useTrainerProfileForm() {
         Swal.fire('Error!', 'PIN code must be 6 digits', 'error');
         return false;
       }
+      if (normalizeTrainerCities(formData).length === 0) {
+        Swal.fire('Error!', 'Select at least one city', 'error');
+        return false;
+      }
 
       const filledEducation = filterFilledEducationEntries(formData.education);
       const filledCertification = filterFilledCertificationEntries(formData.certification);
@@ -242,17 +244,25 @@ export function useTrainerProfileForm() {
         name: formData.name.trim(),
         title: formData.title.trim(),
         bio: formData.bio.trim(),
-        category: formData.category,
+        category: categoryArray,
         specialistIn: specialistInArray,
         typeOfTraining: typeOfTrainingArray,
         dateOfBirth: formData.dateOfBirth || null,
-        city: (formData.city || '').trim(),
+        cities: normalizeTrainerCities(formData),
         pinCode: formData.pinCode || '',
         experience: formData.experience || '',
         education: filledEducation,
         certification: filledCertification,
       };
       const filledImages = formData.images?.filter((img): img is TrainerImage => Boolean(img));
+      if (filledImages && filledImages.length > MAX_TRAINER_GALLERY_IMAGES) {
+        Swal.fire(
+          'Error!',
+          `You can upload at most ${MAX_TRAINER_GALLERY_IMAGES} gallery photos`,
+          'error'
+        );
+        return false;
+      }
       if (filledImages?.length) updateData.images = filledImages;
       if (formData.profilePhoto) updateData.profilePhoto = formData.profilePhoto;
 
@@ -327,7 +337,8 @@ export function useTrainerProfileForm() {
     acceptingBookingsSaving,
     profilePhotoInputRef,
     galleryInputRefs,
-    handleProfilePhotoChange,
+    handleProfilePhotoFileReady,
+    handleProfilePhotoValidationError,
     handleGallerySlotChange,
     removeImage,
     clearProfilePhoto,

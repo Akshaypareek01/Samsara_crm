@@ -16,7 +16,8 @@ interface CompanyRegisterFormFieldsProps {
   updateContactPerson: (personNumber: 1 | 2, field: keyof ContactPerson, value: string) => void;
   logoInputRef: RefObject<HTMLInputElement | null>;
   uploadingLogo: boolean;
-  onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLogoFileReady: (file: File) => void | Promise<void>;
+  onLogoValidationError?: (message: string) => void;
   onClearLogo: () => void;
   fieldErrors: Partial<Record<CompanyRegistrationField, string>>;
   fieldClass: (field: CompanyRegistrationField, extra?: string) => string;
@@ -35,7 +36,8 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
   updateContactPerson,
   logoInputRef,
   uploadingLogo,
-  onLogoChange,
+  onLogoFileReady,
+  onLogoValidationError,
   onClearLogo,
   fieldErrors,
   fieldClass,
@@ -203,7 +205,8 @@ const CompanyRegisterFormFields: React.FC<CompanyRegisterFormFieldsProps> = ({
               logoUrl={formData.companyLogo ?? ''}
               logoInputRef={logoInputRef}
               uploadingLogo={uploadingLogo}
-              onLogoChange={onLogoChange}
+              onLogoFileReady={onLogoFileReady}
+              onLogoValidationError={onLogoValidationError}
               onClearLogo={onClearLogo}
               hasError={Boolean(fieldErrors.companyLogo)}
             />

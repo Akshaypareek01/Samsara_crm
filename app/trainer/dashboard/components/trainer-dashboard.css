@@ -1,11 +1,41 @@
-/* Trainer dashboard shell — white canvas + purple sidebar */
+/* Trainer dashboard shell — white canvas + orange sidebar */
+
+html:has(.trainer-dashboard-shell) body,
+html.dark:has(.trainer-dashboard-shell) body {
+  background: #ffffff !important;
+}
+
+html:has(.trainer-dashboard-shell) {
+  --body-bg: 255 255 255;
+  color-scheme: light only;
+}
+
+@media (min-width: 992px) {
+  .trainer-dashboard-shell #responsive-overlay,
+  .trainer-dashboard-shell #responsive-overlay.active {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    background: transparent !important;
+  }
+}
+
+.trainer-dashboard-shell #responsive-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  background: transparent !important;
+}
 
 .trainer-dashboard-shell {
-  background: #ffffff;
+  background: #ffffff !important;
+  min-height: 100vh;
 }
 
 .trainer-dashboard-shell .content {
-  background: #ffffff;
+  background: #ffffff !important;
   margin-top: 4rem !important;
 }
 
@@ -13,16 +43,106 @@
   background: #ffffff !important;
   padding-top: 1rem !important;
   padding-bottom: 2rem !important;
+  min-height: calc(100vh - 4rem);
 }
 
 .trainer-dashboard-shell .container-fluid {
-  background: #ffffff;
+  background: #ffffff !important;
   max-width: 100%;
   padding-inline: 1.5rem;
 }
 
+.dark .trainer-dashboard-shell,
+.dark .trainer-dashboard-shell .content,
+.dark .trainer-dashboard-shell .main-content,
+.dark .trainer-dashboard-shell .container-fluid {
+  background: #ffffff !important;
+  color: #1f2937;
+}
+
 .trainer-dashboard-shell .footer {
   display: none;
+}
+
+/* ── Welcome banner (matches sidebar / nav orange) ── */
+.trainer-dashboard-shell .trainer-dashboard-welcome {
+  background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-deep) 100%);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px var(--portal-primary-shadow);
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-body {
+  padding: 1.25rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .trainer-dashboard-shell .trainer-dashboard-welcome-body {
+    padding: 1.5rem 1.75rem;
+  }
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-title {
+  color: #ffffff;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-avatar {
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-avatar-fallback {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  color: #ffffff;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-badge--active {
+  background: #ffffff !important;
+  color: var(--portal-primary-deep) !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-badge--inactive {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-rating strong {
+  color: #ffffff !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-rating span {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-actions {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (min-width: 1024px) {
+  .trainer-dashboard-shell .trainer-dashboard-welcome-actions {
+    border-top: none;
+  }
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-cta {
+  background: #ffffff !important;
+  color: var(--portal-primary-deep) !important;
+  border: none !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-cta:hover {
+  background: var(--portal-primary-tint) !important;
+  color: var(--portal-primary-deep) !important;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-welcome-spinner {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  border-right-color: #ffffff;
 }
 
 /* ── Header ── */
@@ -97,6 +217,12 @@
   font-weight: 500;
   color: #374151;
   white-space: nowrap;
+}
+
+.trainer-dashboard-shell .trainer-dashboard-header-toggle {
+  padding: 0;
+  background-image: none;
+  appearance: none;
 }
 
 .trainer-dashboard-shell .trainer-dashboard-header-logout {

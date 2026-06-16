@@ -15,7 +15,8 @@ type CompanySettingsFormProps = {
     logoInputRef: RefObject<HTMLInputElement | null>;
     onChange: (data: UpdateCompanyRequest) => void;
     onContactChange: (person: 1 | 2, field: keyof ContactPerson, value: string) => void;
-    onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onLogoFileReady: (file: File) => void | Promise<void>;
+    onLogoValidationError?: (message: string) => void;
     onLogoClear: () => void;
     onSubmit: (e: React.FormEvent) => void;
     onCancel: () => void;
@@ -58,7 +59,8 @@ export default function CompanySettingsForm({
     logoInputRef,
     onChange,
     onContactChange,
-    onLogoChange,
+    onLogoFileReady,
+    onLogoValidationError,
     onLogoClear,
     onSubmit,
     onCancel,
@@ -92,7 +94,8 @@ export default function CompanySettingsForm({
                     logoUrl={formData.companyLogo || ""}
                     uploading={uploadingLogo}
                     inputRef={logoInputRef}
-                    onFileChange={onLogoChange}
+                    onFileReady={onLogoFileReady}
+                    onValidationError={onLogoValidationError}
                     onClear={onLogoClear}
                 />
 

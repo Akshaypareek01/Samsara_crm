@@ -164,22 +164,12 @@ const CompanyRegister = () => {
      *
      * @param e - Change event from the hidden file input.
      */
-    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                Swal.fire('Error!', 'Please select an image file', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire('Error!', 'File size should be less than 5MB', 'error');
-                return;
-            }
-            void uploadCompanyLogo(file);
-        }
-        if (logoInputRef.current) {
-            logoInputRef.current.value = '';
-        }
+    const handleLogoFileReady = async (file: File) => {
+        await uploadCompanyLogo(file);
+    };
+
+    const handleLogoValidationError = (message: string) => {
+        Swal.fire('Error!', message, 'error');
     };
 
     /** Clear the currently selected company logo. */
@@ -399,7 +389,8 @@ const CompanyRegister = () => {
                                 updateContactPerson={updateContactPerson}
                                 logoInputRef={logoInputRef}
                                 uploadingLogo={uploadingLogo}
-                                onLogoChange={handleLogoChange}
+                                onLogoFileReady={handleLogoFileReady}
+                                onLogoValidationError={handleLogoValidationError}
                                 onClearLogo={clearCompanyLogo}
                                 fieldErrors={fieldErrors}
                                 fieldClass={fieldClass}

@@ -25,7 +25,8 @@ const TrainerProfile = () => {
     acceptingBookingsSaving,
     profilePhotoInputRef,
     galleryInputRefs,
-    handleProfilePhotoChange,
+    handleProfilePhotoFileReady,
+    handleProfilePhotoValidationError,
     handleGallerySlotChange,
     removeImage,
     clearProfilePhoto,
@@ -151,7 +152,8 @@ const TrainerProfile = () => {
                 galleryInputRefs={galleryInputRefs}
                 setFormData={setFormData}
                 patchDetails={patchDetails}
-                onProfilePhotoChange={handleProfilePhotoChange}
+                onProfilePhotoFileReady={handleProfilePhotoFileReady}
+                onProfilePhotoValidationError={handleProfilePhotoValidationError}
                 onGallerySlotChange={handleGallerySlotChange}
                 onClearProfilePhoto={clearProfilePhoto}
                 onRemoveGalleryImage={removeImage}

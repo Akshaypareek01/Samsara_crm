@@ -10,11 +10,13 @@ import {
   mergeTrainerSelectOptions,
 } from "@/services/trainerService";
 import MultiSelect from "@/shared/components/MultiSelect";
+import TrainerChipSelect from "@/shared/components/trainer/TrainerChipSelect";
 import TrainerPersonalDetailsFields from "@/shared/components/trainer/TrainerPersonalDetailsFields";
 import TrainerQualificationFields from "@/shared/components/trainer/TrainerQualificationFields";
 import TrainerFormSectionHeader from "@/shared/components/trainer/TrainerFormSectionHeader";
 import TrainerPhotosFields from "@/shared/components/trainer/TrainerPhotosFields";
 import TrainerProfileBanner from "@/shared/components/trainer/TrainerProfileBanner";
+import { normalizeTrainerCategories } from "@/shared/utils/trainerCategoryUtils";
 
 type TrainerProfileEditFormProps = {
   trainer: Trainer | null;
@@ -26,7 +28,8 @@ type TrainerProfileEditFormProps = {
   galleryInputRefs: RefObject<(HTMLInputElement | null)[]>;
   setFormData: React.Dispatch<React.SetStateAction<UpdateTrainerRequest>>;
   patchDetails: (patch: Partial<UpdateTrainerRequest>) => void;
-  onProfilePhotoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onProfilePhotoFileReady: (file: File) => void | Promise<void>;
+  onProfilePhotoValidationError?: (message: string) => void;
   onGallerySlotChange: (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearProfilePhoto: () => void;
   onRemoveGalleryImage: (index: number) => void;
@@ -47,7 +50,8 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
   galleryInputRefs,
   setFormData,
   patchDetails,
-  onProfilePhotoChange,
+  onProfilePhotoFileReady,
+  onProfilePhotoValidationError,
   onGallerySlotChange,
   onClearProfilePhoto,
   onRemoveGalleryImage,
@@ -60,7 +64,7 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
       title={formData.title || trainer?.title}
       email={trainer?.email}
       mobile={trainer?.mobile}
-      category={formData.category || trainer?.category}
+      category={normalizeTrainerCategories(formData.category ?? trainer?.category)}
       profilePhoto={formData.profilePhoto}
     />
 
@@ -107,31 +111,18 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
               />
             </div>
           </div>
-          <div>
-            <label className="form-label" htmlFor="profile-trainer-category">
-              Category <span className="text-danger">*</span>
-            </label>
-            <div className="relative">
-              <i
-                className="ri-price-tag-3-line absolute left-3 top-1/2 -translate-y-1/2 text-muted z-10"
-                aria-hidden="true"
-              />
-              <select
-                id="profile-trainer-category"
-                className="form-control border-2 focus:border-primary !ps-10"
-                value={formData.category || ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-                required
-                aria-required="true"
-              >
-                <option value="">Select your category</option>
-                {TRAINER_CATEGORY_OPTIONS.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="sm:col-span-2">
+            <TrainerChipSelect
+              label="Category"
+              options={[...TRAINER_CATEGORY_OPTIONS]}
+              value={normalizeTrainerCategories(formData.category)}
+              onChange={(selected) => setFormData((prev) => ({ ...prev, category: selected }))}
+              required
+              fieldId="profile-trainer-category"
+            />
+            <p className="text-muted text-xs mt-1 mb-0">
+              Select all categories you practice — you&apos;ll appear in each matching company section.
+            </p>
           </div>
           <div>
             <label className="form-label" htmlFor="profile-email">
@@ -179,7 +170,7 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
             <TrainerPersonalDetailsFields
               values={{
                 dateOfBirth: formData.dateOfBirth,
-                city: formData.city,
+                cities: formData.cities,
                 pinCode: formData.pinCode,
                 experience: formData.experience,
               }}
@@ -255,7 +246,8 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
           galleryInputRefs={galleryInputRefs}
           uploadingProfilePhoto={uploadingProfilePhoto}
           uploadingGallerySlot={uploadingGallerySlot}
-          onProfilePhotoChange={onProfilePhotoChange}
+          onProfilePhotoFileReady={onProfilePhotoFileReady}
+          onProfilePhotoValidationError={onProfilePhotoValidationError}
           onGallerySlotChange={onGallerySlotChange}
           onClearProfilePhoto={onClearProfilePhoto}
           onRemoveGalleryImage={onRemoveGalleryImage}

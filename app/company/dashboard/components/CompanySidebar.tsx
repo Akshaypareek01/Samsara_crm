@@ -45,25 +45,9 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
         }
         if (mainContent) mainContent.addEventListener('click', menuClose);
 
-        const updateOverlay = () => {
-            const overlay = document.querySelector("#responsive-overlay") as HTMLElement;
-            if (overlay && window.innerWidth <= 992) {
-                const theme = store.getState();
-                if (theme.dataToggled === 'open') {
-                    overlay.classList.add('active');
-                } else {
-                    overlay.classList.remove('active');
-                }
-            }
-        };
-
-        const unsubscribe = store.subscribe(updateOverlay);
-        updateOverlay();
-
         return () => {
             window.removeEventListener("resize", menuResizeFn);
             window.removeEventListener('resize', checkHoriMenu);
-            unsubscribe();
         };
     }, []);
 
@@ -89,10 +73,6 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
         const theme = store.getState();
         if (window.innerWidth <= 992) {
             ThemeChanger({ ...theme, dataToggled: "close" });
-        }
-        const overlayElement = document.querySelector("#responsive-overlay") as HTMLElement | null;
-        if (overlayElement) {
-            overlayElement.classList.remove("active");
         }
         if (theme.dataNavLayout == "horizontal" || theme.dataNavStyle == "menu-click" || theme.dataNavStyle == "icon-click") {
             closeMenu();
@@ -631,8 +611,6 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
         <Fragment>
 
-            <div id="responsive-overlay"
-                onClick={() => { menuClose(); }}></div>
             <aside
                 className="app-sidebar company-wellconnect-sidebar"
                 id="sidebar"

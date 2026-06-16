@@ -1,5 +1,10 @@
 @import "../public/assets/css/style.css";
 
+:root,
+html {
+  color-scheme: light only;
+}
+
  //Packages css
  @import "filepond/dist/filepond.min.css"; //file pond css
  @import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css"; //dependencies plugin css for react file pond package
@@ -30,7 +35,7 @@
 @import "react-color-palette/css";
 
   @media (max-width: 991.98px) {
-    [data-toggled="open"] {
+    html[data-toggled="open"]:not(:has(.company-dashboard-shell)):not(:has(.trainer-dashboard-shell)) {
       #responsive-overlay {
         @apply visible #{!important};
         --tw-bg-opacity: 0.5;

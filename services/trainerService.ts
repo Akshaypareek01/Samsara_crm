@@ -56,6 +56,9 @@ export interface TrainerRatingSummary {
 /** Personal & professional detail fields shared across trainer payloads */
 export interface TrainerProfileDetails {
   dateOfBirth?: string | null;
+  /** Cities where the trainer operates. */
+  cities?: string[];
+  /** @deprecated Legacy single city — use `cities`. */
   city?: string;
   pinCode?: string;
   experience?: string;
@@ -69,7 +72,7 @@ export interface Trainer extends TrainerProfileDetails {
   name: string;
   title: string;
   bio: string;
-  category?: TrainerCategory | string;
+  category?: TrainerCategory | TrainerCategory[] | string | string[];
   email?: string;
   mobile?: string;
   specialistIn: string | string[];
@@ -106,7 +109,7 @@ export interface CreateTrainerRequest extends TrainerProfileDetails {
   name: string;
   title: string;
   bio: string;
-  category: TrainerCategory | string;
+  category: TrainerCategory | TrainerCategory[] | string[];
   email: string;
   mobile: string;
   specialistIn: string | string[];
@@ -122,7 +125,7 @@ export interface UpdateTrainerRequest extends TrainerProfileDetails {
   name?: string;
   title?: string;
   bio?: string;
-  category?: TrainerCategory | string;
+  category?: TrainerCategory | TrainerCategory[] | string[];
   email?: string;
   mobile?: string;
   specialistIn?: string | string[];

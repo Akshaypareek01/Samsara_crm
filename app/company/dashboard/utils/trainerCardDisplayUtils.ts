@@ -1,5 +1,11 @@
 import type { Trainer } from '@/services/trainerService';
-import { HOME_TRAINER_CATEGORY_LABELS } from '../constants/homeTrainerCategories';
+import {
+  trainerCategoryLabel,
+  trainerCategoryLabels,
+} from '@/shared/utils/trainerCategoryUtils';
+import { formatTrainerCities, normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
+
+export { trainerCategoryLabel, trainerCategoryLabels };
 
 /**
  * Professional title line for trainer cards (e.g. "Certified Yoga Instructor").
@@ -28,23 +34,11 @@ export function trainerTrainingLabels(trainer: Trainer): string[] {
 }
 
 /**
- * Human-readable category label for a trainer.
- *
- * @param trainer - Trainer record from the API.
- */
-export function trainerCategoryLabel(trainer: Trainer): string | null {
-  const cat = trainer.category;
-  if (!cat) return null;
-  const key = cat as keyof typeof HOME_TRAINER_CATEGORY_LABELS;
-  return HOME_TRAINER_CATEGORY_LABELS[key] || String(cat);
-}
-
-/**
  * Location line from the trainer city field.
  *
  * @param trainer - Trainer record from the API.
  */
 export function trainerLocationLine(trainer: Trainer): string | null {
-  const city = trainer.city?.trim();
-  return city || null;
+  const cities = formatTrainerCities(normalizeTrainerCities(trainer));
+  return cities || null;
 }

@@ -7,8 +7,9 @@ import {
     trainerSpecialistList,
     trainerTrainingList,
 } from "./companyTrainerProfileUtils";
-import { trainerCategoryLabel } from "../utils/trainerCardDisplayUtils";
+import { trainerCategoryLabels } from "../utils/trainerCardDisplayUtils";
 import { trainerLocationLine } from "../utils/trainerCardDisplayUtils";
+import TrainerCategoryBadges from "@/shared/components/trainer/TrainerCategoryBadges";
 
 type CompanyBookingTrainerPreviewProps = {
     trainer: Trainer;
@@ -22,7 +23,7 @@ const CompanyBookingTrainerPreview: React.FC<CompanyBookingTrainerPreviewProps> 
 }) => {
     const specialists = trainerSpecialistList(trainer.specialistIn);
     const trainings = trainerTrainingList(trainer.typeOfTraining);
-    const category = trainerCategoryLabel(trainer);
+    const categoryLabels = trainerCategoryLabels(trainer);
     const location = trainerLocationLine(trainer);
     const galleryImages = trainer.images?.filter((img) => img.path) ?? [];
     const bio =
@@ -46,8 +47,8 @@ const CompanyBookingTrainerPreview: React.FC<CompanyBookingTrainerPreviewProps> 
                 <div className="min-w-0">
                     <h3 className="company-booking-preview__name">{trainer.name}</h3>
                     <p className="company-booking-preview__title">{trainer.title}</p>
-                    {category && (
-                        <span className="company-booking-preview__badge">{category}</span>
+                    {categoryLabels.length > 0 && (
+                        <TrainerCategoryBadges labels={categoryLabels} className="mt-1" />
                     )}
                 </div>
             </div>

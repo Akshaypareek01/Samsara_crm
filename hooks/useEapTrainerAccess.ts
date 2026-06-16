@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TrainerService, { type Trainer } from "@/services/trainerService";
+import { trainerHasCategory } from "@/shared/utils/trainerCategoryUtils";
 
 /**
  * Ensures the current user is an EAP trainer and loads their profile.
@@ -20,7 +21,7 @@ export function useEapTrainerAccess() {
       try {
         setLoading(true);
         const me = await TrainerService.getMyProfile();
-        if (me.category !== "EAP Trainer") {
+        if (!trainerHasCategory(me, "EAP Trainer")) {
           if (!cancelled) {
             setAccessDenied(true);
             router.replace("/trainer/dashboard");
