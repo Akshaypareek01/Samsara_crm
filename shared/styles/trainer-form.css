@@ -393,7 +393,44 @@
 
 .trainer-auth-panel-inner--centered {
   justify-content: center;
+  align-items: center;
   padding-block: 0.5rem;
+  text-align: center;
+}
+
+.trainer-auth-panel-inner--centered .auth-logo {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.trainer-auth-panel-inner--centered > .mb-6,
+.trainer-auth-panel-inner--centered > form,
+.trainer-auth-panel-inner--centered > .trainer-form-error-summary,
+.trainer-auth-panel-inner--centered > .text-center {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.trainer-auth-panel-inner--centered form {
+  text-align: left;
+}
+
+.trainer-auth-panel-inner--centered .trainer-form-label {
+  text-align: left !important;
+}
+
+.trainer-auth-panel-inner--centered .trainer-form-control {
+  text-align: left;
+}
+
+/** Register pages: centered header, full-width form below. */
+.trainer-auth-panel-inner--centered.trainer-auth-panel-inner--wide-form {
+  justify-content: flex-start;
+}
+
+.trainer-auth-panel-inner--centered.trainer-auth-panel-inner--wide-form > form,
+.trainer-auth-panel-inner--centered.trainer-auth-panel-inner--wide-form > .trainer-form-error-summary {
+  max-width: none;
 }
 
 /** Auth portal logo — larger than legacy panel logo sizing. */

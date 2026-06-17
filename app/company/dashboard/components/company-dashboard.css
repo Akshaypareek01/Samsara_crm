@@ -241,13 +241,13 @@ html[data-toggled="close-menu-close"] .company-dashboard-shell .company-dashboar
 }
 
 .company-home-welcome {
-  background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-deep) 100%);
+  background: #ff9468;
   border: none;
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 4px 20px var(--portal-primary-shadow);
+  box-shadow: 0 4px 20px rgba(255, 148, 104, 0.35);
 }
 
 @media (min-width: 768px) {

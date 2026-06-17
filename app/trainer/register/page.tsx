@@ -374,6 +374,7 @@ const TrainerRegister = () => {
                     </aside>
 
                     <div className="trainer-auth-panel trainer-register-scroll lg:col-span-7 min-h-0 p-6 sm:p-8 lg:p-10 pb-8">
+                        <div className="trainer-auth-panel-inner trainer-auth-panel-inner--centered trainer-auth-panel-inner--wide-form">
                         <div className="mb-6">
                             <img
                                 src="/assets/images/logo.png"
@@ -509,6 +510,7 @@ const TrainerRegister = () => {
                                 </div>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             </div>
