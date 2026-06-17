@@ -396,6 +396,23 @@
   padding-block: 0.5rem;
 }
 
+/** Auth portal logo — larger than legacy panel logo sizing. */
+.auth-logo {
+  display: block;
+  width: auto;
+  height: 8rem !important;
+  max-width: 320px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .auth-logo {
+    height: 6.5rem !important;
+    max-width: 260px;
+  }
+}
+
 @media (max-height: 820px) {
   .trainer-auth-shell {
     padding: 0.75rem 1rem !important;
@@ -409,8 +426,21 @@
     margin-bottom: 1.25rem !important;
   }
 
+  .trainer-auth-panel-logo-wrap {
+    margin-bottom: 0.75rem !important;
+  }
+
   .trainer-auth-aside-logo {
     height: 3.5rem !important;
+  }
+
+  .trainer-auth-panel-logo {
+    height: 3.5rem !important;
+  }
+
+  .auth-logo {
+    height: 6rem !important;
+    max-width: 280px;
   }
 
   .trainer-auth-aside-title {
@@ -438,6 +468,15 @@
 @media (max-height: 680px) {
   .trainer-auth-aside-logo {
     height: 3rem !important;
+  }
+
+  .trainer-auth-panel-logo {
+    height: 3rem !important;
+  }
+
+  .auth-logo {
+    height: 5rem !important;
+    max-width: 240px;
   }
 
   .trainer-auth-aside-title {

@@ -94,13 +94,6 @@ const TrainerLogin = () => {
 
                         <div className="trainer-auth-aside-inner relative z-10 w-full">
                             <div>
-                                <div className="trainer-auth-aside-logo-wrap inline-flex items-center justify-center bg-white rounded-xl p-1.5 mb-8 xl:mb-10 shadow-lg leading-none">
-                                    <img
-                                        src="/assets/images/logo.jpeg"
-                                        alt="Samsara"
-                                        className="trainer-auth-aside-logo h-20 xl:h-24 2xl:h-28 w-auto max-w-[220px] object-contain block"
-                                    />
-                                </div>
                                 <h1 className="trainer-auth-aside-title text-2xl xl:text-3xl font-bold leading-tight mb-4">
                                     Welcome back to your trainer dashboard
                                 </h1>
@@ -143,9 +136,9 @@ const TrainerLogin = () => {
                         <div className="trainer-auth-panel-inner trainer-auth-panel-inner--centered">
                         <div className="mb-6">
                             <img
-                                src="/assets/images/logo.jpeg"
+                                src="/assets/images/logo.png"
                                 alt="Samsara"
-                                className="h-20 sm:h-24 w-auto mb-4 lg:hidden"
+                                className="auth-logo"
                             />
                             <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Trainer Login</h2>
                             <p className="text-[#8c9097] dark:text-white/50 text-sm mt-1">

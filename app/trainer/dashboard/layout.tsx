@@ -59,4 +59,15 @@ const mapStateToProps = (state: any) => ({
     local_varaiable: state
 });
 
-export default connect(mapStateToProps, { ThemeChanger })(TrainerLayout);
+const ConnectedTrainerLayout = connect(mapStateToProps, { ThemeChanger })(TrainerLayout);
+
+/**
+ * Next.js App Router layout wrapper — connect() HOC cannot be the default export.
+ */
+export default function TrainerDashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return <ConnectedTrainerLayout>{children}</ConnectedTrainerLayout>;
+}
