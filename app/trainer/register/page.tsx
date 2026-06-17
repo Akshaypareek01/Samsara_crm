@@ -231,7 +231,7 @@ const TrainerRegister = () => {
                 typeOfTraining: Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : [formData.typeOfTraining].filter(Boolean),
                 dateOfBirth: formData.dateOfBirth,
                 cities: Array.isArray(formData.cities)
-                    ? [...new Set(formData.cities.map((c) => c.trim()).filter(Boolean))]
+                    ? Array.from(new Set(formData.cities.map((c) => c.trim()).filter(Boolean)))
                     : [],
                 pinCode: formData.pinCode,
                 experience: formData.experience,

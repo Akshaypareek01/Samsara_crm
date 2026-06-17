@@ -14,7 +14,7 @@ export function normalizeTrainerCities(
     : [];
 
   if (fromArray.length > 0) {
-    return [...new Set(fromArray)];
+    return Array.from(new Set(fromArray));
   }
 
   const legacy = trainer.city?.trim();
@@ -28,7 +28,7 @@ export function normalizeTrainerCities(
  * @returns Comma-separated label or empty string when none.
  */
 export function formatTrainerCities(cities: string[]): string {
-  const unique = [...new Set(cities.map((c) => c.trim()).filter(Boolean))];
+  const unique = Array.from(new Set(cities.map((c) => c.trim()).filter(Boolean)));
   return unique.join(', ');
 }
 

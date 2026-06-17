@@ -18,7 +18,7 @@ export function normalizeTrainerCategories(value: unknown): TrainerCategory[] {
     ? value.map((item) => String(item).trim()).filter(Boolean)
     : [String(value).trim()].filter(Boolean);
 
-  const unique = [...new Set(rawList)];
+  const unique = Array.from(new Set(rawList));
   return unique.filter((item): item is TrainerCategory =>
     TRAINER_CATEGORY_OPTIONS.includes(item as TrainerCategory)
   );

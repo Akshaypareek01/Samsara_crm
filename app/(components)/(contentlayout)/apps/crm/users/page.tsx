@@ -68,6 +68,15 @@ function isUserAccountActive(user: User): boolean {
   return true;
 }
 
+/**
+ * Normalize API role to values allowed in the admin user form.
+ *
+ * @param role - Role from the user record.
+ */
+function normalizeUserFormRole(role: User['role'] | undefined): 'user' | 'teacher' {
+  return role === 'teacher' ? 'teacher' : 'user';
+}
+
 const Users = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -95,7 +104,7 @@ const Users = () => {
       name: user.name || '',
       email: user.email || '',
       password: '',
-      role: user.role || 'user',
+      role: normalizeUserFormRole(user.role),
       mobile: user.mobile || '',
       gender: user.gender || '',
       dob: user.dob || '',
@@ -290,7 +299,7 @@ const Users = () => {
 
     try {
       setBulkDeleting(true);
-      const res = await UserService.bulkDeleteUsers([...selectedUserIds]);
+      const res = await UserService.bulkDeleteUsers(Array.from(selectedUserIds));
       setSelectedUserIds(new Set());
       if (res.failed.length > 0) {
         Swal.fire(

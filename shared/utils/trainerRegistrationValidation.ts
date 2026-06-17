@@ -123,7 +123,7 @@ export function validateTrainerRegistration(
   }
 
   const cities = Array.isArray(data.cities)
-    ? [...new Set(data.cities.map((c) => String(c).trim()).filter(Boolean))]
+    ? Array.from(new Set(data.cities.map((c) => String(c).trim()).filter(Boolean)))
     : [];
   if (cities.length === 0) {
     errors.city = 'Select at least one city';
