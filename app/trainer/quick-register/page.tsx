@@ -226,13 +226,6 @@ const TrainerQuickRegister = () => {
               </div>
 
               <div className="trainer-auth-aside-footer space-y-3 pt-2">
-                <p className="text-white/70 text-sm mb-0">Want to complete your full profile instead?</p>
-                <Link
-                  href="/trainer/register"
-                  className="inline-flex items-center justify-center w-full min-h-[48px] px-6 py-3 rounded-xl bg-white text-primary font-bold text-base hover:bg-white/90 transition-colors shadow-lg"
-                >
-                  Full Registration
-                </Link>
                 <p className="text-white/50 text-[0.65rem] leading-relaxed">
                   Copyright&copy; 2025 Samsaraa WellTek Pvt Ltd. All rights reserved.
                 </p>

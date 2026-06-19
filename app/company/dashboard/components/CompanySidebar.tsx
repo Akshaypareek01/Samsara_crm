@@ -631,7 +631,7 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
                             </span>
                             <span className="company-sidebar-brand-text">
                                 <span className="company-sidebar-brand-title">Samsara Wellness</span>
-                                <span className="company-sidebar-brand-sub">HR CRM</span>
+                                <span className="company-sidebar-brand-sub">HR 365</span>
                             </span>
                         </Link>
                         <button

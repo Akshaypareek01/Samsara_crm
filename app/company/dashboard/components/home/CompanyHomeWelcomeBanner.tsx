@@ -28,6 +28,22 @@ const CompanyHomeWelcomeBanner: React.FC<CompanyHomeWelcomeBannerProps> = ({
             Empower well-being. Inspire growth. Discover the best wellness trainers
             for a healthier, happier workplace.
           </p>
+          <div className="company-home-welcome-stats" aria-label="Platform highlights">
+            <span className="company-home-welcome-stat">
+              <i className="ri-award-line" aria-hidden="true"></i>
+              200+ certified trainers
+            </span>
+            <span className="company-home-welcome-stat-divider" aria-hidden="true"></span>
+            <span className="company-home-welcome-stat">
+              <i className="ri-map-pin-line" aria-hidden="true"></i>
+              Available Across Major Cities
+            </span>
+            <span className="company-home-welcome-stat-divider" aria-hidden="true"></span>
+            <span className="company-home-welcome-stat">
+              <i className="ri-global-line" aria-hidden="true"></i>
+              Online / Offline delivery
+            </span>
+          </div>
         </div>
         <div className="company-home-welcome-hero-wrap" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
