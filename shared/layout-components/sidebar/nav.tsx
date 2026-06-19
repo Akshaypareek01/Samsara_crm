@@ -70,6 +70,15 @@ export const MenuItems: any = [
         title: "Trainers",
         permission: "userManagement.trainers",
       },
+      {
+        path: "/apps/crm/trainer-leads",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Trainer Leads",
+        permission: "userManagement.trainerLeads",
+      },
     ],
   },
 

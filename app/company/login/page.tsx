@@ -121,6 +121,30 @@ const CompanyLoginInner = () => {
                                         </li>
                                     ))}
                                 </ul>
+
+                                <div className="trainer-auth-aside-stats grid grid-cols-3 gap-3 mt-6 xl:mt-8 pt-5 border-t border-white/15">
+                                    <div className="flex flex-col items-center text-center gap-1.5">
+                                        <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <i className="ri-award-line text-lg" aria-hidden="true"></i>
+                                        </span>
+                                        <p className="font-bold text-sm mb-0">200+</p>
+                                        <p className="text-white/70 text-[0.7rem] leading-tight mb-0">Certified Trainers</p>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center gap-1.5">
+                                        <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <i className="ri-map-pin-line text-lg" aria-hidden="true"></i>
+                                        </span>
+                                        <p className="font-bold text-sm mb-0">Pan India</p>
+                                        <p className="text-white/70 text-[0.7rem] leading-tight mb-0">Available Across Major Cities</p>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center gap-1.5">
+                                        <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+                                            <i className="ri-global-line text-lg" aria-hidden="true"></i>
+                                        </span>
+                                        <p className="font-bold text-sm mb-0">Flexible</p>
+                                        <p className="text-white/70 text-[0.7rem] leading-tight mb-0">Online / Offline Delivery</p>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="trainer-auth-aside-footer space-y-3 pt-2">
