@@ -63,4 +63,13 @@ export const MenuItems: any = [
         dirchange: false,
         title: "Settings",
     },
+    {
+        path: "/company/dashboard/faq",
+        icon: <i className="bx bx-help-circle side-menu__icon"></i>,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "FAQ",
+    },
 ];
