@@ -3,7 +3,7 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
 import CompanyService, { Company, CreateCompanyRequest, ContactPerson } from '@/services/companyService';
-import { formatCompanyAddress, getCompanyLogoUrl } from '@/shared/utils/companyDisplayUtils';
+import { formatCompanyAddress, getCompanyContactName, getCompanyLogoUrl } from '@/shared/utils/companyDisplayUtils';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
 import {
@@ -321,8 +321,8 @@ const Companies = () => {
                 <table className={crmTableClass}>
                   <thead>
                     <tr className={crmTheadTrClass}>
-                      <th className={crmThClass}>Company ID</th>
                       <th className={crmThClass}>Company Name</th>
+                      <th className={crmThClass}>Contact Person</th>
                       <th className={crmThClass}>Email</th>
                       <th className={crmThClass}>Domain</th>
                       <th className={crmThClass}>Employees</th>
@@ -343,11 +343,6 @@ const Companies = () => {
                         return (
                           <tr key={companyId} className={crmTbodyTrClass}>
                             <td className={crmTdClass}>
-                              <span className="font-semibold text-purple-600 text-[12px]">
-                                {company.companyId}
-                              </span>
-                            </td>
-                            <td className={crmTdClass}>
                               <div className="flex items-center gap-2">
                                 {company.companyLogo ? (
                                   <img src={company.companyLogo} alt={company.companyName} className="w-10 h-10 rounded shrink-0" />
@@ -359,6 +354,7 @@ const Companies = () => {
                                 <span className="font-semibold text-gray-900 text-[12px]">{company.companyName || '-'}</span>
                               </div>
                             </td>
+                            <td className={`${crmTdClass} text-gray-600`}>{getCompanyContactName(company)}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.email || '-'}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.domain || '-'}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.numberOfEmployees ?? '-'}</td>
@@ -729,6 +725,7 @@ const Companies = () => {
                   />
                 ) : null}
                 <h4 className="font-semibold text-lg mb-0">{viewingCompany.companyName || '-'}</h4>
+                <p className="text-sm text-muted mt-1 mb-0">Contact: {getCompanyContactName(viewingCompany)}</p>
                 <span
                   className={`badge mt-2 ${viewingCompany.status !== false ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}
                 >

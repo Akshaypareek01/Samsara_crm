@@ -25,6 +25,29 @@ export function getBookingCompanyName(booking: Booking, fallback = 'Company'): s
 }
 
 /**
+ * Resolves the primary contact person's name for a company.
+ * Falls back to the second contact person, then a dash.
+ *
+ * @param company - Company profile or null.
+ */
+export function getCompanyContactName(company: Company | null): string {
+    const primary = company?.contactPerson1?.name?.trim();
+    if (primary) return primary;
+    const secondary = company?.contactPerson2?.name?.trim();
+    if (secondary) return secondary;
+    return '—';
+}
+
+/**
+ * Resolves the primary contact person's name for a booking's company.
+ *
+ * @param booking - Booking record.
+ */
+export function getBookingCompanyContactName(booking: Booking): string {
+    return getCompanyContactName(getBookingCompany(booking));
+}
+
+/**
  * Builds a single-line postal address from company fields.
  *
  * @param company - Company profile or null.

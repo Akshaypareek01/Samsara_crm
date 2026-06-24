@@ -2,35 +2,46 @@
 
 import React, { RefObject } from "react";
 import { TrainerAccountDetails } from "@/services/trainerService";
-import { sanitizeTrainerPan } from "../utils/trainerAccountValidation";
+import { sanitizeTrainerPan, sanitizeTrainerGst } from "../utils/trainerAccountValidation";
 import TrainerPanDocumentUpload from "./TrainerPanDocumentUpload";
+import TrainerGstDocumentUpload from "./TrainerGstDocumentUpload";
 
 interface TrainerAccountFormProps {
   formData: TrainerAccountDetails;
   saving: boolean;
   uploadingPanDocument: boolean;
+  uploadingGstDocument: boolean;
   panDocumentInputRef: RefObject<HTMLInputElement | null>;
+  gstDocumentInputRef: RefObject<HTMLInputElement | null>;
   onChange: (patch: Partial<TrainerAccountDetails>) => void;
   onPanDocumentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearPanDocument: () => void;
+  onGstDocumentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onClearGstDocument: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
 /**
- * Payout account form for trainer PAN, UPI, and bank details.
+ * Payout account form for trainer PAN, GST, and bank details.
  */
 export default function TrainerAccountForm({
   formData,
   saving,
   uploadingPanDocument,
+  uploadingGstDocument,
   panDocumentInputRef,
+  gstDocumentInputRef,
   onChange,
   onPanDocumentChange,
   onClearPanDocument,
+  onGstDocumentChange,
+  onClearGstDocument,
   onSubmit,
 }: TrainerAccountFormProps) {
   const panDocumentUrl = formData.panDocument?.path || "";
   const panDocumentIsPdf = panDocumentUrl.toLowerCase().includes(".pdf");
+  const gstDocumentUrl = formData.gstDocument?.path || "";
+  const gstDocumentIsPdf = gstDocumentUrl.toLowerCase().includes(".pdf");
 
   return (
     <form onSubmit={onSubmit} noValidate aria-label="Trainer account details">
@@ -77,6 +88,54 @@ export default function TrainerAccountForm({
               uploading={uploadingPanDocument}
               onChange={onPanDocumentChange}
               onClear={onClearPanDocument}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="trainer-account-details-card"
+        aria-labelledby="trainer-account-gst-heading"
+      >
+        <div className="trainer-account-details-card__head">
+          <span className="trainer-account-details-card__icon" aria-hidden="true">
+            <i className="ri-bill-line" />
+          </span>
+          <div>
+            <h2 id="trainer-account-gst-heading" className="trainer-account-details-card__title">
+              GST details
+            </h2>
+            <p className="trainer-account-details-card__desc">
+              Optional — add if you are GST registered.
+            </p>
+          </div>
+        </div>
+
+        <div className="trainer-account-details-form-grid">
+          <div className="trainer-account-details-form-grid__full">
+            <label className="trainer-account-details-field__label" htmlFor="trainer-gst-number">
+              GST number
+            </label>
+            <input
+              id="trainer-gst-number"
+              type="text"
+              className="trainer-account-details-field__input"
+              placeholder="e.g. 22AAAAA0000A1Z5"
+              maxLength={15}
+              value={formData.gstNumber || ""}
+              onChange={(e) => onChange({ gstNumber: sanitizeTrainerGst(e.target.value) })}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="trainer-account-details-form-grid__full">
+            <TrainerGstDocumentUpload
+              documentUrl={gstDocumentUrl}
+              isPdf={gstDocumentIsPdf}
+              gstDocumentInputRef={gstDocumentInputRef}
+              uploading={uploadingGstDocument}
+              onChange={onGstDocumentChange}
+              onClear={onClearGstDocument}
             />
           </div>
         </div>
@@ -185,7 +244,7 @@ export default function TrainerAccountForm({
         <button
           type="submit"
           className="trainer-account-details-btn"
-          disabled={saving || uploadingPanDocument}
+          disabled={saving || uploadingPanDocument || uploadingGstDocument}
           aria-label="Save account details"
         >
           {saving ? "Saving…" : "Save details"}

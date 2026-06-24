@@ -15,12 +15,16 @@ export default function TrainerMyAccountPage() {
     loading,
     saving,
     uploadingPanDocument,
+    uploadingGstDocument,
     error,
     formData,
     panDocumentInputRef,
+    gstDocumentInputRef,
     patchDetails,
     handlePanDocumentChange,
     clearPanDocument,
+    handleGstDocumentChange,
+    clearGstDocument,
     handleSubmit,
   } = useTrainerAccountForm();
 
@@ -33,7 +37,7 @@ export default function TrainerMyAccountPage() {
         <header className="trainer-account-details-page__header">
           <h1 className="trainer-account-details-page__title">My Account</h1>
           <p className="trainer-account-details-page__subtitle">
-            Add your PAN, UPI, and bank details.
+            Add your PAN, GST, UPI, and bank details.
           </p>
         </header>
 
@@ -53,10 +57,14 @@ export default function TrainerMyAccountPage() {
             formData={formData}
             saving={saving}
             uploadingPanDocument={uploadingPanDocument}
+            uploadingGstDocument={uploadingGstDocument}
             panDocumentInputRef={panDocumentInputRef}
+            gstDocumentInputRef={gstDocumentInputRef}
             onChange={patchDetails}
             onPanDocumentChange={handlePanDocumentChange}
             onClearPanDocument={clearPanDocument}
+            onGstDocumentChange={handleGstDocumentChange}
+            onClearGstDocument={clearGstDocument}
             onSubmit={(e) => {
               void handleSubmit(e);
             }}

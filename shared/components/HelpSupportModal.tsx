@@ -10,6 +10,8 @@ type HelpSupportModalProps = {
   open: boolean;
   onClose: () => void;
   description: string;
+  /** Override the support inbox shown for this portal (defaults to SUPPORT_EMAIL). */
+  email?: string;
 };
 
 /**
@@ -19,6 +21,7 @@ const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
   open,
   onClose,
   description,
+  email = SUPPORT_EMAIL,
 }) => {
   const titleId = useId();
   const descId = useId();
@@ -67,12 +70,12 @@ const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
           {description}
         </p>
         <p className="help-support-modal__email-label">Email us at</p>
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="help-support-modal__email">
-          {SUPPORT_EMAIL}
+        <a href={`mailto:${email}`} className="help-support-modal__email">
+          {email}
         </a>
         <div className="help-support-modal__actions">
           <a
-            href={`mailto:${SUPPORT_EMAIL}`}
+            href={`mailto:${email}`}
             className="help-support-modal__contact-btn"
           >
             <i className="ri-mail-send-line" aria-hidden="true" />

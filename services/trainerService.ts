@@ -45,6 +45,8 @@ export interface TrainerAccountDetails {
   accountHolderName?: string;
   panNumber?: string;
   panDocument?: TrainerImage | null;
+  gstNumber?: string;
+  gstDocument?: TrainerImage | null;
 }
 
 /** Aggregate session rating summary (denormalized on trainer). */

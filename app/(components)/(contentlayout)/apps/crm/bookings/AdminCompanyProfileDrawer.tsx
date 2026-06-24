@@ -3,7 +3,7 @@
 import React from "react";
 import type { Company } from "@/services/companyService";
 import CrmRightDrawer from "../components/CrmRightDrawer";
-import { formatCompanyAddress, getCompanyLogoUrl } from "@/shared/utils/companyDisplayUtils";
+import { formatCompanyAddress, getCompanyContactName, getCompanyLogoUrl } from "@/shared/utils/companyDisplayUtils";
 import { displayOrDash } from "@/app/company/dashboard/components/companyTrainerProfileUtils";
 
 export type AdminCompanyProfileDrawerProps = {
@@ -27,6 +27,7 @@ const AdminCompanyProfileDrawer: React.FC<AdminCompanyProfileDrawerProps> = ({
     const logoUrl = getCompanyLogoUrl(company);
     const addressLine = formatCompanyAddress(company);
     const name = company?.companyName?.trim() || "Company";
+    const contactName = getCompanyContactName(company);
 
     return (
         <CrmRightDrawer
@@ -69,9 +70,7 @@ const AdminCompanyProfileDrawer: React.FC<AdminCompanyProfileDrawerProps> = ({
                             </div>
                         )}
                         <h3 className="text-xl font-bold text-defaulttextcolor mb-0">{name}</h3>
-                        {company.companyId && (
-                            <p className="text-xs text-muted mt-1 mb-0">ID: {company.companyId}</p>
-                        )}
+                        <p className="text-xs text-muted mt-1 mb-0">Contact: {contactName}</p>
                         <span
                             className={`badge text-xs mt-2 ${company.status !== false ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}
                         >

@@ -10,7 +10,10 @@ import TrainerService, {
   TrainerImage,
   UpdateTrainerRequest,
 } from "@/services/trainerService";
-import { validateTrainerPanNumber } from "@/app/trainer/dashboard/utils/trainerAccountValidation";
+import {
+  validateTrainerPanNumber,
+  validateTrainerGstNumber,
+} from "@/app/trainer/dashboard/utils/trainerAccountValidation";
 
 const emptyAccountDetails: TrainerAccountDetails = {
   upiId: "",
@@ -20,6 +23,8 @@ const emptyAccountDetails: TrainerAccountDetails = {
   accountHolderName: "",
   panNumber: "",
   panDocument: null,
+  gstNumber: "",
+  gstDocument: null,
 };
 
 /**
@@ -33,8 +38,10 @@ export function validateTrainerAccountDetails(details: TrainerAccountDetails): s
   const accountNumber = (details.accountNumber || "").trim();
   const ifscCode = (details.ifscCode || "").trim();
   const panError = validateTrainerPanNumber(details.panNumber || "");
+  const gstError = validateTrainerGstNumber(details.gstNumber || "");
 
   if (panError) return panError;
+  if (gstError) return gstError;
   if (upiId && !/^.+@.+$/.test(upiId)) {
     return "Please enter a valid UPI ID (e.g. name@bank)";
   }
@@ -57,9 +64,11 @@ export function useTrainerAccountForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPanDocument, setUploadingPanDocument] = useState(false);
+  const [uploadingGstDocument, setUploadingGstDocument] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<TrainerAccountDetails>({ ...emptyAccountDetails });
   const panDocumentInputRef = useRef<HTMLInputElement>(null);
+  const gstDocumentInputRef = useRef<HTMLInputElement>(null);
 
   const patchDetails = useCallback((patch: Partial<TrainerAccountDetails>) => {
     setFormData((prev) => ({ ...prev, ...patch }));
@@ -79,6 +88,8 @@ export function useTrainerAccountForm() {
         accountHolderName: account.accountHolderName || "",
         panNumber: account.panNumber || "",
         panDocument: account.panDocument?.path ? account.panDocument : null,
+        gstNumber: account.gstNumber || "",
+        gstDocument: account.gstDocument?.path ? account.gstDocument : null,
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load account details";
@@ -169,6 +180,78 @@ export function useTrainerAccountForm() {
   }, [patchDetails]);
 
   /**
+   * Uploads a GST certificate image or PDF to storage and stores the URL in form state.
+   *
+   * @param file - Selected GST document file.
+   */
+  const uploadGstDocument = useCallback(async (file: File) => {
+    const isImage = file.type.startsWith("image/");
+    const isPdf = file.type === "application/pdf";
+    if (!isImage && !isPdf) {
+      Swal.fire("Error!", "Please upload a JPG, PNG, or PDF file", "error");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire("Error!", "File must be 5MB or smaller", "error");
+      return;
+    }
+
+    try {
+      setUploadingGstDocument(true);
+      const body = new FormData();
+      body.append("file", file);
+      const token = localStorage.getItem("token");
+      const response = await axios.post(`${Base_url}/upload`, body, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+
+      if (!response.data.success || !response.data.url) {
+        throw new Error("Upload failed: Invalid response");
+      }
+
+      const imageData: TrainerImage = {
+        key: `trainer-gst/${response.data.fileName || file.name}`,
+        path: response.data.url,
+      };
+
+      patchDetails({ gstDocument: imageData });
+      Swal.fire("Success!", "GST document uploaded successfully", "success");
+    } catch (uploadErr: unknown) {
+      const axiosErr = uploadErr as { response?: { data?: { message?: string } }; message?: string };
+      Swal.fire(
+        "Error!",
+        axiosErr.response?.data?.message || axiosErr.message || "Failed to upload GST document",
+        "error"
+      );
+    } finally {
+      setUploadingGstDocument(false);
+    }
+  }, [patchDetails]);
+
+  /**
+   * Handles GST document file input change.
+   *
+   * @param e - File input change event.
+   */
+  const handleGstDocumentChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) void uploadGstDocument(file);
+      if (gstDocumentInputRef.current) gstDocumentInputRef.current.value = "";
+    },
+    [uploadGstDocument]
+  );
+
+  /** Clears the uploaded GST document from form state. */
+  const clearGstDocument = useCallback(() => {
+    patchDetails({ gstDocument: null });
+    if (gstDocumentInputRef.current) gstDocumentInputRef.current.value = "";
+  }, [patchDetails]);
+
+  /**
    * Persists payout account details via PATCH /trainers/me.
    *
    * @param e - Form submit event.
@@ -201,6 +284,13 @@ export function useTrainerAccountForm() {
                 path: formData.panDocument.path,
               }
             : { key: "", path: "" },
+          gstNumber: (formData.gstNumber || "").trim().toUpperCase(),
+          gstDocument: formData.gstDocument?.path
+            ? {
+                key: formData.gstDocument.key || "",
+                path: formData.gstDocument.path,
+              }
+            : { key: "", path: "" },
         },
       };
 
@@ -226,12 +316,16 @@ export function useTrainerAccountForm() {
     loading,
     saving,
     uploadingPanDocument,
+    uploadingGstDocument,
     error,
     formData,
     panDocumentInputRef,
+    gstDocumentInputRef,
     patchDetails,
     handlePanDocumentChange,
     clearPanDocument,
+    handleGstDocumentChange,
+    clearGstDocument,
     handleSubmit,
     fetchAccountDetails,
   };

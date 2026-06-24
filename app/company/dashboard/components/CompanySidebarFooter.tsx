@@ -44,6 +44,7 @@ const CompanySidebarFooter: React.FC = () => {
         open={helpOpen}
         onClose={() => setHelpOpen(false)}
         description="Need assistance with bookings, trainers, or your company account? Reach out to our team and we'll get back to you as soon as possible."
+        email="assist@samsarawellness.in"
       />
 
       <Link

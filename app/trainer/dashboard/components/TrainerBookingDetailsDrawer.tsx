@@ -12,6 +12,7 @@ import {
 } from "@/shared/utils/bookingUtils";
 import {
     getBookingCompany,
+    getBookingCompanyContactName,
     getBookingCompanyName,
     getCompanyLogoUrl,
 } from "@/shared/utils/companyDisplayUtils";
@@ -60,6 +61,7 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
 
     const company = booking ? getBookingCompany(booking) : null;
     const companyName = booking ? getBookingCompanyName(booking) : "Company";
+    const contactName = booking ? getBookingCompanyContactName(booking) : "—";
     const logoUrl = getCompanyLogoUrl(company);
     const bookingId = booking?._id || booking?.id || "";
 
@@ -128,6 +130,9 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                         <h3 className="text-base font-bold text-defaulttextcolor mb-0 truncate">
                                             {companyName}
                                         </h3>
+                                        <p className="text-xs text-muted mt-1 mb-0 truncate">
+                                            Contact: {contactName}
+                                        </p>
                                     </div>
                                 </div>
                             </section>
