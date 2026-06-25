@@ -16,6 +16,8 @@ export default function TrainerMyAccountPage() {
     saving,
     uploadingPanDocument,
     uploadingGstDocument,
+    savingPanDocument,
+    savingGstDocument,
     error,
     formData,
     panDocumentInputRef,
@@ -23,8 +25,10 @@ export default function TrainerMyAccountPage() {
     patchDetails,
     handlePanDocumentChange,
     clearPanDocument,
+    savePanDocument,
     handleGstDocumentChange,
     clearGstDocument,
+    saveGstDocument,
     handleSubmit,
   } = useTrainerAccountForm();
 
@@ -34,12 +38,9 @@ export default function TrainerMyAccountPage() {
       <Pageheader currentpage="My Account" activepage="Trainer" mainpage="My Account" />
 
       <div className="trainer-account-details-page">
-        <header className="trainer-account-details-page__header">
-          <h1 className="trainer-account-details-page__title">My Account</h1>
-          <p className="trainer-account-details-page__subtitle">
-            Add your PAN, GST, UPI, and bank details.
-          </p>
-        </header>
+        <p className="trainer-account-details-page__subtitle mb-4">
+          Add your PAN, GST, UPI, and bank details.
+        </p>
 
         {error && (
           <div className="alert alert-danger mb-4" role="alert">
@@ -58,13 +59,17 @@ export default function TrainerMyAccountPage() {
             saving={saving}
             uploadingPanDocument={uploadingPanDocument}
             uploadingGstDocument={uploadingGstDocument}
+            savingPanDocument={savingPanDocument}
+            savingGstDocument={savingGstDocument}
             panDocumentInputRef={panDocumentInputRef}
             gstDocumentInputRef={gstDocumentInputRef}
             onChange={patchDetails}
             onPanDocumentChange={handlePanDocumentChange}
             onClearPanDocument={clearPanDocument}
+            onSavePanDocument={() => void savePanDocument()}
             onGstDocumentChange={handleGstDocumentChange}
             onClearGstDocument={clearGstDocument}
+            onSaveGstDocument={() => void saveGstDocument()}
             onSubmit={(e) => {
               void handleSubmit(e);
             }}

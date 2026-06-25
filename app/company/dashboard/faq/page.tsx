@@ -34,6 +34,7 @@ type FaqSection = {
 
 const FAQ_SECTIONS: FaqSection[] = [
     {
+        title: "General",
         items: [
             {
                 id: "1",
@@ -534,17 +535,9 @@ const CompanyFaqPage = () => {
         <Fragment>
             <Seo title={"FAQ"} />
             <div>
-                <div className="box mb-4 !border-0 bg-gradient-to-br from-primary to-primary/70 overflow-hidden">
-                    <div className="box-body py-5 px-5 sm:px-7 text-center text-white">
-                        <h4 className="text-lg sm:text-xl font-bold mb-1">
-                            SAMSARA Wellness 365 — Frequently Asked Questions
-                        </h4>
-                        <p className="text-white/80 text-sm mb-0">
-                            India&apos;s Corporate Wellness Marketplace for Hiring Wellness
-                            Professionals On-Demand. 🌿🏢🧘‍♀️🧠✨
-                        </p>
-                    </div>
-                </div>
+                <h4 className="text-lg sm:text-xl font-bold mb-4 text-defaulttextcolor">
+                    SAMSARA Wellness 365 — Frequently Asked Questions
+                </h4>
 
                 {FAQ_SECTIONS.map((section, sectionIdx) => (
                     <div className="box" key={section.title || `section-${sectionIdx}`}>

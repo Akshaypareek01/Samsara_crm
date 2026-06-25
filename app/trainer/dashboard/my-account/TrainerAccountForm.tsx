@@ -11,13 +11,17 @@ interface TrainerAccountFormProps {
   saving: boolean;
   uploadingPanDocument: boolean;
   uploadingGstDocument: boolean;
+  savingPanDocument: boolean;
+  savingGstDocument: boolean;
   panDocumentInputRef: RefObject<HTMLInputElement | null>;
   gstDocumentInputRef: RefObject<HTMLInputElement | null>;
   onChange: (patch: Partial<TrainerAccountDetails>) => void;
   onPanDocumentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearPanDocument: () => void;
+  onSavePanDocument: () => void;
   onGstDocumentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClearGstDocument: () => void;
+  onSaveGstDocument: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -29,13 +33,17 @@ export default function TrainerAccountForm({
   saving,
   uploadingPanDocument,
   uploadingGstDocument,
+  savingPanDocument,
+  savingGstDocument,
   panDocumentInputRef,
   gstDocumentInputRef,
   onChange,
   onPanDocumentChange,
   onClearPanDocument,
+  onSavePanDocument,
   onGstDocumentChange,
   onClearGstDocument,
+  onSaveGstDocument,
   onSubmit,
 }: TrainerAccountFormProps) {
   const panDocumentUrl = formData.panDocument?.path || "";
@@ -47,24 +55,25 @@ export default function TrainerAccountForm({
     <form onSubmit={onSubmit} noValidate aria-label="Trainer account details">
       <section
         className="trainer-account-details-card"
-        aria-labelledby="trainer-account-pan-heading"
+        aria-labelledby="trainer-account-tax-heading"
       >
         <div className="trainer-account-details-card__head">
           <span className="trainer-account-details-card__icon" aria-hidden="true">
             <i className="ri-id-card-line" />
           </span>
           <div>
-            <h2 id="trainer-account-pan-heading" className="trainer-account-details-card__title">
-              PAN details
+            <h2 id="trainer-account-tax-heading" className="trainer-account-details-card__title">
+              PAN &amp; GST details
             </h2>
             <p className="trainer-account-details-card__desc">
-              Required for tax compliance and verification.
+              PAN is required for tax compliance and verification. GST is
+              optional — add if you are GST registered.
             </p>
           </div>
         </div>
 
         <div className="trainer-account-details-form-grid">
-          <div className="trainer-account-details-form-grid__full">
+          <div>
             <label className="trainer-account-details-field__label" htmlFor="trainer-pan-number">
               PAN number
             </label>
@@ -80,39 +89,7 @@ export default function TrainerAccountForm({
             />
           </div>
 
-          <div className="trainer-account-details-form-grid__full">
-            <TrainerPanDocumentUpload
-              documentUrl={panDocumentUrl}
-              isPdf={panDocumentIsPdf}
-              panDocumentInputRef={panDocumentInputRef}
-              uploading={uploadingPanDocument}
-              onChange={onPanDocumentChange}
-              onClear={onClearPanDocument}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section
-        className="trainer-account-details-card"
-        aria-labelledby="trainer-account-gst-heading"
-      >
-        <div className="trainer-account-details-card__head">
-          <span className="trainer-account-details-card__icon" aria-hidden="true">
-            <i className="ri-bill-line" />
-          </span>
           <div>
-            <h2 id="trainer-account-gst-heading" className="trainer-account-details-card__title">
-              GST details
-            </h2>
-            <p className="trainer-account-details-card__desc">
-              Optional — add if you are GST registered.
-            </p>
-          </div>
-        </div>
-
-        <div className="trainer-account-details-form-grid">
-          <div className="trainer-account-details-form-grid__full">
             <label className="trainer-account-details-field__label" htmlFor="trainer-gst-number">
               GST number
             </label>
@@ -128,14 +105,29 @@ export default function TrainerAccountForm({
             />
           </div>
 
-          <div className="trainer-account-details-form-grid__full">
+          <div>
+            <TrainerPanDocumentUpload
+              documentUrl={panDocumentUrl}
+              isPdf={panDocumentIsPdf}
+              panDocumentInputRef={panDocumentInputRef}
+              uploading={uploadingPanDocument}
+              saving={savingPanDocument}
+              onChange={onPanDocumentChange}
+              onClear={onClearPanDocument}
+              onSave={onSavePanDocument}
+            />
+          </div>
+
+          <div>
             <TrainerGstDocumentUpload
               documentUrl={gstDocumentUrl}
               isPdf={gstDocumentIsPdf}
               gstDocumentInputRef={gstDocumentInputRef}
               uploading={uploadingGstDocument}
+              saving={savingGstDocument}
               onChange={onGstDocumentChange}
               onClear={onClearGstDocument}
+              onSave={onSaveGstDocument}
             />
           </div>
         </div>

@@ -3,9 +3,9 @@
 import React, { useMemo, useState } from "react";
 import type {
     MyBookingsSummary,
-    MyBookingsSummaryClassRow,
     MyBookingsSummaryTrainerAvail,
 } from "@/services/bookingService";
+import CompanyLatestBookings from "./CompanyLatestBookings";
 
 import {
     buildCalendarMeta,
@@ -60,12 +60,6 @@ const QUICK_ACTIONS = [
     },
 ];
 
-const STATUS_STYLE: Record<string, string> = {
-    Active: "bg-success/15 text-success",
-    "Nearly Full": "bg-warning/15 text-warning",
-    Full: "bg-danger/15 text-danger",
-};
-
 const AVAIL_STYLE: Record<string, string> = {
     Available: "bg-success/15 text-success",
     Unavailable: "bg-danger/15 text-danger",
@@ -102,7 +96,6 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
     onRefreshList,
     onOpenTableView,
 }) => {
-    const [classSearch, setClassSearch] = useState("");
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const {
         trainerDrawerOpen,
@@ -116,16 +109,6 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
         const { year, monthIndex } = parseYearMonth(monthKey);
         return buildCalendarMeta(year, monthIndex);
     }, [monthKey]);
-
-    const filteredClasses = useMemo(() => {
-        const rows: MyBookingsSummaryClassRow[] = summary?.classSchedule || [];
-        return rows.filter(
-            (c) =>
-                classSearch === "" ||
-                c.classType.toLowerCase().includes(classSearch.toLowerCase()) ||
-                c.trainerName.toLowerCase().includes(classSearch.toLowerCase())
-        );
-    }, [summary, classSearch]);
 
     const calendarDots = summary?.calendarDots || {};
     const calendarDays = summary?.calendarDays ?? {};
@@ -472,110 +455,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                 </div>
             </div>
 
-            <div className="box mb-6">
-                <div className="box-header flex items-center justify-between flex-wrap gap-3">
-                    <h6 className="box-title font-bold !mb-0">Class Schedule Management</h6>
-                    <div className="flex items-center gap-2">
-                        <div className="relative" style={{ minWidth: "200px" }}>
-                            <i
-                                className="bx bx-search absolute top-1/2 -translate-y-1/2 text-muted text-sm"
-                                style={{ left: "10px" }}
-                            ></i>
-                            <input
-                                type="search"
-                                placeholder="Search classes..."
-                                value={classSearch}
-                                onChange={(e) => setClassSearch(e.target.value)}
-                                className="ti-form-control !text-[0.875rem]"
-                                style={{ paddingLeft: "32px" }}
-                                aria-label="Search schedule"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <div className="box-body p-0">
-                    <div className="table-responsive w-full">
-                        <table className="table w-full text-sm whitespace-nowrap mb-0">
-                            <thead>
-                                <tr className="border-b border-defaultborder bg-light/40">
-                                    {[
-                                        "Date & Time",
-                                        "Class Type",
-                                        "Trainer",
-                                        "Capacity",
-                                        "Booked",
-                                        "Waiting List",
-                                        "Status",
-                                    ].map((h) => (
-                                        <th key={h} className="font-semibold text-muted text-xs py-3 px-4">
-                                            {h}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredClasses.map((row, i) => (
-                                    <tr key={i} className="border-b border-defaultborder/50 hover:bg-light/50">
-                                        <td className="py-3 px-4">
-                                            <p className="font-semibold text-sm text-defaulttextcolor mb-0">
-                                                {row.dateLabel}
-                                            </p>
-                                            <p className="text-xs text-muted mb-0">{row.dateSubLabel}</p>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center gap-2">
-                                                <span
-                                                    className="w-2 h-2 rounded-full flex-shrink-0"
-                                                    style={{ backgroundColor: row.dotColor }}
-                                                />
-                                                <span className="text-sm text-defaulttextcolor">{row.classType}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                                    style={{ backgroundColor: row.trainerBg, color: "#374151" }}
-                                                >
-                                                    {row.trainerInitials}
-                                                </div>
-                                                {row.trainerId ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => void openTrainerProfile(row.trainerId!)}
-                                                        className="text-sm text-primary hover:underline p-0 bg-transparent border-0 text-left"
-                                                    >
-                                                        {row.trainerName}
-                                                    </button>
-                                                ) : (
-                                                    <span className="text-sm text-defaulttextcolor">{row.trainerName}</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-sm text-defaulttextcolor">{row.capacity}</td>
-                                        <td className="py-3 px-4 text-sm text-defaulttextcolor">{row.booked}</td>
-                                        <td className="py-3 px-4 text-sm text-defaulttextcolor">{row.waitingList}</td>
-                                        <td className="py-3 px-4">
-                                            <span
-                                                className={`px-2.5 py-0.5 rounded text-xs font-semibold ${STATUS_STYLE[row.status] || STATUS_STYLE.Active}`}
-                                            >
-                                                {row.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredClasses.length === 0 && (
-                                    <tr>
-                                        <td colSpan={7} className="text-center py-8 text-muted text-sm">
-                                            No sessions in this month.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <CompanyLatestBookings onViewAll={openTableView} onBookingChanged={onRefreshList} />
 
             <div className="grid grid-cols-12 gap-4 mb-6">
                 <div className="xl:col-span-5 col-span-12 box mb-0">

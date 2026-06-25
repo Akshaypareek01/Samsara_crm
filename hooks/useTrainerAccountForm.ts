@@ -65,14 +65,57 @@ export function useTrainerAccountForm() {
   const [saving, setSaving] = useState(false);
   const [uploadingPanDocument, setUploadingPanDocument] = useState(false);
   const [uploadingGstDocument, setUploadingGstDocument] = useState(false);
+  const [savingPanDocument, setSavingPanDocument] = useState(false);
+  const [savingGstDocument, setSavingGstDocument] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<TrainerAccountDetails>({ ...emptyAccountDetails });
   const panDocumentInputRef = useRef<HTMLInputElement>(null);
   const gstDocumentInputRef = useRef<HTMLInputElement>(null);
+  const formDataRef = useRef(formData);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   const patchDetails = useCallback((patch: Partial<TrainerAccountDetails>) => {
     setFormData((prev) => ({ ...prev, ...patch }));
   }, []);
+
+  /**
+   * Persists the given account details to the backend (PATCH /trainers/me),
+   * without the local-only validation `handleSubmit` applies. Used by the
+   * per-document "Save" buttons so a PAN/GST upload can be attached to the
+   * account without requiring the full form to be valid/submitted.
+   *
+   * @param overrides - Fields to merge on top of the latest known form state.
+   */
+  const persistAccountDetails = useCallback(
+    async (overrides: Partial<TrainerAccountDetails>) => {
+      const next: TrainerAccountDetails = { ...formDataRef.current, ...overrides };
+      const payload: UpdateTrainerRequest = {
+        accountDetails: {
+          upiId: (next.upiId || "").trim(),
+          bankName: (next.bankName || "").trim(),
+          accountNumber: (next.accountNumber || "").trim(),
+          ifscCode: (next.ifscCode || "").trim().toUpperCase(),
+          accountHolderName: (next.accountHolderName || "").trim(),
+          panNumber: (next.panNumber || "").trim().toUpperCase(),
+          panDocument: next.panDocument?.path
+            ? { key: next.panDocument.key || "", path: next.panDocument.path }
+            : { key: "", path: "" },
+          gstNumber: (next.gstNumber || "").trim().toUpperCase(),
+          gstDocument: next.gstDocument?.path
+            ? { key: next.gstDocument.key || "", path: next.gstDocument.path }
+            : { key: "", path: "" },
+        },
+      };
+      await TrainerService.updateMyProfile(payload);
+      await fetchAccountDetails();
+    },
+    // fetchAccountDetails is stable (only depends on router); declared above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   const fetchAccountDetails = useCallback(async () => {
     try {
@@ -146,7 +189,7 @@ export function useTrainerAccountForm() {
       };
 
       patchDetails({ panDocument: imageData });
-      Swal.fire("Success!", "PAN document uploaded successfully", "success");
+      Swal.fire("Uploaded!", "Now click Save to attach it to your account", "success");
     } catch (uploadErr: unknown) {
       const axiosErr = uploadErr as { response?: { data?: { message?: string } }; message?: string };
       Swal.fire(
@@ -158,6 +201,24 @@ export function useTrainerAccountForm() {
       setUploadingPanDocument(false);
     }
   }, [patchDetails]);
+
+  /** Persists the currently selected PAN document to the backend. */
+  const savePanDocument = useCallback(async () => {
+    try {
+      setSavingPanDocument(true);
+      await persistAccountDetails({ panDocument: formDataRef.current.panDocument });
+      Swal.fire("Saved!", "PAN document saved to your account", "success");
+    } catch (saveErr: unknown) {
+      const axiosErr = saveErr as { response?: { data?: { message?: string } }; message?: string };
+      Swal.fire(
+        "Error!",
+        axiosErr.response?.data?.message || axiosErr.message || "Failed to save PAN document",
+        "error"
+      );
+    } finally {
+      setSavingPanDocument(false);
+    }
+  }, [persistAccountDetails]);
 
   /**
    * Handles PAN document file input change.
@@ -173,7 +234,7 @@ export function useTrainerAccountForm() {
     [uploadPanDocument]
   );
 
-  /** Clears the uploaded PAN document from form state. */
+  /** Clears the uploaded PAN document from form state. Click Save to persist the removal. */
   const clearPanDocument = useCallback(() => {
     patchDetails({ panDocument: null });
     if (panDocumentInputRef.current) panDocumentInputRef.current.value = "";
@@ -218,7 +279,7 @@ export function useTrainerAccountForm() {
       };
 
       patchDetails({ gstDocument: imageData });
-      Swal.fire("Success!", "GST document uploaded successfully", "success");
+      Swal.fire("Uploaded!", "Now click Save to attach it to your account", "success");
     } catch (uploadErr: unknown) {
       const axiosErr = uploadErr as { response?: { data?: { message?: string } }; message?: string };
       Swal.fire(
@@ -230,6 +291,24 @@ export function useTrainerAccountForm() {
       setUploadingGstDocument(false);
     }
   }, [patchDetails]);
+
+  /** Persists the currently selected GST document to the backend. */
+  const saveGstDocument = useCallback(async () => {
+    try {
+      setSavingGstDocument(true);
+      await persistAccountDetails({ gstDocument: formDataRef.current.gstDocument });
+      Swal.fire("Saved!", "GST document saved to your account", "success");
+    } catch (saveErr: unknown) {
+      const axiosErr = saveErr as { response?: { data?: { message?: string } }; message?: string };
+      Swal.fire(
+        "Error!",
+        axiosErr.response?.data?.message || axiosErr.message || "Failed to save GST document",
+        "error"
+      );
+    } finally {
+      setSavingGstDocument(false);
+    }
+  }, [persistAccountDetails]);
 
   /**
    * Handles GST document file input change.
@@ -245,7 +324,7 @@ export function useTrainerAccountForm() {
     [uploadGstDocument]
   );
 
-  /** Clears the uploaded GST document from form state. */
+  /** Clears the uploaded GST document from form state. Click Save to persist the removal. */
   const clearGstDocument = useCallback(() => {
     patchDetails({ gstDocument: null });
     if (gstDocumentInputRef.current) gstDocumentInputRef.current.value = "";
@@ -317,6 +396,8 @@ export function useTrainerAccountForm() {
     saving,
     uploadingPanDocument,
     uploadingGstDocument,
+    savingPanDocument,
+    savingGstDocument,
     error,
     formData,
     panDocumentInputRef,
@@ -324,8 +405,10 @@ export function useTrainerAccountForm() {
     patchDetails,
     handlePanDocumentChange,
     clearPanDocument,
+    savePanDocument,
     handleGstDocumentChange,
     clearGstDocument,
+    saveGstDocument,
     handleSubmit,
     fetchAccountDetails,
   };

@@ -3,6 +3,11 @@
 import React, { useEffect, useState } from "react";
 import type { Trainer } from "@/services/trainerService";
 import { isTrainerAcceptingBookings } from "@/services/trainerService";
+import TrainerRatingService, {
+  getTrainerRatingSummary,
+  hasTrainerReviews,
+  type TrainerRating,
+} from "@/services/trainerRatingService";
 import {
   displayOrDash,
   trainerSpecialistList,
@@ -14,15 +19,17 @@ import TrainerRatingBadge from "@/shared/components/trainer/TrainerRatingBadge";
 import TrainerCategoryBadges from "@/shared/components/trainer/TrainerCategoryBadges";
 import { trainerCategoryLabels } from "@/shared/utils/trainerCategoryUtils";
 import { formatTrainerCities, normalizeTrainerCities } from "@/shared/utils/trainerCityUtils";
+import { formatBookingDate } from "@/shared/utils/bookingUtils";
 import "./company-trainer-profile-drawer.css";
 
-type ProfileTab = "overview" | "education" | "certifications" | "gallery";
+type ProfileTab = "overview" | "education" | "certifications" | "gallery" | "ratings";
 
 const TABS: { id: ProfileTab; label: string; icon: string }[] = [
   { id: "overview", label: "Overview", icon: "ri-user-line" },
   { id: "education", label: "Education", icon: "ri-graduation-cap-line" },
   { id: "certifications", label: "Certifications", icon: "ri-award-line" },
   { id: "gallery", label: "Gallery", icon: "ri-gallery-line" },
+  { id: "ratings", label: "Ratings", icon: "ri-star-line" },
 ];
 
 type CompanyTrainerProfilePanelProps = {
@@ -77,9 +84,14 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
   variant = "drawer",
 }) => {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
+  const [reviews, setReviews] = useState<TrainerRating[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
 
   useEffect(() => {
     setActiveTab("overview");
+    setReviews([]);
+    setReviewsLoaded(false);
   }, [trainer?._id, trainer?.id]);
 
   const canBook = trainer ? isTrainerAcceptingBookings(trainer) : false;
@@ -87,6 +99,39 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
   const specialists = trainer ? trainerSpecialistList(trainer.specialistIn) : [];
   const trainings = trainer ? trainerTrainingList(trainer.typeOfTraining) : [];
   const galleryImages = trainer?.images?.filter((img) => img.path) ?? [];
+  const ratingSummary = trainer ? getTrainerRatingSummary(trainer) : { averageRating: 0, totalReviews: 0 };
+  const trainerId = trainer?._id || trainer?.id;
+
+  useEffect(() => {
+    if (activeTab !== "ratings" || reviewsLoaded || !trainerId) return;
+    if (!hasTrainerReviews(ratingSummary)) {
+      setReviewsLoaded(true);
+      return;
+    }
+
+    let cancelled = false;
+    const loadReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const data = await TrainerRatingService.getTrainerReviews(trainerId, { limit: 20 });
+        if (!cancelled) setReviews(data.results || []);
+      } catch (err) {
+        console.error("Failed to load trainer reviews:", err);
+        if (!cancelled) setReviews([]);
+      } finally {
+        if (!cancelled) {
+          setReviewsLoading(false);
+          setReviewsLoaded(true);
+        }
+      }
+    };
+
+    void loadReviews();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, trainerId, reviewsLoaded]);
 
   if (loading) {
     return (
@@ -253,6 +298,83 @@ const CompanyTrainerProfilePanel: React.FC<CompanyTrainerProfilePanelProps> = ({
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "ratings" && (
+          <div
+            id="trainer-tab-ratings"
+            role="tabpanel"
+            aria-labelledby="trainer-tab-btn-ratings"
+            className="space-y-4"
+          >
+            <section className="rounded-lg border border-gray-100 p-3 bg-gray-50/50 flex items-center justify-between gap-3">
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-0">
+                Overall rating
+              </h4>
+              {hasTrainerReviews(ratingSummary) ? (
+                <TrainerRatingBadge summary={ratingSummary} size="md" />
+              ) : (
+                <span className="text-sm text-gray-400">No ratings yet</span>
+              )}
+            </section>
+
+            {reviewsLoading ? (
+              <p className="text-sm text-gray-500 mb-0" role="status">
+                Loading reviews…
+              </p>
+            ) : !hasTrainerReviews(ratingSummary) || reviews.length === 0 ? (
+              <p className="company-trainer-profile__empty mb-0">No reviews to display yet.</p>
+            ) : (
+              <ul className="list-none m-0 p-0 flex flex-col gap-3">
+                {reviews.map((review) => {
+                  const key = review._id || review.id || String(review.createdAt);
+                  const booking =
+                    review.booking && typeof review.booking === "object"
+                      ? (review.booking as { bookingDate?: string })
+                      : null;
+                  const company =
+                    review.company && typeof review.company === "object"
+                      ? (review.company as { companyName?: string })
+                      : null;
+                  return (
+                    <li key={key} className="rounded-lg border border-gray-100 p-3 bg-gray-50/50">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-sm font-semibold text-gray-900">
+                          {company?.companyName || "Company"}
+                        </span>
+                        <span
+                          className="inline-flex items-center gap-0.5 text-sm text-amber-500"
+                          aria-label={`${review.rating} out of 5 stars`}
+                        >
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <i
+                              key={i}
+                              className={
+                                i < review.rating ? "ri-star-fill" : "ri-star-line text-gray-300"
+                              }
+                              aria-hidden="true"
+                            />
+                          ))}
+                        </span>
+                      </div>
+                      {booking?.bookingDate && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          Session on {formatBookingDate(booking.bookingDate)}
+                        </p>
+                      )}
+                      {review.feedback ? (
+                        <p className="text-sm text-gray-700 mb-0 leading-relaxed">
+                          {review.feedback}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-400 mb-0 italic">No written feedback.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
         )}

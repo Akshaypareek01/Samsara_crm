@@ -1,14 +1,17 @@
 "use client";
 
 import React, { RefObject } from "react";
+import { useAuthenticatedImage } from "@/hooks/useAuthenticatedImage";
 
 type TrainerPanDocumentUploadProps = {
   documentUrl: string;
   isPdf: boolean;
   panDocumentInputRef: RefObject<HTMLInputElement | null>;
   uploading: boolean;
+  saving: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
+  onSave: () => void;
 };
 
 /**
@@ -21,9 +24,15 @@ export default function TrainerPanDocumentUpload({
   isPdf,
   panDocumentInputRef,
   uploading,
+  saving,
   onChange,
   onClear,
+  onSave,
 }: TrainerPanDocumentUploadProps) {
+  const { src: previewSrc, failed: previewFailed, handleError } = useAuthenticatedImage(
+    !isPdf ? documentUrl : null
+  );
+
   return (
     <>
       <input
@@ -42,15 +51,19 @@ export default function TrainerPanDocumentUpload({
           disabled={uploading}
           aria-label="Upload PAN card document"
         >
-          {documentUrl && !isPdf ? (
+          {documentUrl && !isPdf && !previewFailed ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={documentUrl} alt="PAN document preview" />
+            <img src={previewSrc} alt="PAN document preview" onError={handleError} />
           ) : documentUrl && isPdf ? (
             <span className="trainer-account-pan-upload__pdf" aria-hidden="true">
               <i className="ri-file-pdf-line" />
             </span>
           ) : uploading ? (
             <span className="spinner-border spinner-border-sm text-primary" role="status" />
+          ) : documentUrl && previewFailed ? (
+            <span className="trainer-account-pan-upload__pdf" aria-hidden="true">
+              <i className="ri-image-line" />
+            </span>
           ) : (
             <span className="trainer-account-pan-upload__placeholder" aria-hidden="true">
               <i className="ri-id-card-line" />
@@ -64,16 +77,24 @@ export default function TrainerPanDocumentUpload({
           </p>
           {documentUrl && (
             <div className="trainer-account-pan-upload__actions">
-              {isPdf && (
+              {(isPdf || previewFailed) && (
                 <a
                   href={documentUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="trainer-account-pan-upload__link"
                 >
-                  View PDF
+                  {isPdf ? "View PDF" : "Open document"}
                 </a>
               )}
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={saving || uploading}
+                className="trainer-account-pan-upload__save"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
               <button
                 type="button"
                 onClick={onClear}

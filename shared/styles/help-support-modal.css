@@ -27,8 +27,8 @@
   height: 3rem;
   margin-bottom: 0.85rem;
   border-radius: 999px;
-  background: rgba(59, 130, 246, 0.12);
-  color: #2563eb;
+  background: var(--portal-primary-tint, #fff4ef);
+  color: var(--portal-primary, #ed662e);
   font-size: 1.35rem;
 }
 
@@ -60,7 +60,7 @@
   margin-bottom: 1.25rem;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #2563eb;
+  color: var(--portal-primary, #ed662e);
   text-decoration: none;
 }
 
@@ -82,7 +82,7 @@
   width: 100%;
   padding: 0.7rem 1rem;
   border-radius: 0.65rem;
-  background: #2563eb;
+  background: var(--portal-primary, #ed662e);
   color: #fff;
   font-size: 0.875rem;
   font-weight: 600;
@@ -91,7 +91,7 @@
 }
 
 .help-support-modal__contact-btn:hover {
-  background: #1d4ed8;
+  background: var(--portal-primary-deep, #c95520);
   color: #fff;
 }
 
@@ -110,6 +110,7 @@
 }
 
 .help-support-modal__close-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--portal-primary-tint, #fff4ef);
+  border-color: var(--portal-primary-tint-border, #ffe0d0);
+  color: var(--portal-primary-deep, #c95520);
 }

@@ -241,13 +241,27 @@
 }
 
 .trainer-account-pan-upload__link,
-.trainer-account-pan-upload__remove {
+.trainer-account-pan-upload__remove,
+.trainer-account-pan-upload__save {
   font-size: 0.75rem;
   font-weight: 600;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+}
+
+.trainer-account-pan-upload__save {
+  color: var(--portal-primary);
+}
+
+.trainer-account-pan-upload__save:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.trainer-account-pan-upload__save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .trainer-account-pan-upload__link {

@@ -623,15 +623,11 @@ const CompanySidebar = ({ local_varaiable, ThemeChanger }: any) => {
                         <Link href="/company/dashboard" className="header-logo company-sidebar-brand">
                             <span className="company-sidebar-brand-mark">
                                 <img
-                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`}
+                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/VerticalLogo.png`}
                                     alt="Samsara Wellness logo"
-                                    width={72}
-                                    height={72}
+                                    width={160}
+                                    height={160}
                                 />
-                            </span>
-                            <span className="company-sidebar-brand-text">
-                                <span className="company-sidebar-brand-title">Samsara Wellness</span>
-                                <span className="company-sidebar-brand-sub">HR 365</span>
                             </span>
                         </Link>
                         <button
