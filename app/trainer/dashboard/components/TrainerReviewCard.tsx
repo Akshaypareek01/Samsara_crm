@@ -2,12 +2,16 @@
 
 import React from "react";
 import type { TrainerRating } from "@/services/trainerRatingService";
-import type { Company } from "@/services/companyService";
-import { getCompanyLogoUrl } from "@/shared/utils/companyDisplayUtils";
 import { formatBookingDate } from "@/shared/utils/bookingUtils";
 
 type TrainerReviewCardProps = {
   review: TrainerRating;
+};
+
+type ReviewCompanyRef = {
+  companyName?: string;
+  name?: string;
+  companyLogo?: string;
 };
 
 /**
@@ -22,15 +26,17 @@ function getReviewCompanyMeta(review: TrainerRating): {
 } {
   const company =
     review.company && typeof review.company === "object"
-      ? (review.company as Company)
+      ? (review.company as ReviewCompanyRef)
       : null;
 
   const companyName =
     company?.companyName?.trim() || company?.name?.trim() || "Company";
 
+  const logoUrl = company?.companyLogo?.trim() || null;
+
   return {
     companyName,
-    logoUrl: getCompanyLogoUrl(company),
+    logoUrl,
   };
 }
 
