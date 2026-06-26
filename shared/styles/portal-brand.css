@@ -19,3 +19,21 @@
   --primary: 237 102 46;
   --primary-rgb: 237, 102, 46;
 }
+
+html:has(.company-dashboard-shell),
+html:has(.trainer-dashboard-shell) {
+  --scroll-to-top-bg: #ed662e;
+  --scroll-to-top-bg-hover: #c95520;
+  --scroll-to-top-shadow: rgba(237, 102, 46, 0.25);
+}
+
+html:has(.company-dashboard-shell) .scrollToTop,
+html:has(.trainer-dashboard-shell) .scrollToTop {
+  background-color: var(--scroll-to-top-bg) !important;
+  box-shadow: 0 4px 14px var(--scroll-to-top-shadow) !important;
+}
+
+html:has(.company-dashboard-shell) .scrollToTop:hover,
+html:has(.trainer-dashboard-shell) .scrollToTop:hover {
+  background-color: var(--scroll-to-top-bg-hover) !important;
+}

@@ -25,11 +25,11 @@
   position: relative !important;
   width: 100% !important;
   height: auto !important;
-  min-height: 7.5rem;
+  min-height: 6.5rem;
   background: var(--company-sidebar-bg) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-inline-end: none !important;
-  padding: 1.25rem 1.25rem 1.25rem !important;
+  padding: 1rem 0.65rem !important;
   justify-content: flex-start !important;
   flex-shrink: 0;
   z-index: 1 !important;
@@ -42,34 +42,27 @@
   gap: 0.75rem;
   text-decoration: none;
   color: #fff;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 9.5rem;
-  height: 9.5rem;
+  display: block;
+  width: 100%;
   overflow: hidden;
-  border-radius: 0.75rem;
-  background: #ffffff;
-  padding: 0.35rem;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand img {
-  height: 100% !important;
+  display: block;
   width: 100% !important;
-  max-height: 100% !important;
-  max-width: 100% !important;
-  object-fit: contain !important;
+  height: auto !important;
+  min-height: 4.75rem;
+  max-height: none !important;
+  object-fit: contain;
   object-position: center;
-  background: transparent !important;
-  padding: 0 !important;
-  border-radius: 0;
-  flex-shrink: 0;
-  transform: none;
+  border-radius: 10px;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand-text {
@@ -93,11 +86,6 @@
   color: var(--company-sidebar-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-}
-
-.company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-brand {
-  flex: 1;
-  min-width: 0;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-close {
@@ -305,11 +293,15 @@
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
   flex: 1;
   min-width: 0;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-name {
+  display: block;
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.25;
@@ -319,9 +311,13 @@
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-role {
+  display: block;
   font-size: 0.7rem;
   color: var(--company-sidebar-text-muted);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .company-dashboard-shell .company-wellconnect-sidebar .company-sidebar-user-chevron {

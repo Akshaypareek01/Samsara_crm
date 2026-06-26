@@ -136,8 +136,8 @@ const TrainerLogin = () => {
                         <div className="trainer-auth-panel-inner trainer-auth-panel-inner--centered">
                         <div className="mb-6">
                             <img
-                                src="/assets/images/logo.png"
-                                alt="Samsara"
+                                src="/assets/images/VerticalLogo.png"
+                                alt="Samsara Wellness 365"
                                 className="auth-logo"
                             />
                             <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Trainer Login</h2>

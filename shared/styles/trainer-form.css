@@ -433,20 +433,25 @@
   max-width: none;
 }
 
-/** Auth portal logo — larger than legacy panel logo sizing. */
+/** Auth portal logo — larger vertical brand mark on login/register panels. */
+.trainer-auth-shell .auth-logo,
 .auth-logo {
   display: block;
   width: auto;
-  height: 8rem !important;
-  max-width: 320px;
+  height: 12rem !important;
+  max-width: 400px;
   object-fit: contain;
+  object-position: center;
   margin-bottom: 1rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @media (max-width: 640px) {
+  .trainer-auth-shell .auth-logo,
   .auth-logo {
-    height: 6.5rem !important;
-    max-width: 260px;
+    height: 9rem !important;
+    max-width: 320px;
   }
 }
 
@@ -475,9 +480,10 @@
     height: 3.5rem !important;
   }
 
+  .trainer-auth-shell .auth-logo,
   .auth-logo {
-    height: 6rem !important;
-    max-width: 280px;
+    height: 8.5rem !important;
+    max-width: 340px;
   }
 
   .trainer-auth-aside-title {
@@ -511,9 +517,10 @@
     height: 3rem !important;
   }
 
+  .trainer-auth-shell .auth-logo,
   .auth-logo {
-    height: 5rem !important;
-    max-width: 240px;
+    height: 7.5rem !important;
+    max-width: 300px;
   }
 
   .trainer-auth-aside-title {

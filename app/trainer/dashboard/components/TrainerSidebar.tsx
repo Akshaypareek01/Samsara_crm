@@ -535,10 +535,8 @@ const TrainerSidebar = ({ local_varaiable, ThemeChanger }: any) => {
                         <Link href="/trainer/dashboard" className="header-logo trainer-sidebar-brand">
                             <span className="trainer-sidebar-brand-mark">
                                 <img
-                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/VerticalLogo.png`}
-                                    alt="Samsara Wellness logo"
-                                    width={160}
-                                    height={160}
+                                    src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/HorizontalLogo.png`}
+                                    alt="Samsara Wellness 365"
                                 />
                             </span>
                         </Link>

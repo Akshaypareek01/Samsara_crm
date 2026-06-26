@@ -16,3 +16,51 @@
 .admin-crm-shell .main-profile-cover::before {
   background-color: rgba(237, 102, 46, 0.85) !important;
 }
+
+.admin-crm-sidebar .main-sidebar-header {
+  height: auto !important;
+  min-height: 6.5rem;
+  padding: 1rem 0.65rem !important;
+}
+
+.admin-crm-sidebar .admin-sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-decoration: none;
+}
+
+.admin-crm-sidebar .admin-sidebar-brand-mark {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.admin-crm-sidebar .admin-sidebar-brand-logo,
+.admin-crm-sidebar .admin-sidebar-brand img {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 4.75rem;
+  max-height: none !important;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 10px;
+}
+
+html:has(.admin-crm-shell) {
+  --scroll-to-top-bg: #ed662e;
+  --scroll-to-top-bg-hover: #c95520;
+  --scroll-to-top-shadow: rgba(237, 102, 46, 0.25);
+}
+
+html:has(.admin-crm-shell) .scrollToTop {
+  background-color: var(--scroll-to-top-bg) !important;
+  box-shadow: 0 4px 14px var(--scroll-to-top-shadow) !important;
+}
+
+html:has(.admin-crm-shell) .scrollToTop:hover {
+  background-color: var(--scroll-to-top-bg-hover) !important;
+}

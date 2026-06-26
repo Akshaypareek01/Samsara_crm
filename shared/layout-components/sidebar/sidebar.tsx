@@ -697,16 +697,17 @@ const Sidebar = ({ local_varaiable, ThemeChanger }: any) => {
 
 			<div id="responsive-overlay"
 				onClick={() => { menuClose(); }}></div>
-			<aside className="app-sidebar" id="sidebar" onMouseOver={() => Onhover()}
+			<aside className="app-sidebar admin-crm-sidebar" id="sidebar" onMouseOver={() => Onhover()}
 				onMouseLeave={() => Outhover()}>
 				<div className="main-sidebar-header">
-					<Link href="/dashboards/analytics/" className="header-logo">
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo desktop-logo" style={{ height: '80px', width: 'auto' }} />
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo toggle-logo" style={{ height: '80px', width: 'auto' }} />
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo desktop-dark" style={{ height: '80px', width: 'auto' }} />
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo toggle-dark" style={{ height: '80px', width: 'auto' }} />
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo desktop-white" style={{ height: '80px', width: 'auto' }} />
-						<img src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/logosm.png`} alt="logo" className="main-logo toggle-white" style={{ height: '80px', width: 'auto' }} />
+					<Link href="/dashboards/analytics/" className="header-logo admin-sidebar-brand">
+						<span className="admin-sidebar-brand-mark">
+							<img
+								src={`${process.env.NODE_ENV === "production" ? basePath : ""}/assets/images/HorizontalLogo.png`}
+								alt="Samsara Wellness 365"
+								className="admin-sidebar-brand-logo"
+							/>
+						</span>
 					</Link>
 				</div>
 

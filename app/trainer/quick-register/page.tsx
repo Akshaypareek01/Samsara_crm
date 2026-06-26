@@ -236,7 +236,7 @@ const TrainerQuickRegister = () => {
           <div className="trainer-auth-panel trainer-register-scroll lg:col-span-7 min-h-0 p-6 sm:p-8 lg:p-10 pb-8">
             <div className="trainer-auth-panel-inner trainer-auth-panel-inner--centered">
               <div className="mb-6">
-                <img src="/assets/images/logo.png" alt="Samsara" className="auth-logo" />
+                <img src="/assets/images/VerticalLogo.png" alt="Samsara Wellness 365" className="auth-logo" />
                 <h2 className="text-xl sm:text-2xl font-bold text-defaulttextcolor">Trainer Interest Form</h2>
                 <p className="text-[#8c9097] dark:text-white/50 text-sm mt-1">
                   Just a few quick details — takes under a minute.
