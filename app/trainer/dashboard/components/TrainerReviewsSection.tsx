@@ -8,14 +8,14 @@ import TrainerRatingService, {
 } from "@/services/trainerRatingService";
 import type { Trainer } from "@/services/trainerService";
 import TrainerRatingBadge from "@/shared/components/trainer/TrainerRatingBadge";
-import { formatBookingDate } from "@/shared/utils/bookingUtils";
+import TrainerReviewCard from "./TrainerReviewCard";
 
 type TrainerReviewsSectionProps = {
   trainer: Trainer | null;
 };
 
 /**
- * Recent session ratings received by the trainer (read-only).
+ * Recent session ratings received by the trainer (read-only), shown as a horizontal row of cards.
  */
 export default function TrainerReviewsSection({ trainer }: TrainerReviewsSectionProps) {
   const [reviews, setReviews] = useState<TrainerRating[]>([]);
@@ -64,57 +64,20 @@ export default function TrainerReviewsSection({ trainer }: TrainerReviewsSection
         ) : reviews.length === 0 ? (
           <p className="text-sm text-muted mb-0">No reviews to display yet.</p>
         ) : (
-          <ul className="list-none m-0 p-0 flex flex-col gap-3">
+          <div
+            className="trainer-review-cards-row"
+            role="list"
+            aria-label="Recent session ratings"
+          >
             {reviews.map((review) => {
               const key = review._id || review.id || String(review.createdAt);
-              const booking =
-                review.booking && typeof review.booking === "object"
-                  ? (review.booking as { bookingDate?: string })
-                  : null;
-              const company =
-                review.company && typeof review.company === "object"
-                  ? (review.company as { companyName?: string })
-                  : null;
               return (
-                <li
-                  key={key}
-                  className="rounded-lg border border-defaultborder p-4 bg-light/20"
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-sm font-semibold text-defaulttextcolor">
-                      {company?.companyName || "Company"}
-                    </span>
-                    <span
-                      className="inline-flex items-center gap-0.5 text-sm text-amber-600"
-                      aria-label={`${review.rating} out of 5 stars`}
-                    >
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <i
-                          key={i}
-                          className={
-                            i < review.rating ? "ri-star-fill" : "ri-star-line text-gray-300"
-                          }
-                          aria-hidden="true"
-                        />
-                      ))}
-                    </span>
-                  </div>
-                  {booking?.bookingDate && (
-                    <p className="text-xs text-muted mb-2">
-                      Session on {formatBookingDate(booking.bookingDate)}
-                    </p>
-                  )}
-                  {review.feedback ? (
-                    <p className="text-sm text-defaulttextcolor mb-0 leading-relaxed">
-                      {review.feedback}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted mb-0 italic">No written feedback.</p>
-                  )}
-                </li>
+                <div key={key} role="listitem" className="h-full">
+                  <TrainerReviewCard review={review} />
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
     </section>

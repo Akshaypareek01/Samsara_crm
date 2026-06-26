@@ -38,7 +38,7 @@ const TrainerAvailabilityDisplay: React.FC<TrainerAvailabilityDisplayProps> = ({
         <ul className="list-none space-y-1.5 mb-0 ps-0">
           {lines.map((line) => (
             <li key={line} className="text-sm text-gray-800 flex items-start gap-2">
-              <i className="ri-time-line text-violet-600 mt-0.5 shrink-0" aria-hidden="true" />
+              <i className="ri-time-line text-primary mt-0.5 shrink-0" aria-hidden="true" />
               <span>{line}</span>
             </li>
           ))}

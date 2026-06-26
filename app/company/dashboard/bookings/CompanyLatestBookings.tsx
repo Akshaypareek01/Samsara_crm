@@ -130,10 +130,11 @@ const CompanyLatestBookings: React.FC<Props> = ({ refreshTrigger = 0, onViewAll,
                 <button
                     type="button"
                     onClick={onViewAll}
-                    className="ti-btn ti-btn-sm ti-btn-light !mb-0"
+                    className="company-home-view-all inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 bg-transparent border-0 p-0 cursor-pointer transition-colors"
+                    aria-label="View all bookings"
                 >
-                    View all
-                    <i className="ri-arrow-right-line ms-1" aria-hidden="true"></i>
+                    View All
+                    <i className="ri-arrow-right-line text-base leading-none" aria-hidden="true"></i>
                 </button>
             </div>
             <div className="box-body p-0">

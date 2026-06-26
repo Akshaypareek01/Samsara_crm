@@ -18,6 +18,7 @@ import {
 import { broadcastTrainerAcceptingBookings } from '@/utils/trainerAvailabilitySync';
 import { broadcastTrainerProfileUpdated } from '@/utils/trainerProfileSync';
 import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUtils';
+import { normalizeWeeklyAvailability } from '@/shared/utils/trainerAvailabilityUtils';
 import { normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
 import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
 import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
@@ -297,7 +298,9 @@ export function useTrainerProfileForm() {
     if (!trainer || trainer.status === false) return;
     try {
       setScheduleSaving(true);
-      const updated = await TrainerService.updateMyProfile({ weeklyAvailability });
+      const updated = await TrainerService.updateMyProfile({
+        weeklyAvailability: normalizeWeeklyAvailability(weeklyAvailability),
+      });
       setTrainer(updated);
       setWeeklyAvailability(updated.weeklyAvailability ?? []);
       Swal.fire('Saved!', 'Weekly schedule updated.', 'success');

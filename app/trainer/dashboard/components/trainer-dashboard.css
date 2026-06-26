@@ -298,3 +298,108 @@ html[data-toggled="close-menu-close"] .trainer-dashboard-shell .trainer-dashboar
     gap: 0.5rem;
   }
 }
+
+/* ── Session rating cards (dashboard home) ── */
+.trainer-review-cards-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trainer-review-cards-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.trainer-review-cards-row::-webkit-scrollbar-thumb {
+  background: rgba(237, 102, 46, 0.35);
+  border-radius: 999px;
+}
+
+.trainer-review-card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  min-height: 168px;
+}
+
+.trainer-review-card__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.trainer-review-card__logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  object-fit: contain;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
+.trainer-review-card__logo-fallback {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: rgba(237, 102, 46, 0.12);
+  color: var(--portal-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trainer-review-card__company {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trainer-review-card__date {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.3;
+  width: 100%;
+}
+
+.trainer-review-card__stars {
+  justify-content: center;
+}
+
+.trainer-review-card__feedback {
+  font-size: 0.75rem;
+  color: #374151;
+  line-height: 1.45;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trainer-review-card__feedback--empty {
+  color: #9ca3af;
+  font-style: italic;
+}

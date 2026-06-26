@@ -25,6 +25,8 @@ html:has(.trainer-dashboard-shell) {
   --scroll-to-top-bg: #ed662e;
   --scroll-to-top-bg-hover: #c95520;
   --scroll-to-top-shadow: rgba(237, 102, 46, 0.25);
+  --portal-primary: #ed662e;
+  --portal-primary-deep: #c95520;
 }
 
 html:has(.company-dashboard-shell) .scrollToTop,
@@ -36,4 +38,33 @@ html:has(.trainer-dashboard-shell) .scrollToTop {
 html:has(.company-dashboard-shell) .scrollToTop:hover,
 html:has(.trainer-dashboard-shell) .scrollToTop:hover {
   background-color: var(--scroll-to-top-bg-hover) !important;
+}
+
+/* SweetAlert2 renders on body — match portal sidebar orange on confirm */
+html:has(.company-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm,
+html:has(.trainer-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm,
+html:has(.trainer-auth-shell) .swal2-container .swal2-styled.swal2-confirm {
+  background-color: var(--portal-primary) !important;
+  border-color: var(--portal-primary) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  min-width: 5.5rem;
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 0.625rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+html:has(.company-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm:hover,
+html:has(.trainer-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm:hover,
+html:has(.trainer-auth-shell) .swal2-container .swal2-styled.swal2-confirm:hover {
+  background-color: var(--portal-primary-deep) !important;
+  border-color: var(--portal-primary-deep) !important;
+}
+
+html:has(.company-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm:focus,
+html:has(.trainer-dashboard-shell) .swal2-container .swal2-styled.swal2-confirm:focus,
+html:has(.trainer-auth-shell) .swal2-container .swal2-styled.swal2-confirm:focus {
+  box-shadow: 0 0 0 3px rgba(237, 102, 46, 0.35) !important;
 }

@@ -1,3 +1,5 @@
+import { formatBookingTime } from './bookingUtils';
+
 /** Day-of-week index (0 = Sunday) to display label. */
 export const WEEKDAY_LABELS = [
   'Sunday',
@@ -160,11 +162,6 @@ export function getAvailableStartTimesForDate(
 }
 
 /**
- * Format weekly availability for read-only display.
- *
- * @param schedule - Trainer weekly availability entries.
- */
-/**
  * Whether the trainer has saved at least one weekly availability window.
  *
  * @param schedule - Trainer weekly availability from profile.
@@ -175,6 +172,11 @@ export function trainerHasWeeklySchedule(
   return normalizeWeeklyAvailability(schedule).length > 0;
 }
 
+/**
+ * Format weekly availability for read-only display (12-hour AM/PM times).
+ *
+ * @param schedule - Trainer weekly availability entries.
+ */
 export function formatWeeklyAvailabilityLines(
   schedule: WeeklyAvailabilityDay[] | undefined
 ): string[] {
@@ -189,7 +191,7 @@ export function formatWeeklyAvailabilityLines(
       const day = WEEKDAY_LABELS[entry.dayOfWeek] ?? `Day ${entry.dayOfWeek}`;
       const slots = (entry.slots ?? [])
         .filter((s) => s.startTime && s.endTime)
-        .map((s) => `${s.startTime} – ${s.endTime}`)
+        .map((s) => `${formatBookingTime(s.startTime)} – ${formatBookingTime(s.endTime)}`)
         .join(', ');
       return slots ? `${day}: ${slots}` : null;
     })
