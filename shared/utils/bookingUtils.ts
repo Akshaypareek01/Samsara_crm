@@ -127,6 +127,26 @@ export function formatDuration(hours: number): string {
     return `${wholeHours}h ${minutes}m`;
 }
 
+/**
+ * Earliest selectable booking date (tomorrow) in local timezone as YYYY-MM-DD.
+ */
+export function getMinBookingDate(): string {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns true when the date is tomorrow or later (YYYY-MM-DD).
+ */
+export function isBookingDateAllowed(date: string): boolean {
+    return Boolean(date) && date >= getMinBookingDate();
+}
+
 // ==================== VALIDATION UTILITIES ====================
 
 export function validateBookingTime(date: string, time: string): boolean {

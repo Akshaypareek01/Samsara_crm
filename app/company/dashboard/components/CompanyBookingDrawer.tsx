@@ -16,6 +16,7 @@ import {
   AVAILABILITY_ERROR_MESSAGE,
   mapBookingAvailabilityError,
 } from "@/shared/utils/trainerAvailabilityUtils";
+import { getMinBookingDate, isBookingDateAllowed } from "@/shared/utils/bookingUtils";
 import "./company-booking-drawer.css";
 
 export type CompanyBookingDrawerProps = {
@@ -47,7 +48,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
     const [displayTrainer, setDisplayTrainer] = useState<Trainer | null>(null);
     const [loadingTrainer, setLoadingTrainer] = useState(false);
 
-    const getMinDate = () => new Date().toISOString().split("T")[0];
+    const minBookingDate = getMinBookingDate();
 
     useEffect(() => {
         if (!isOpen || !trainer) {
@@ -102,6 +103,14 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
     const validateForm = (): boolean => {
         if (!formData.bookingDate) {
             void Swal.fire({ icon: "warning", title: "Validation Error", text: "Please select a date" });
+            return false;
+        }
+        if (!isBookingDateAllowed(formData.bookingDate)) {
+            void Swal.fire({
+                icon: "warning",
+                title: "Validation Error",
+                text: "Booking date must be tomorrow or later",
+            });
             return false;
         }
         if (!formData.startTime) {
@@ -248,52 +257,63 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
 
                 <div className="company-booking-drawer__form-col">
                     <h3 className="company-booking-drawer__form-title">Session details</h3>
-                    <form id="company-booking-drawer-form" onSubmit={handleSubmit} className="space-y-4">
+                    <form id="company-booking-drawer-form" onSubmit={handleSubmit} className="company-booking-drawer__form">
                         {!canAcceptNewBookings && (
-                            <div className="alert alert-warning mb-0" role="alert">
+                            <div className="company-booking-drawer__alert" role="alert">
                                 This trainer is not accepting new bookings at the moment.
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="form-label" htmlFor="booking-date">
-                                    Booking date <span className="text-danger">*</span>
+                        <div className="company-booking-drawer__form-row">
+                            <div className="company-booking-drawer__field">
+                                <label className="company-booking-drawer__label" htmlFor="booking-date">
+                                    Booking date <span className="company-booking-drawer__required">*</span>
                                 </label>
                                 <input
                                     id="booking-date"
                                     type="date"
-                                    className="form-control"
+                                    className="company-booking-drawer__input"
                                     value={formData.bookingDate}
-                                    min={getMinDate()}
+                                    min={minBookingDate}
                                     onChange={(e) =>
                                         setFormData((prev) => ({ ...prev, bookingDate: e.target.value }))
                                     }
                                     disabled={!canAcceptNewBookings}
                                     required
+                                    aria-describedby="booking-date-hint"
+                                />
+                                <p id="booking-date-hint" className="company-booking-drawer__hint">
+                                    Earliest available date is tomorrow
+                                </p>
+                            </div>
+                            <div className="company-booking-drawer__field">
+                                <BookingStartTimeField
+                                    id="booking-time"
+                                    bookingDate={formData.bookingDate}
+                                    startTime={formData.startTime}
+                                    durationHours={formData.duration}
+                                    weeklyAvailability={previewTrainer.weeklyAvailability}
+                                    disabled={!canAcceptNewBookings}
+                                    labelClassName="company-booking-drawer__label"
+                                    inputClassName="company-booking-drawer__input"
+                                    hintClassName="company-booking-drawer__hint"
+                                    warningHintClassName="company-booking-drawer__hint company-booking-drawer__hint--warning"
+                                    requiredMarkClassName="company-booking-drawer__required"
+                                    onChange={(time) =>
+                                        setFormData((prev) => ({ ...prev, startTime: time }))
+                                    }
                                 />
                             </div>
-                            <BookingStartTimeField
-                                id="booking-time"
-                                bookingDate={formData.bookingDate}
-                                startTime={formData.startTime}
-                                durationHours={formData.duration}
-                                weeklyAvailability={previewTrainer.weeklyAvailability}
-                                disabled={!canAcceptNewBookings}
-                                onChange={(time) =>
-                                    setFormData((prev) => ({ ...prev, startTime: time }))
-                                }
-                            />
                         </div>
 
-                        <div>
-                            <label className="form-label" htmlFor="booking-duration">
-                                Duration (hours) <span className="text-danger">*</span>
+                        <div className="company-booking-drawer__field">
+                            <label className="company-booking-drawer__label" htmlFor="booking-duration">
+                                Duration (hours) <span className="company-booking-drawer__required">*</span>
                             </label>
                             <input
                                 id="booking-duration"
                                 type="number"
-                                className="form-control"
+                                className="company-booking-drawer__input"
                                 value={formData.duration}
                                 min={0.5}
                                 max={24}
@@ -306,49 +326,56 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                                 }
                                 disabled={!canAcceptNewBookings}
                                 required
+                                aria-describedby="booking-duration-hint"
                             />
-                            <small className="text-muted">Between 0.5 and 24 hours</small>
+                            <p id="booking-duration-hint" className="company-booking-drawer__hint">
+                                Between 0.5 and 24 hours
+                            </p>
                         </div>
 
-                        <div>
-                            <label className="form-label">
-                                Training types <span className="text-danger">*</span>
-                            </label>
+                        <div className="company-booking-drawer__field">
+                            <span className="company-booking-drawer__label" id="booking-types-label">
+                                Training types <span className="company-booking-drawer__required">*</span>
+                            </span>
                             {availableTypes.length === 0 ? (
-                                <p className="text-sm text-muted mb-0">
+                                <p className="company-booking-drawer__hint mb-0">
                                     No training types available for this trainer.
                                 </p>
                             ) : (
-                                <div className="border border-defaultborder rounded-lg p-3 max-h-[180px] overflow-y-auto">
+                                <div
+                                    className="company-booking-drawer__types-panel"
+                                    role="group"
+                                    aria-labelledby="booking-types-label"
+                                >
                                     {availableTypes.map((type) => (
-                                        <div key={type} className="form-check mb-2 last:mb-0">
+                                        <div key={type} className="company-booking-drawer__check">
                                             <input
                                                 type="checkbox"
-                                                className="form-check-input"
+                                                className="company-booking-drawer__checkbox"
                                                 id={`drawer-type-${type}`}
                                                 checked={formData.typeOfTraining.includes(type)}
                                                 onChange={() => handleTrainingTypeToggle(type)}
                                                 disabled={!canAcceptNewBookings}
                                             />
-                                            <label className="form-check-label" htmlFor={`drawer-type-${type}`}>
+                                            <label className="company-booking-drawer__check-label" htmlFor={`drawer-type-${type}`}>
                                                 {type}
                                             </label>
                                         </div>
                                     ))}
                                 </div>
                             )}
-                            <small className="text-muted">
+                            <p className="company-booking-drawer__hint">
                                 Selected: {formData.typeOfTraining.length}
-                            </small>
+                            </p>
                         </div>
 
-                        <div>
-                            <label className="form-label" htmlFor="booking-notes">
-                                Notes (optional)
+                        <div className="company-booking-drawer__field">
+                            <label className="company-booking-drawer__label" htmlFor="booking-notes">
+                                Notes <span className="company-booking-drawer__optional">(optional)</span>
                             </label>
                             <textarea
                                 id="booking-notes"
-                                className="form-control"
+                                className="company-booking-drawer__input company-booking-drawer__textarea"
                                 rows={3}
                                 value={formData.notes}
                                 onChange={(e) =>

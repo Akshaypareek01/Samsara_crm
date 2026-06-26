@@ -212,6 +212,15 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                     <p className="text-sm text-defaulttextcolor mb-0">{booking.trainerNotes}</p>
                                 </section>
                             )}
+
+                            {booking.cancellationReason && booking.status === "cancelled" && (
+                                <section>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-1">
+                                        Cancellation reason
+                                    </p>
+                                    <p className="text-sm text-defaulttextcolor mb-0">{booking.cancellationReason}</p>
+                                </section>
+                            )}
                         </div>
                     )}
                 </div>

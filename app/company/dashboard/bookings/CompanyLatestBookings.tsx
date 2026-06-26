@@ -11,6 +11,7 @@ import {
 import { getBookingTrainerName } from "@/shared/utils/bookingTrainerUtils";
 import CompanyBookingDetailsDrawer from "../components/CompanyBookingDetailsDrawer";
 import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
+import BookingCancellationReasonNote from "@/shared/components/booking/BookingCancellationReasonNote";
 import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
 import Swal from "sweetalert2";
 
@@ -210,6 +211,10 @@ const CompanyLatestBookings: React.FC<Props> = ({ refreshTrigger = 0, onViewAll,
                                         </td>
                                         <td>
                                             <StatusBadge status={booking.status} />
+                                            <BookingCancellationReasonNote
+                                                status={booking.status}
+                                                cancellationReason={booking.cancellationReason}
+                                            />
                                         </td>
                                         <td>
                                             {booking.paymentStatus?.isPaid ? (

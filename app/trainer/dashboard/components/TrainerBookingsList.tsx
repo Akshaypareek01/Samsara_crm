@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import bookingService, { Booking } from '@/services/bookingService';
 import StatusBadge from '@/shared/components/StatusBadge';
-import { formatBookingDate, formatBookingTime, formatDuration, canConfirmBooking, canCompleteBooking, canCancelBooking } from '@/shared/utils/bookingUtils';
+import { canConfirmBooking, canCompleteBooking, canCancelBooking } from '@/shared/utils/bookingUtils';
+import { promptBookingCancellationReason } from '@/shared/utils/promptBookingCancellationReason';
 import { getBookingCompanyName, getCompanyLogoUrl, getBookingCompany } from '@/shared/utils/companyDisplayUtils';
 import TrainerBookingDetailsDrawer from './TrainerBookingDetailsDrawer';
 import { BookingsTableToolbar, BookingsTableFooter } from '@/shared/components/BookingsTablePagination';
@@ -97,25 +98,16 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        const result = await Swal.fire({
-            title: 'Cancel Booking?',
-            text: 'Are you sure you want to cancel this booking?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, cancel it',
-        });
+        const cancellationReason = await promptBookingCancellationReason();
+        if (!cancellationReason) return;
 
-        if (result.isConfirmed) {
-            try {
-                await bookingService.cancelBooking(bookingId);
-                Swal.fire('Cancelled!', 'Booking has been cancelled.', 'success');
-                setDrawerOpen(false);
-                loadBookings();
-            } catch (error: any) {
-                Swal.fire('Error', error.message || 'Failed to cancel booking', 'error');
-            }
+        try {
+            await bookingService.cancelBooking(bookingId, { cancellationReason });
+            Swal.fire('Cancelled!', 'Booking has been cancelled.', 'success');
+            setDrawerOpen(false);
+            loadBookings();
+        } catch (error: any) {
+            Swal.fire('Error', error.message || 'Failed to cancel booking', 'error');
         }
     };
 

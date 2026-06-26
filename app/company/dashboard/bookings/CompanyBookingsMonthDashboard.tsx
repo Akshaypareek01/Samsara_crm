@@ -18,6 +18,7 @@ import {
     getBookingStatusDotColor,
 } from "@/shared/utils/bookingCalendarStatus";
 import StatusBadge from "@/shared/components/StatusBadge";
+import BookingCancellationReasonNote from "@/shared/components/booking/BookingCancellationReasonNote";
 import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
 import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
 
@@ -379,6 +380,10 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                                         <span className="text-warning font-semibold">Pending</span>
                                                     )}
                                                 </p>
+                                                <BookingCancellationReasonNote
+                                                    status={b.status}
+                                                    cancellationReason={b.cancellationReason}
+                                                />
                                             </li>
                                         ))}
                                     </ul>

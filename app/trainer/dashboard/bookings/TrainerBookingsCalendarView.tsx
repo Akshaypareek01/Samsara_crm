@@ -18,6 +18,7 @@ import {
     canConfirmBooking,
     formatBookingTime,
 } from "@/shared/utils/bookingUtils";
+import { promptBookingCancellationReason } from "@/shared/utils/promptBookingCancellationReason";
 import {
     TRAINER_CALENDAR_LEGEND,
     getBookingStatusDotColor,
@@ -217,18 +218,11 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        const result = await Swal.fire({
-            title: "Cancel Booking?",
-            text: "Are you sure you want to cancel this booking?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, cancel it",
-        });
-        if (!result.isConfirmed) return;
+        const cancellationReason = await promptBookingCancellationReason();
+        if (!cancellationReason) return;
+
         try {
-            await bookingService.cancelBooking(bookingId);
+            await bookingService.cancelBooking(bookingId, { cancellationReason });
             void Swal.fire("Cancelled!", "Booking has been cancelled.", "success");
             setDrawerOpen(false);
             onRefresh();

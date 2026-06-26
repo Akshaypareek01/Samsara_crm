@@ -158,6 +158,7 @@ export interface MyBookingsSummaryDayBooking {
     companyName?: string;
     trainerName?: string;
     isPaid: boolean;
+    cancellationReason?: string;
     duration: number;
     typeOfTraining: string[];
 }

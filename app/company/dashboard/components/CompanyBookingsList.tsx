@@ -10,6 +10,7 @@ import CompanyBookingDetailsDrawer from "./CompanyBookingDetailsDrawer";
 import CompanyTrainerProfileDrawer from "./CompanyTrainerProfileDrawer";
 import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
 import { BookingsTableToolbar, BookingsTableFooter } from "@/shared/components/BookingsTablePagination";
+import BookingCancellationReasonNote from "@/shared/components/booking/BookingCancellationReasonNote";
 import Swal from "sweetalert2";
 
 type CompanyBookingsListProps = {
@@ -291,6 +292,10 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                                             </td>
                                             <td>
                                                 <StatusBadge status={booking.status} />
+                                                <BookingCancellationReasonNote
+                                                    status={booking.status}
+                                                    cancellationReason={booking.cancellationReason}
+                                                />
                                             </td>
                                             <td>
                                                 {booking.paymentStatus?.isPaid ? (

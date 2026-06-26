@@ -17,6 +17,11 @@ type BookingStartTimeFieldProps = {
   disabled?: boolean;
   onChange: (time: string) => void;
   error?: string;
+  labelClassName?: string;
+  inputClassName?: string;
+  hintClassName?: string;
+  warningHintClassName?: string;
+  requiredMarkClassName?: string;
 };
 
 /**
@@ -31,7 +36,13 @@ const BookingStartTimeField: React.FC<BookingStartTimeFieldProps> = ({
   disabled = false,
   onChange,
   error,
+  labelClassName = "form-label",
+  inputClassName = "form-control",
+  hintClassName = "text-warning d-block mt-1",
+  warningHintClassName,
+  requiredMarkClassName = "text-danger",
 }) => {
+  const availabilityHintClass = warningHintClassName ?? hintClassName;
   const slotOptions =
     bookingDate && weeklyAvailability?.length
       ? getAvailableStartTimesForDate(weeklyAvailability, bookingDate, durationHours)
@@ -41,13 +52,13 @@ const BookingStartTimeField: React.FC<BookingStartTimeFieldProps> = ({
 
   return (
     <div>
-      <label className="form-label" htmlFor={id}>
-        Start time <span className="text-danger">*</span>
+      <label className={labelClassName} htmlFor={id}>
+        Start time <span className={requiredMarkClassName}>*</span>
       </label>
       {showSlotSelect ? (
         <select
           id={id}
-          className={`form-control ${error ? "is-invalid" : ""}`}
+          className={`${inputClassName} ${error ? "is-invalid" : ""}`}
           value={startTime}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
@@ -66,7 +77,7 @@ const BookingStartTimeField: React.FC<BookingStartTimeFieldProps> = ({
         <input
           id={id}
           type="time"
-          className={`form-control ${error ? "is-invalid" : ""}`}
+          className={`${inputClassName} ${error ? "is-invalid" : ""}`}
           value={startTime}
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
@@ -76,7 +87,7 @@ const BookingStartTimeField: React.FC<BookingStartTimeFieldProps> = ({
         />
       )}
       {weeklyAvailability?.length && bookingDate && slotOptions.length === 0 && (
-        <small className="text-warning d-block mt-1">
+        <small className={availabilityHintClass}>
           No availability on this day. Choose another date.
         </small>
       )}
