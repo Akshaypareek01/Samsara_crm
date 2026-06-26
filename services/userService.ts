@@ -41,7 +41,11 @@ export interface User {
     institution: string;
     year: string;
   }>;
-  company_name?: string;
+  company_name?: string | {
+    _id?: string;
+    companyName?: string;
+    companyId?: string;
+  };
   companyId?: string;
   corporate_id?: string;
   profileImage?: string;
@@ -88,6 +92,13 @@ export interface GetUsersParams {
   limit?: number;
   page?: number;
   search?: string;
+  userCategory?: 'Personal' | 'Corporate';
+  companyId?: string;
+  companyName?: string;
+  corporate_id?: string;
+  mobile?: string;
+  city?: string;
+  status?: 'true' | 'false' | boolean;
 }
 
 export interface UsersResponse {

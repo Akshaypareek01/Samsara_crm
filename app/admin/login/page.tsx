@@ -19,6 +19,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [err, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [data, setData] = useState({
     email: "admin@samsarawellness.in",
     password: "",
@@ -143,17 +144,31 @@ export default function AdminLoginPage() {
                       <label htmlFor="signin-password" className="form-label text-default">
                         Password
                       </label>
-                      <input
-                        name="password"
-                        type="password"
-                        value={password}
-                        onChange={changeHandler}
-                        className="form-control form-control-lg w-full !rounded-md"
-                        id="signin-password"
-                        placeholder="Password"
-                        required
-                        autoComplete="current-password"
-                      />
+                      <div className="input-group">
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={changeHandler}
+                          className="form-control form-control-lg w-full !border-s !rounded-s-md"
+                          id="signin-password"
+                          placeholder="Password"
+                          required
+                          autoComplete="current-password"
+                        />
+                        <button
+                          type="button"
+                          className="ti-btn ti-btn-light !rounded-s-none !mb-0"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-pressed={showPassword}
+                        >
+                          <i
+                            className={`${showPassword ? "ri-eye-line" : "ri-eye-off-line"} align-middle`}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
                     </div>
                     <div className="xl:col-span-12 col-span-12 grid mt-2">
                       <button

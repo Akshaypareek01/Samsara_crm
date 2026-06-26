@@ -7,6 +7,15 @@ import membershipService, { UserMembership } from '@/services/membershipService'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
+import UsersCategoryTabs from './UsersCategoryTabs';
+import UsersFiltersPanel from './UsersFiltersPanel';
+import {
+  emptyUsersListFilters,
+  type UserCategoryTab,
+  type UsersListFilters,
+} from './usersFilterTypes';
+import { getUserCompanyIdDisplay, getUserCompanyName } from './userDisplayUtils';
+import UsersAssignMembershipDrawer from './UsersAssignMembershipDrawer';
 
 type UserFormState = CreateUserRequest & {
   mobile?: string;
@@ -86,17 +95,19 @@ const Users = () => {
   const [adminUser, setAdminUser] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [selectedUsers, setSelectedUsers] = useState<Map<string, string>>(new Map());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showAssignMembershipDrawer, setShowAssignMembershipDrawer] = useState(false);
   const [userMemberships, setUserMemberships] = useState<Map<string, UserMembership | null>>(new Map());
   const [formData, setFormData] = useState<UserFormState>(emptyUserForm());
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryTab, setCategoryTab] = useState<UserCategoryTab>('all');
+  const [filters, setFilters] = useState<UsersListFilters>(emptyUsersListFilters());
 
   useEffect(() => {
-    setSelectedUserIds(new Set());
-  }, [page, searchTerm]);
+    setSelectedUsers(new Map());
+  }, [categoryTab, filters]);
 
   const openEditForUser = useCallback((user: User) => {
     setEditingUser(user);
@@ -161,15 +172,36 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: Record<string, string | number> = {
         role: 'user',
         page,
         limit: 10,
         sortBy: 'name:asc',
       };
 
-      if (searchTerm) {
-        params.search = searchTerm;
+      if (categoryTab !== 'all') {
+        params.userCategory = categoryTab;
+      }
+      if (filters.search.trim()) {
+        params.search = filters.search.trim();
+      }
+      if (filters.mobile.trim()) {
+        params.mobile = filters.mobile.trim();
+      }
+      if (filters.city.trim()) {
+        params.city = filters.city.trim();
+      }
+      if (filters.status) {
+        params.status = filters.status;
+      }
+      if (filters.companyId.trim()) {
+        params.companyId = filters.companyId.trim();
+      }
+      if (filters.companyName.trim()) {
+        params.companyName = filters.companyName.trim();
+      }
+      if (filters.corporateId.trim()) {
+        params.corporate_id = filters.corporateId.trim();
       }
 
       const response = await UserService.getAllUsers(params);
@@ -215,7 +247,7 @@ const Users = () => {
       setAdminUser(JSON.parse(userStr));
     }
     void fetchUsers();
-  }, [page, searchTerm]);
+  }, [page, categoryTab, filters]);
 
   /**
    * Build API payload from form state (omit empty password on update).
@@ -265,30 +297,39 @@ const Users = () => {
     openEditForUser(user);
   };
 
-  const toggleUserSelection = (userId: string, checked: boolean) => {
-    setSelectedUserIds((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(userId);
+  const toggleUserSelection = (userId: string, userName: string, checked: boolean) => {
+    setSelectedUsers((prev) => {
+      const next = new Map(prev);
+      if (checked) next.set(userId, userName);
       else next.delete(userId);
       return next;
     });
   };
 
   const toggleSelectAllOnPage = (checked: boolean) => {
-    if (!checked) {
-      setSelectedUserIds(new Set());
-      return;
-    }
-    const ids = users
-      .map((u) => u._id || u.id)
-      .filter((id): id is string => Boolean(id));
-    setSelectedUserIds(new Set(ids));
+    setSelectedUsers((prev) => {
+      const next = new Map(prev);
+      if (!checked) {
+        users.forEach((u) => {
+          const id = u._id || u.id;
+          if (id) next.delete(id);
+        });
+        return next;
+      }
+      users.forEach((u) => {
+        const id = u._id || u.id;
+        if (id) next.set(id, u.name || u.email);
+      });
+      return next;
+    });
   };
 
+  const clearSelectedUsers = () => setSelectedUsers(new Map());
+
   const handleBulkDelete = async () => {
-    if (selectedUserIds.size === 0) return;
+    if (selectedUsers.size === 0) return;
     const result = await Swal.fire({
-      title: `Delete ${selectedUserIds.size} user(s)?`,
+      title: `Delete ${selectedUsers.size} user(s)?`,
       text: "You won't be able to revert this!",
       icon: 'warning',
       showCancelButton: true,
@@ -299,8 +340,8 @@ const Users = () => {
 
     try {
       setBulkDeleting(true);
-      const res = await UserService.bulkDeleteUsers(Array.from(selectedUserIds));
-      setSelectedUserIds(new Set());
+      const res = await UserService.bulkDeleteUsers(Array.from(selectedUsers.keys()));
+      clearSelectedUsers();
       if (res.failed.length > 0) {
         Swal.fire(
           'Partial success',
@@ -350,7 +391,14 @@ const Users = () => {
     .map((u) => u._id || u.id)
     .filter((id): id is string => Boolean(id));
   const allOnPageSelected =
-    pageUserIds.length > 0 && pageUserIds.every((id) => selectedUserIds.has(id));
+    pageUserIds.length > 0 && pageUserIds.every((id) => selectedUsers.has(id));
+
+  const handleMembershipAssigned = (allSucceeded: boolean) => {
+    void fetchMembershipsForUsers(users);
+    if (allSucceeded) {
+      clearSelectedUsers();
+    }
+  };
 
   return (
     <Fragment>
@@ -385,30 +433,67 @@ const Users = () => {
         </div>
       )}
 
+      <UsersCategoryTabs
+        activeTab={categoryTab}
+        onChange={(tab) => {
+          setCategoryTab(tab);
+          setPage(1);
+        }}
+      />
+
+      <UsersFiltersPanel
+        categoryTab={categoryTab}
+        filters={filters}
+        onChange={(next) => {
+          setFilters(next);
+          setPage(1);
+        }}
+        onClear={() => {
+          setFilters(emptyUsersListFilters());
+          setPage(1);
+        }}
+      />
+
       <div className="box">
         <div className="box-body">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <input
-              type="text"
-              className="form-control text-sm py-1.5 flex-1 min-w-[200px]"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPage(1);
-              }}
-            />
-            {selectedUserIds.size > 0 && hasPermission(adminUser, 'userManagement.users', 'delete') && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 justify-between">
+            {selectedUsers.size > 0 && (
+              <p className="text-sm text-muted mb-0">
+                <span className="font-semibold text-defaulttextcolor">{selectedUsers.size}</span>{' '}
+                user{selectedUsers.size === 1 ? '' : 's'} selected
+                <button
+                  type="button"
+                  className="ms-2 text-primary text-xs font-semibold hover:underline"
+                  onClick={clearSelectedUsers}
+                >
+                  Clear
+                </button>
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 ms-auto">
+            {selectedUsers.size > 0 && hasPermission(adminUser, 'membershipManagement', 'create') && (
+              <button
+                type="button"
+                className="ti-btn ti-btn-primary !text-xs !py-2 !px-3"
+                onClick={() => setShowAssignMembershipDrawer(true)}
+                aria-label={`Assign membership to ${selectedUsers.size} selected users`}
+              >
+                <i className="ri-vip-crown-line me-1" aria-hidden="true" />
+                Assign membership ({selectedUsers.size})
+              </button>
+            )}
+            {selectedUsers.size > 0 && hasPermission(adminUser, 'userManagement.users', 'delete') && (
               <button
                 type="button"
                 className="ti-btn ti-btn-danger !text-xs !py-2 !px-3"
                 onClick={() => void handleBulkDelete()}
                 disabled={bulkDeleting}
-                aria-label={`Delete ${selectedUserIds.size} selected users`}
+                aria-label={`Delete ${selectedUsers.size} selected users`}
               >
-                {bulkDeleting ? 'Deleting…' : `Delete selected (${selectedUserIds.size})`}
+                {bulkDeleting ? 'Deleting…' : `Delete selected (${selectedUsers.size})`}
               </button>
             )}
+            </div>
           </div>
 
           {loading ? (
@@ -430,6 +515,13 @@ const Users = () => {
                     <th>Email</th>
                     <th>Mobile</th>
                     <th>Category</th>
+                    {(categoryTab === 'Corporate' || categoryTab === 'all') && (
+                      <>
+                        <th>Company</th>
+                        <th>Company ID</th>
+                        <th>Corporate ID</th>
+                      </>
+                    )}
                     <th>Membership</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -438,7 +530,10 @@ const Users = () => {
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-4 text-sm">
+                      <td
+                        colSpan={categoryTab === 'Personal' ? 8 : 11}
+                        className="text-center py-4 text-sm"
+                      >
                         No users found
                       </td>
                     </tr>
@@ -453,8 +548,10 @@ const Users = () => {
                             {userId ? (
                               <input
                                 type="checkbox"
-                                checked={selectedUserIds.has(userId)}
-                                onChange={(e) => toggleUserSelection(userId, e.target.checked)}
+                                checked={selectedUsers.has(userId)}
+                                onChange={(e) =>
+                                  toggleUserSelection(userId, user.name || user.email, e.target.checked)
+                                }
                                 aria-label={`Select ${user.name}`}
                               />
                             ) : null}
@@ -484,6 +581,13 @@ const Users = () => {
                               {user.userCategory || 'Personal'}
                             </span>
                           </td>
+                          {(categoryTab === 'Corporate' || categoryTab === 'all') && (
+                            <>
+                              <td>{getUserCompanyName(user)}</td>
+                              <td>{getUserCompanyIdDisplay(user)}</td>
+                              <td>{user.corporate_id || '—'}</td>
+                            </>
+                          )}
                           <td>
                             {membership ? (
                               <div>
@@ -570,6 +674,13 @@ const Users = () => {
           )}
         </div>
       </div>
+
+      <UsersAssignMembershipDrawer
+        open={showAssignMembershipDrawer}
+        selectedUsers={selectedUsers}
+        onClose={() => setShowAssignMembershipDrawer(false)}
+        onAssigned={handleMembershipAssigned}
+      />
 
       {/* Edit/Add user side drawer */}
       {showModal && (
