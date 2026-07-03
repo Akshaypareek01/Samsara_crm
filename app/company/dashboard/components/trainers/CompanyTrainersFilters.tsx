@@ -7,6 +7,7 @@ import {
   SPECIALIST_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
 } from '@/services/trainerService';
+import { HOME_TRAINER_CATEGORY_LABELS } from '../../constants/homeTrainerCategories';
 
 type CompanyTrainersFiltersProps = {
   searchInput: string;
@@ -78,7 +79,7 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
           <option value="">All Categories</option>
           {TRAINER_CATEGORY_OPTIONS.filter((cat) => cat !== 'EAP Trainer').map((cat) => (
             <option key={cat} value={cat}>
-              {cat}
+              {HOME_TRAINER_CATEGORY_LABELS[cat] || cat}
             </option>
           ))}
         </select>

@@ -1,6 +1,7 @@
 /** Wellness practice categories for corporate Trainer profiles */
 export const TRAINER_CATEGORY_OPTIONS = [
   'Yoga Trainer',
+  'Zumba Trainer',
   'Sound Healer',
   'Psychologist',
   'Women Health Trainer',
