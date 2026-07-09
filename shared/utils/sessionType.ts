@@ -8,6 +8,21 @@ export const TRAINER_LOGIN_PATH = "/trainer/login";
 export const TRAINER_HOME_PATH = "/trainer/dashboard";
 
 /**
+ * Returns the logged-in trainer's Mongo id from localStorage, if any.
+ */
+export function getStoredTrainerId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("user");
+    const user = raw ? JSON.parse(raw) : null;
+    if (!user || typeof user !== "object") return null;
+    return user._id || user.id || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Classifies the current browser session from localStorage.
  * Admin, company, and trainer share the same token keys — type disambiguation is required.
  */

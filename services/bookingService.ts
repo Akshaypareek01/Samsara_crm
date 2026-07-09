@@ -1,4 +1,5 @@
 import ApiService from './ApiService';
+import type { BookingInvoice } from './bookingInvoiceService';
 import { normalizeBookingNotes } from '@/shared/utils/bookingFormUtils';
 
 // ==================== INTERFACES ====================
@@ -11,17 +12,33 @@ export type BookingStatus =
     | 'rejected'
     | 'cancelled';
 
+export type TrainerSessionStatus = 'pending' | 'approved' | 'rejected';
+
+export interface BookingSession {
+    _id?: string;
+    id?: string;
+    trainer: string | any;
+    startTime: string;
+    duration: number;
+    typeOfTraining: string[];
+    eapTraining?: string | EapTrainingRef | null;
+    trainerStatus?: TrainerSessionStatus;
+    trainerNotes?: string;
+    approvedAt?: string;
+}
+
 export interface Booking {
     id?: string;
     _id?: string;
-    company: string | any; // Can be populated with company object
-    trainer: string | any; // Can be populated with trainer object
+    company: string | any;
+    trainer: string | any;
     eapTraining?: string | EapTrainingRef | null;
-    bookingDate: string; // "2026-01-30"
-    startTime: string; // "14:00"
-    duration: number; // Hours (0.5 to 24)
-    typeOfTraining: string[]; // Array of training types
-    notes?: string; // Company notes
+    bookingDate: string;
+    startTime: string;
+    duration: number;
+    typeOfTraining: string[];
+    sessions?: BookingSession[];
+    notes?: string;
     trainerNotes?: string;
     adminNotes?: string;
     cancellationReason?: string;
@@ -51,14 +68,53 @@ export interface EapTrainingRef {
 }
 
 export interface CreateBookingRequest {
-    company: string; // Company MongoDB ID
-    trainer: string; // Trainer MongoDB ID
-    bookingDate: string; // "2026-01-30"
-    startTime: string; // "14:00" (24-hour format)
-    duration: number; // 0.5 to 24 hours
-    typeOfTraining: string[]; // Array of training types
-    eapTraining?: string; // EAP training id when booking an EAP program
-    notes?: string; // Optional company notes
+    company: string;
+    trainer: string;
+    bookingDate: string;
+    startTime: string;
+    duration: number;
+    typeOfTraining: string[];
+    eapTraining?: string;
+    notes?: string;
+}
+
+export interface CreateMultiSessionBookingRequest {
+    company: string;
+    bookingDate: string;
+    notes?: string;
+    sessions: Array<{
+        trainer: string;
+        startTime: string;
+        duration: number;
+        typeOfTraining: string[];
+        eapTraining?: string;
+    }>;
+}
+
+export interface CheckAvailabilitySessionInput {
+    trainer: string;
+    startTime: string;
+    duration: number;
+}
+
+export interface CheckAvailabilityRequest {
+    bookingDate: string;
+    sessions: CheckAvailabilitySessionInput[];
+}
+
+export interface CheckAvailabilityResult {
+    index: number;
+    available: boolean;
+    reason?: string;
+}
+
+export interface CheckAvailabilityResponse {
+    results: CheckAvailabilityResult[];
+}
+
+export interface ApproveBookingResult {
+    booking: Booking;
+    invoice?: BookingInvoice;
 }
 
 export interface ApproveBookingRequest {
@@ -67,6 +123,19 @@ export interface ApproveBookingRequest {
     paymentType: 'full' | 'partial' | 'advance';
     paymentAmount: number;
     adminNotes?: string;
+    trainerFeeLines: Array<{
+        trainer: string;
+        sessionIndex?: number;
+        baseFee: number;
+        gstRate?: number;
+        otherTaxes?: Array<{
+            name: string;
+            rate: number;
+            type: 'percentage' | 'fixed';
+            amount?: number;
+        }>;
+        deductions?: Array<{ name: string; amount: number }>;
+    }>;
 }
 
 export interface RejectBookingRequest {
@@ -74,7 +143,7 @@ export interface RejectBookingRequest {
 }
 
 export interface UpdateStatusRequest {
-    status: 'approved' | 'completed';
+    status: 'approved' | 'rejected' | 'completed';
     trainerNotes?: string;
 }
 
@@ -161,6 +230,15 @@ export interface MyBookingsSummaryDayBooking {
     cancellationReason?: string;
     duration: number;
     typeOfTraining: string[];
+    sessionCount?: number;
+    sessions?: Array<{
+        startTime: string;
+        duration: number;
+        trainerName?: string;
+        typeOfTraining: string[];
+        trainerStatus?: TrainerSessionStatus;
+    }>;
+    trainerStatus?: TrainerSessionStatus;
 }
 
 /** Response from GET /v1/bookings/my-bookings/summary */
@@ -178,6 +256,40 @@ export interface MyBookingsSummary {
 // ==================== SERVICE CLASS ====================
 
 class BookingService {
+    /**
+     * Create a multi-session same-day booking (Company only).
+     * POST /v1/bookings
+     */
+    async createMultiSessionBooking(
+        bookingData: CreateMultiSessionBookingRequest
+    ): Promise<Booking> {
+        try {
+            const response = await ApiService.post('/bookings', bookingData);
+            if (response.id && !response._id) {
+                return { ...response, _id: response.id };
+            }
+            return response;
+        } catch (error) {
+            console.error('❌ Create multi-session booking error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Pre-check availability for proposed sessions.
+     * POST /v1/bookings/check-availability
+     */
+    async checkBookingAvailability(
+        payload: CheckAvailabilityRequest
+    ): Promise<CheckAvailabilityResponse> {
+        try {
+            return await ApiService.post('/bookings/check-availability', payload);
+        } catch (error) {
+            console.error('❌ Check booking availability error:', error);
+            throw error;
+        }
+    }
+
     /**
      * Create a new booking (Company only)
      * POST /v1/bookings
@@ -355,16 +467,21 @@ class BookingService {
      * Approve booking with payment details (Admin only)
      * PATCH /v1/bookings/:id/approve
      */
-    async approveBooking(bookingId: string, approvalData: ApproveBookingRequest): Promise<Booking> {
+    async approveBooking(bookingId: string, approvalData: ApproveBookingRequest): Promise<ApproveBookingResult> {
         try {
             console.log('✅ Approving booking:', bookingId, approvalData);
             const response = await ApiService.patch(`/bookings/${bookingId}/approve`, approvalData);
 
-            // Normalize id field
-            if (response.id && !response._id) {
-                return { ...response, _id: response.id };
-            }
-            return response;
+            const booking = response.booking || response;
+            const invoice = response.invoice;
+
+            const normalizedBooking =
+                booking?.id && !booking?._id ? { ...booking, _id: booking.id } : booking;
+
+            const normalizedInvoice =
+                invoice?.id && !invoice?._id ? { ...invoice, _id: invoice.id } : invoice;
+
+            return { booking: normalizedBooking, invoice: normalizedInvoice };
         } catch (error) {
             console.error('❌ Approve booking error:', error);
             throw error;

@@ -16,13 +16,21 @@ import {
     getBookingCompanyName,
     getCompanyLogoUrl,
 } from "@/shared/utils/companyDisplayUtils";
+import BookingSessionsTable from "@/shared/components/booking/BookingSessionsTable";
+import {
+    canTrainerActOnSession,
+    getBookingSessions,
+    getTrainerSessionInBooking,
+} from "@/shared/utils/bookingSessionUtils";
 
 export type TrainerBookingDetailsDrawerProps = {
     open: boolean;
     booking: Booking | null;
     loading?: boolean;
+    currentTrainerId?: string;
     onClose: () => void;
     onConfirm?: (booking: Booking) => void;
+    onReject?: (booking: Booking) => void;
     onComplete?: (booking: Booking) => void;
     onCancel?: (bookingId: string) => void;
 };
@@ -34,8 +42,10 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
     open,
     booking,
     loading = false,
+    currentTrainerId,
     onClose,
     onConfirm,
+    onReject,
     onComplete,
     onCancel,
 }) => {
@@ -64,6 +74,18 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
     const contactName = booking ? getBookingCompanyContactName(booking) : "—";
     const logoUrl = getCompanyLogoUrl(company);
     const bookingId = booking?._id || booking?.id || "";
+    const sessions = booking ? getBookingSessions(booking) : [];
+    const isMultiSession = sessions.length > 1;
+    const mySession =
+        booking && currentTrainerId
+            ? getTrainerSessionInBooking(booking, currentTrainerId)
+            : null;
+    const canAct =
+        booking && currentTrainerId
+            ? canTrainerActOnSession(booking, currentTrainerId)
+            : booking
+              ? canConfirmBooking(booking.status)
+              : false;
 
     return (
         <>
@@ -138,7 +160,9 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                             </section>
 
                             <section>
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Session</p>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
+                                    {isMultiSession ? "Your session" : "Session"}
+                                </p>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Status</span>
@@ -158,6 +182,8 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                             {formatBookingDate(booking.bookingDate)}
                                         </span>
                                     </div>
+                                    {!isMultiSession && (
+                                    <>
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Time</span>
                                         <span className="font-medium text-defaulttextcolor">
@@ -168,10 +194,32 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                         <span className="text-muted text-xs block mb-0.5">Duration</span>
                                         <span className="font-medium text-defaulttextcolor">{booking.duration} hrs</span>
                                     </div>
+                                    </>
+                                    )}
+                                    {isMultiSession && mySession && (
+                                    <>
+                                    <div>
+                                        <span className="text-muted text-xs block mb-0.5">Your time</span>
+                                        <span className="font-medium text-defaulttextcolor">
+                                            {formatBookingTime(mySession.startTime)}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted text-xs block mb-0.5">Your duration</span>
+                                        <span className="font-medium text-defaulttextcolor">{mySession.duration} hrs</span>
+                                    </div>
+                                    </>
+                                    )}
                                 </div>
+                                {isMultiSession && (
+                                    <BookingSessionsTable
+                                        booking={booking}
+                                        highlightTrainerId={currentTrainerId}
+                                    />
+                                )}
                             </section>
 
-                            {booking.typeOfTraining?.length > 0 && (
+                            {!isMultiSession && booking.typeOfTraining?.length > 0 && (
                                 <section>
                                     <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
                                         Training types
@@ -231,13 +279,22 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                         role="group"
                         aria-label="Booking actions"
                     >
-                        {canConfirmBooking(booking.status) && onConfirm && (
+                        {canAct && onConfirm && (
                             <button
                                 type="button"
                                 className="ti-btn ti-btn-success !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold whitespace-nowrap min-h-[2.5rem] rounded-lg shadow-none"
                                 onClick={() => onConfirm(booking)}
                             >
-                                Accept booking
+                                Accept your session
+                            </button>
+                        )}
+                        {canAct && onReject && (
+                            <button
+                                type="button"
+                                className="ti-btn ti-btn-danger-outline !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold whitespace-nowrap min-h-[2.5rem] rounded-lg shadow-none"
+                                onClick={() => onReject(booking)}
+                            >
+                                Reject your session
                             </button>
                         )}
                         {canCompleteBooking(booking.status) && onComplete && (

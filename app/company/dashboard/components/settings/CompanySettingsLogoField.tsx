@@ -5,6 +5,8 @@ import ProfilePhotoCropModal from "@/shared/components/trainer/ProfilePhotoCropM
 import {
     COMPANY_LOGO_OUTPUT_SIZE,
     validateImageUploadFile,
+    ALLOWED_IMAGE_ACCEPT,
+    ALLOWED_IMAGE_FORMATS_LABEL,
 } from "@/shared/utils/imageCropUtils";
 
 type CompanySettingsLogoFieldProps = {
@@ -103,7 +105,7 @@ export default function CompanySettingsLogoField({
             <input
                 type="file"
                 ref={setLogoInputRef}
-                accept="image/*"
+                accept={ALLOWED_IMAGE_ACCEPT}
                 onChange={handleFileSelect}
                 className="hidden"
                 aria-label="Upload company logo"
@@ -187,7 +189,7 @@ export default function CompanySettingsLogoField({
                 <p className="font-semibold text-[#374151] !mb-1">Company logo</p>
                 <p>
                     Shown on your dashboard and employee-facing pages. Choose an image, crop it to a
-                    square, then upload. JPG or PNG up to 5MB.
+                    square, then upload. {ALLOWED_IMAGE_FORMATS_LABEL} only, up to 5MB.
                 </p>
                 {logoUrl && (
                     <button

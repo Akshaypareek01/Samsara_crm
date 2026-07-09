@@ -22,6 +22,7 @@ import {
   validateTrainerRegistration,
 } from '@/shared/utils/trainerRegistrationValidation';
 import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
+import { validateImageUploadFile } from '@/shared/utils/imageCropUtils';
 const HERO_FEATURES = [
     { icon: 'ri-team-line', title: 'Reach a wider audience', desc: 'Get discovered by corporate clients seeking wellness experts.' },
     { icon: 'ri-calendar-check-line', title: 'Effortless scheduling', desc: 'Manage all your bookings from one dashboard.' },
@@ -171,12 +172,9 @@ const TrainerRegister = () => {
     const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (!file.type.startsWith('image/')) {
-                Swal.fire('Error!', 'Please select an image file', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire('Error!', 'File size should be less than 5MB', 'error');
+            const validationError = validateImageUploadFile(file);
+            if (validationError) {
+                Swal.fire('Error!', validationError, 'error');
                 return;
             }
             handleFileUpload(file, false, slotIndex);

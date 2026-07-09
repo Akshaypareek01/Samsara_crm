@@ -16,6 +16,15 @@ import {
 } from "@/shared/utils/bookingTrainerUtils";
 import CompanyRightDrawer from "./CompanyRightDrawer";
 import EapBookingDetailsSection from "@/shared/components/EapBookingDetailsSection";
+import BookingSessionsTable from "@/shared/components/booking/BookingSessionsTable";
+import {
+    getBookingSessions,
+    getBookingSessionSummary,
+    getTrainerApprovalProgress,
+    getBookingTrainersLabel,
+    canTrainerActOnSession,
+    getTrainerSessionInBooking,
+} from "@/shared/utils/bookingSessionUtils";
 import { useCompanyRating } from "../context/CompanyRatingContext";
 
 export type CompanyBookingDetailsDrawerProps = {
@@ -44,6 +53,10 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     const photoUrl = getTrainerProfilePhotoUrl(trainer);
     const locationLine = formatTrainerLocation(trainer);
     const bookingId = booking?._id || booking?.id || "";
+    const sessions = booking ? getBookingSessions(booking) : [];
+    const isMultiSession = sessions.length > 1;
+    const sessionSummary = booking ? getBookingSessionSummary(booking) : null;
+    const approvalProgress = booking ? getTrainerApprovalProgress(booking) : null;
 
     const isCompleted = booking?.status === "completed";
     const isUnrated = bookingId ? pendingBookingIds.has(bookingId) : false;
@@ -101,6 +114,7 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                 <p className="text-sm text-muted mb-0">No booking selected.</p>
             ) : (
                 <div className="space-y-5">
+                    {!isMultiSession && (
                     <section className="rounded-xl border border-defaultborder p-4 bg-light/30 dark:bg-black/20">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Trainer</p>
                         <div className="flex items-start gap-3">
@@ -153,9 +167,26 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                             </div>
                         </div>
                     </section>
+                    )}
+
+                    {isMultiSession && (
+                        <section className="rounded-xl border border-defaultborder p-4 bg-light/30 dark:bg-black/20">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+                                Booking overview
+                            </p>
+                            <p className="text-sm font-semibold text-defaulttextcolor mb-0">
+                                {getBookingTrainersLabel(booking!)}
+                            </p>
+                            <p className="text-xs text-muted mb-0 mt-1">
+                                {sessionSummary?.label}
+                            </p>
+                        </section>
+                    )}
 
                     <section>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Session</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
+                            {isMultiSession ? "Sessions" : "Session"}
+                        </p>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                             <div className="col-span-2">
                                 <span className="text-muted text-xs block mb-0.5">Booking status</span>
@@ -164,11 +195,15 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                                     booking.status === "approved") && (
                                     <p className="text-xs text-muted mt-2 mb-0 leading-relaxed">
                                         {booking.status === "pending_approval"
-                                            ? "Awaiting trainer acceptance. You will be notified when the trainer responds."
-                                            : "Trainer accepted. Awaiting admin approval and payment — confirmation email is sent once admin confirms."}
+                                            ? isMultiSession && approvalProgress
+                                                ? `Awaiting trainer acceptance (${approvalProgress.approved} of ${approvalProgress.total} approved).`
+                                                : "Awaiting trainer acceptance. You will be notified when the trainer responds."
+                                            : "All trainers accepted. Awaiting admin approval and payment — confirmation email is sent once admin confirms."}
                                     </p>
                                 )}
                             </div>
+                            {!isMultiSession && (
+                            <>
                             <div>
                                 <span className="text-muted text-xs block mb-0.5">Payment</span>
                                 {booking.paymentStatus?.isPaid ? (
@@ -193,12 +228,21 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                                 <span className="text-muted text-xs block mb-0.5">Duration</span>
                                 <span className="font-medium text-defaulttextcolor">{booking.duration} hrs</span>
                             </div>
+                            </>
+                            )}
+                            {isMultiSession && (
+                            <div className="col-span-2">
+                                <span className="text-muted text-xs block mb-0.5">Date</span>
+                                <span className="font-medium text-defaulttextcolor">
+                                    {formatBookingDate(booking.bookingDate)}
+                                </span>
+                            </div>
+                            )}
                         </div>
+                        {isMultiSession && <BookingSessionsTable booking={booking} />}
                     </section>
 
-                    <EapBookingDetailsSection booking={booking} />
-
-                    {booking.typeOfTraining?.length > 0 && (
+                    {!isMultiSession && booking.typeOfTraining?.length > 0 && (
                         <section>
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
                                 Training types
@@ -212,6 +256,8 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                             </div>
                         </section>
                     )}
+
+                    <EapBookingDetailsSection booking={booking} />
 
                     {booking.notes && (
                         <section>

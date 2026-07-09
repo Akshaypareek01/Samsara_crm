@@ -15,9 +15,9 @@ import {
 import {
     canCancelBooking,
     canCompleteBooking,
-    canConfirmBooking,
     formatBookingTime,
 } from "@/shared/utils/bookingUtils";
+import { getStoredTrainerId } from "@/shared/utils/sessionType";
 import { promptBookingCancellationReason } from "@/shared/utils/promptBookingCancellationReason";
 import {
     TRAINER_CALENDAR_LEGEND,
@@ -113,8 +113,10 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
     const [drawerLoading, setDrawerLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [trainerNotes, setTrainerNotes] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
+    const currentTrainerId = getStoredTrainerId() || "";
 
     const cal = useMemo(() => {
         const { year, monthIndex } = parseYearMonth(monthKey);
@@ -198,6 +200,28 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
             void Swal.fire("Error", msg, "error");
         }
     };
+
+    const handleRejectBooking = async () => {
+        if (!selectedBooking) return;
+        try {
+            await bookingService.updateBookingStatus(selectedBooking._id || selectedBooking.id || "", {
+                status: "rejected",
+                trainerNotes,
+            });
+            void Swal.fire("Rejected", "Your session was rejected.", "success");
+            setShowRejectModal(false);
+            setDrawerOpen(false);
+            setTrainerNotes("");
+            onRefresh();
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : "Failed to reject booking";
+            void Swal.fire("Error", msg, "error");
+        }
+    };
+
+    const canAcceptSnippet = (b: MyBookingsSummaryDayBooking) =>
+        b.status === "pending_approval" &&
+        (!b.trainerStatus || b.trainerStatus === "pending");
 
     const handleCompleteBooking = async () => {
         if (!selectedBooking) return;
@@ -459,7 +483,7 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                                                         icon: "ri-eye-line",
                                                         onClick: () => void openBookingView(b.id),
                                                     },
-                                                    ...(canConfirmBooking(b.status)
+                                                    ...(canAcceptSnippet(b)
                                                         ? [
                                                               {
                                                                   id: "confirm",
@@ -510,11 +534,17 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                 open={drawerOpen}
                 booking={selectedBooking}
                 loading={drawerLoading}
+                currentTrainerId={currentTrainerId}
                 onClose={() => setDrawerOpen(false)}
                 onConfirm={(booking) => {
                     setSelectedBooking(booking);
                     setTrainerNotes("");
                     setShowConfirmModal(true);
+                }}
+                onReject={(booking) => {
+                    setSelectedBooking(booking);
+                    setTrainerNotes("");
+                    setShowRejectModal(true);
                 }}
                 onComplete={(booking) => {
                     setSelectedBooking(booking);
@@ -523,6 +553,33 @@ const TrainerBookingsCalendarView: React.FC<Props> = ({
                 }}
                 onCancel={(id) => void handleCancelBooking(id)}
             />
+
+            {showRejectModal && selectedBooking && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-lg">
+                        <h3 className="text-lg font-semibold mb-4">Reject your session</h3>
+                        <textarea
+                            className="form-control mb-4"
+                            rows={3}
+                            value={trainerNotes}
+                            onChange={(e) => setTrainerNotes(e.target.value)}
+                            placeholder="Optional reason"
+                            aria-label="Rejection reason"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="ti-btn ti-btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button onClick={handleRejectBooking} className="ti-btn ti-btn-danger">
+                                Reject session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showConfirmModal && selectedBooking && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

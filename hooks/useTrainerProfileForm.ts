@@ -21,6 +21,7 @@ import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUt
 import { normalizeWeeklyAvailability } from '@/shared/utils/trainerAvailabilityUtils';
 import { normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
 import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
+import { validateImageUploadFile } from '@/shared/utils/imageCropUtils';
 import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
 
 const emptyForm: UpdateTrainerRequest = {
@@ -170,12 +171,9 @@ export function useTrainerProfileForm() {
   const handleGallerySlotChange = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      Swal.fire('Error!', 'Please select an image file', 'error');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      Swal.fire('Error!', 'File size should be less than 5MB', 'error');
+    const validationError = validateImageUploadFile(file);
+    if (validationError) {
+      Swal.fire('Error!', validationError, 'error');
       return;
     }
     void handleFileUpload(file, false, slotIndex);

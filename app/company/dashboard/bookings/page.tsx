@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import CompanyBookingsList from "../components/CompanyBookingsList";
 import CompanyBookingsMonthDashboard from "./CompanyBookingsMonthDashboard";
+import CompanyMultiSessionBookingDrawer from "../components/CompanyMultiSessionBookingDrawer";
 import { currentYearMonth, maxYearMonth, shiftYearMonth } from "@/shared/utils/bookingsCalendarUtils";
 import bookingService, { MyBookingsSummary } from "@/services/bookingService";
 
@@ -15,6 +16,7 @@ const BookingsPage: React.FC = () => {
     const [summary, setSummary] = useState<MyBookingsSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
 
     const loadSummary = useCallback(async () => {
         try {
@@ -47,7 +49,7 @@ const BookingsPage: React.FC = () => {
     return (
         <div>
             <div className="box mb-4">
-                <div className="box-body py-3">
+                <div className="box-body py-3 flex flex-wrap items-center justify-between gap-3">
                     <div
                         className="inline-flex rounded-lg border border-defaultborder p-1 bg-light/40"
                         role="tablist"
@@ -82,6 +84,15 @@ const BookingsPage: React.FC = () => {
                             Table
                         </button>
                     </div>
+                    <button
+                        type="button"
+                        className="ti-btn ti-btn-primary !m-0"
+                        onClick={() => setCreateDrawerOpen(true)}
+                        aria-label="Create new multi-session booking"
+                    >
+                        <i className="ri-add-line me-1" aria-hidden="true" />
+                        New booking
+                    </button>
                 </div>
             </div>
 
@@ -101,6 +112,7 @@ const BookingsPage: React.FC = () => {
                     onRetrySummary={() => void loadSummary()}
                     onRefreshList={bumpList}
                     onOpenTableView={() => setView("table")}
+                    onNewBooking={() => setCreateDrawerOpen(true)}
                 />
             ) : (
                 <div id="company-bookings-list" className="grid grid-cols-12 gap-6">
@@ -109,6 +121,12 @@ const BookingsPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            <CompanyMultiSessionBookingDrawer
+                isOpen={createDrawerOpen}
+                onClose={() => setCreateDrawerOpen(false)}
+                onSuccess={bumpList}
+            />
         </div>
     );
 };

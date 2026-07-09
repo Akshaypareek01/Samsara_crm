@@ -1,4 +1,5 @@
 import { Booking } from '@/services/bookingService';
+import { getBookingTrainersLabel } from '@/shared/utils/bookingSessionUtils';
 
 // ==================== STATUS UTILITIES ====================
 
@@ -210,9 +211,7 @@ export function canRejectBooking(status: string): boolean {
 // ==================== DISPLAY UTILITIES ====================
 
 export function getBookingTitle(booking: Booking): string {
-    const trainerName = typeof booking.trainer === 'string'
-        ? 'Trainer'
-        : booking.trainer?.name || 'Unknown Trainer';
+    const trainerName = getBookingTrainersLabel(booking, 'Trainer');
     const companyName = typeof booking.company === 'string'
         ? 'Company'
         : booking.company?.companyName || 'Unknown Company';

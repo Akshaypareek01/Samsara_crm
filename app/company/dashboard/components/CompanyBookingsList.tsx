@@ -5,7 +5,10 @@ import bookingService, { Booking } from "@/services/bookingService";
 import { clearCompanyInsightsCache } from "@/services/companyInsightsClient";
 import StatusBadge from "@/shared/components/StatusBadge";
 import { canCompanyCancelBooking } from "@/shared/utils/bookingUtils";
-import { getBookingTrainerName } from "@/shared/utils/bookingTrainerUtils";
+import {
+    getBookingSessionSummary,
+    getBookingTrainersLabel,
+} from "@/shared/utils/bookingSessionUtils";
 import CompanyBookingDetailsDrawer from "./CompanyBookingDetailsDrawer";
 import CompanyTrainerProfileDrawer from "./CompanyTrainerProfileDrawer";
 import { useCompanyTrainerProfileDrawer } from "../hooks/useCompanyTrainerProfileDrawer";
@@ -251,10 +254,13 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                                                         type="button"
                                                         onClick={() => void openTrainerProfile(booking.trainer)}
                                                         className="font-semibold text-primary hover:underline p-0 bg-transparent border-0 text-left"
-                                                        aria-label={`View profile for ${getBookingTrainerName(booking)}`}
+                                                        aria-label={`View profile for ${getBookingTrainersLabel(booking)}`}
                                                     >
-                                                        {getBookingTrainerName(booking)}
+                                                        {getBookingTrainersLabel(booking)}
                                                     </button>
+                                                    <div className="text-xs text-muted mt-0.5">
+                                                        {getBookingSessionSummary(booking).label}
+                                                    </div>
                                                     {getTrainerTitle(booking) && (
                                                         <div className="text-sm text-muted">
                                                             {getTrainerTitle(booking)}
@@ -308,7 +314,7 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                                                 <div
                                                     className="inline-flex items-stretch rounded-lg border border-defaultborder dark:border-white/10 overflow-hidden divide-x divide-defaultborder dark:divide-white/10 shrink-0"
                                                     role="group"
-                                                    aria-label={`Actions for ${getBookingTrainerName(booking)}`}
+                                                    aria-label={`Actions for ${getBookingTrainersLabel(booking)}`}
                                                 >
                                                     <button
                                                         type="button"

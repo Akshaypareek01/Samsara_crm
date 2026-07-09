@@ -2,7 +2,7 @@
 
 import React, { Fragment, useEffect, useState } from 'react';
 import Seo from '@/shared/layout-components/seo/seo';
-import bookingService, { Booking, ApproveBookingRequest, RejectBookingRequest } from '@/services/bookingService';
+import bookingService, { Booking, RejectBookingRequest } from '@/services/bookingService';
 import CompanyService, { Company } from '@/services/companyService';
 import TrainerService, { Trainer } from '@/services/trainerService';
 import Swal from 'sweetalert2';
@@ -10,6 +10,7 @@ import StatusBadge from '@/shared/components/StatusBadge';
 import { canAdminCancelBooking } from '@/shared/utils/bookingUtils';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import AdminBookingDetailsDrawer from './AdminBookingDetailsDrawer';
+import AdminBookingApprovalModal from './AdminBookingApprovalModal';
 import AdminCompanyProfileDrawer from './AdminCompanyProfileDrawer';
 import AdminTrainerProfileDrawer from './AdminTrainerProfileDrawer';
 import { BookingsTableToolbar, BookingsTableFooter } from '@/shared/components/BookingsTablePagination';
@@ -44,14 +45,7 @@ const BookingsManagement = () => {
     const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
     const [profileStacked, setProfileStacked] = useState(false);
 
-    // Approval form data
-    const [approvalData, setApprovalData] = useState<ApproveBookingRequest>({
-        paymentMode: 'cash',
-        transactionId: '',
-        paymentType: 'full',
-        paymentAmount: 0,
-        adminNotes: '',
-    });
+    // Approval form handled in AdminBookingApprovalModal
 
     // Rejection form data
     const [rejectionReason, setRejectionReason] = useState('');
@@ -198,13 +192,6 @@ const BookingsManagement = () => {
 
     const handleApprove = (booking: Booking) => {
         setSelectedBooking(booking);
-        setApprovalData({
-            paymentMode: 'cash',
-            transactionId: '',
-            paymentType: 'full',
-            paymentAmount: 0,
-            adminNotes: '',
-        });
         setShowApprovalModal(true);
     };
 
@@ -220,27 +207,11 @@ const BookingsManagement = () => {
         setShowCancelModal(true);
     };
 
-    const submitApproval = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedBooking) return;
-
-        try {
-            const bookingId = selectedBooking._id || selectedBooking.id;
-            if (!bookingId) {
-                Swal.fire('Error!', 'Booking ID not found', 'error');
-                return;
-            }
-
-            await bookingService.approveBooking(bookingId, approvalData);
-            Swal.fire('Success!', 'Booking confirmed successfully', 'success');
-            setShowApprovalModal(false);
-            setBookingDrawerOpen(false);
-            setSelectedBooking(null);
-            fetchPendingBookings();
-            if (activeTab === 'all') fetchAllBookings();
-        } catch (err: any) {
-            Swal.fire('Error!', err.message || 'Failed to approve booking', 'error');
-        }
+    const handleApprovalSuccess = () => {
+        setBookingDrawerOpen(false);
+        setSelectedBooking(null);
+        fetchPendingBookings();
+        if (activeTab === 'all') fetchAllBookings();
     };
 
     const submitRejection = async (e: React.FormEvent) => {
@@ -568,113 +539,12 @@ const BookingsManagement = () => {
                 </div>
             </div>
 
-            {/* Approval Modal */}
-            {showApprovalModal && selectedBooking && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Approve Booking</h3>
-                            <button
-                                onClick={() => setShowApprovalModal(false)}
-                                className="ti-btn ti-btn-sm ti-btn-ghost"
-                            >
-                                <i className="ri-close-line"></i>
-                            </button>
-                        </div>
-
-                        <div className="mb-4 p-4 bg-primary/5 rounded">
-                            <p className="text-sm">
-                                <strong>Company:</strong> {getCompanyName(selectedBooking)}
-                            </p>
-                            <p className="text-sm">
-                                <strong>Trainer:</strong> {getTrainerName(selectedBooking)}
-                            </p>
-                            <p className="text-sm">
-                                <strong>Date:</strong> {formatDate(selectedBooking.bookingDate)} at {formatTime(selectedBooking.startTime)}
-                            </p>
-                        </div>
-
-                        <form onSubmit={submitApproval}>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className="form-label">Payment Mode <span className="text-danger">*</span></label>
-                                    <select
-                                        className="form-control"
-                                        value={approvalData.paymentMode}
-                                        onChange={(e) => setApprovalData({ ...approvalData, paymentMode: e.target.value as any })}
-                                        required
-                                    >
-                                        <option value="cash">Cash</option>
-                                        <option value="card">Card</option>
-                                        <option value="upi">UPI</option>
-                                        <option value="bank_transfer">Bank Transfer</option>
-                                        <option value="cheque">Cheque</option>
-                                        <option value="online">Online</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="form-label">Transaction ID <span className="text-danger">*</span></label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={approvalData.transactionId}
-                                        onChange={(e) => setApprovalData({ ...approvalData, transactionId: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="form-label">Payment Type <span className="text-danger">*</span></label>
-                                    <select
-                                        className="form-control"
-                                        value={approvalData.paymentType}
-                                        onChange={(e) => setApprovalData({ ...approvalData, paymentType: e.target.value as any })}
-                                        required
-                                    >
-                                        <option value="full">Full Payment</option>
-                                        <option value="partial">Partial Payment</option>
-                                        <option value="advance">Advance Payment</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="form-label">Payment Amount <span className="text-danger">*</span></label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        value={approvalData.paymentAmount}
-                                        onChange={(e) => setApprovalData({ ...approvalData, paymentAmount: parseFloat(e.target.value) })}
-                                        min="0"
-                                        step="0.01"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="mb-4">
-                                <label className="form-label">Admin Notes (Optional)</label>
-                                <textarea
-                                    className="form-control"
-                                    rows={3}
-                                    value={approvalData.adminNotes}
-                                    onChange={(e) => setApprovalData({ ...approvalData, adminNotes: e.target.value })}
-                                    placeholder="Add any notes about this approval..."
-                                />
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowApprovalModal(false)}
-                                    className="ti-btn ti-btn-secondary"
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className="ti-btn ti-btn-success">
-                                    Confirm Booking
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <AdminBookingApprovalModal
+                open={showApprovalModal}
+                booking={selectedBooking}
+                onClose={() => setShowApprovalModal(false)}
+                onSuccess={handleApprovalSuccess}
+            />
 
             {/* Rejection Modal */}
             {showRejectionModal && selectedBooking && (

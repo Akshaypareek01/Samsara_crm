@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import bookingService, { Booking } from '@/services/bookingService';
 import StatusBadge from '@/shared/components/StatusBadge';
-import { canConfirmBooking, canCompleteBooking, canCancelBooking } from '@/shared/utils/bookingUtils';
+import { canCompleteBooking, canCancelBooking } from '@/shared/utils/bookingUtils';
+import { getStoredTrainerId } from '@/shared/utils/sessionType';
+import { canTrainerActOnSession } from '@/shared/utils/bookingSessionUtils';
 import { promptBookingCancellationReason } from '@/shared/utils/promptBookingCancellationReason';
 import { getBookingCompanyName, getCompanyLogoUrl, getBookingCompany } from '@/shared/utils/companyDisplayUtils';
 import TrainerBookingDetailsDrawer from './TrainerBookingDetailsDrawer';
@@ -26,7 +28,9 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
     const [drawerLoading, setDrawerLoading] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showCompleteModal, setShowCompleteModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [trainerNotes, setTrainerNotes] = useState('');
+    const currentTrainerId = getStoredTrainerId() || '';
 
     const loadBookings = async () => {
         try {
@@ -77,6 +81,29 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
         } catch (error: any) {
             Swal.fire('Error', error.message || 'Failed to accept booking', 'error');
         }
+    };
+
+    const handleRejectBooking = async () => {
+        if (!selectedBooking) return;
+
+        try {
+            await bookingService.updateBookingStatus(selectedBooking._id || selectedBooking.id || '', {
+                status: 'rejected',
+                trainerNotes,
+            });
+            Swal.fire('Rejected', 'Your session was rejected. The company will be notified.', 'success');
+            setShowRejectModal(false);
+            setDrawerOpen(false);
+            setTrainerNotes('');
+            loadBookings();
+        } catch (error: any) {
+            Swal.fire('Error', error.message || 'Failed to reject booking', 'error');
+        }
+    };
+
+    const openRejectModal = (booking: Booking) => {
+        setSelectedBooking(booking);
+        setShowRejectModal(true);
     };
 
     const handleCompleteBooking = async () => {
@@ -291,7 +318,7 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
                                                     >
                                                         <i className="ri-eye-line"></i>
                                                     </button>
-                                                    {canConfirmBooking(booking.status) && (
+                                                    {currentTrainerId && canTrainerActOnSession(booking, currentTrainerId) && (
                                                         <button
                                                             onClick={() => openConfirmModal(booking)}
                                                             className="ti-btn ti-btn-sm ti-btn-success"
@@ -450,12 +477,57 @@ const TrainerBookingsList: React.FC<TrainerBookingsListProps> = ({ refreshTrigge
                 </div>
             )}
 
+            {showRejectModal && selectedBooking && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-bodybg rounded-lg p-6 w-full max-w-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold">Reject your session</h3>
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="ti-btn ti-btn-sm ti-btn-ghost"
+                                aria-label="Close reject dialog"
+                            >
+                                <i className="ri-close-line"></i>
+                            </button>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="form-label">Reason (optional)</label>
+                            <textarea
+                                className="form-control"
+                                rows={3}
+                                value={trainerNotes}
+                                onChange={(e) => setTrainerNotes(e.target.value)}
+                                placeholder="Why are you rejecting this session?"
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="ti-btn ti-btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRejectBooking}
+                                className="ti-btn ti-btn-danger"
+                            >
+                                Reject session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <TrainerBookingDetailsDrawer
                 open={drawerOpen}
                 booking={selectedBooking}
                 loading={drawerLoading}
+                currentTrainerId={currentTrainerId}
                 onClose={() => setDrawerOpen(false)}
                 onConfirm={(b) => openConfirmModal(b)}
+                onReject={(b) => openRejectModal(b)}
                 onComplete={(b) => openCompleteModal(b)}
                 onCancel={(id) => void handleCancelBooking(id)}
             />

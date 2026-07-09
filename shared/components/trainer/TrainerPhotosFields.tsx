@@ -3,7 +3,7 @@ import React, { RefObject, useEffect, useRef, useState } from 'react';
 import type { TrainerImage } from '@/services/trainerService';
 import ProfilePhotoCropModal from '@/shared/components/trainer/ProfilePhotoCropModal';
 import TrainerFormSectionTitle from '@/shared/components/trainer/TrainerFormSectionTitle';
-import { validateProfilePhotoFile } from '@/shared/utils/imageCropUtils';
+import { validateProfilePhotoFile, ALLOWED_IMAGE_ACCEPT, ALLOWED_IMAGE_FORMATS_LABEL } from '@/shared/utils/imageCropUtils';
 import '@/shared/styles/trainer-form.css';
 
 /** Maximum gallery images allowed on trainer profile / registration. */
@@ -125,7 +125,7 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
       <input
         type="file"
         ref={setProfilePhotoInputRef}
-        accept="image/*"
+        accept={ALLOWED_IMAGE_ACCEPT}
         onChange={handleProfilePhotoSelect}
         className="hidden"
         aria-hidden="true"
@@ -161,7 +161,7 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
           <div className="trainer-form-profile-info flex-1 min-w-0">
             <strong>Upload your profile photo</strong>
             <p>
-              Click the circle to choose a photo, crop it to a headshot, then upload. JPG or PNG,
+              Click the circle to choose a photo, crop it to a headshot, then upload. {ALLOWED_IMAGE_FORMATS_LABEL} only,
               min 300×300px recommended.
             </p>
             {profilePhoto?.path && (
@@ -195,7 +195,7 @@ const TrainerPhotosFields: React.FC<TrainerPhotosFieldsProps> = ({
                       galleryInputRefs.current[index] = el;
                     }
                   }}
-                  accept="image/*"
+                  accept={ALLOWED_IMAGE_ACCEPT}
                   onChange={(e) => onGallerySlotChange(index, e)}
                   className="hidden"
                   aria-hidden="true"

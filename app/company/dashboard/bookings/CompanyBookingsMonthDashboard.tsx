@@ -28,6 +28,14 @@ const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const QUICK_ACTIONS = [
     {
+        icon: "bx-plus-circle",
+        iconBg: "#EEF2FF",
+        iconColor: "#ed662e",
+        title: "New booking",
+        sub: "Multiple trainers, same day",
+        action: "new-booking" as const,
+    },
+    {
         icon: "bx-calendar-check",
         iconBg: "#EEF2FF",
         iconColor: "#ed662e",
@@ -80,6 +88,8 @@ type Props = {
     onRefreshList: () => void;
     /** Switches parent to table view (e.g. quick action). */
     onOpenTableView?: () => void;
+    /** Opens multi-session booking drawer. */
+    onNewBooking?: () => void;
 };
 
 /**
@@ -96,6 +106,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
     onRetrySummary,
     onRefreshList,
     onOpenTableView,
+    onNewBooking,
 }) => {
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const {
@@ -406,6 +417,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                                     onClick={() => {
                                         if (qa.action === "open-table") openTableView();
                                         if (qa.action === "open-table") onRefreshList();
+                                        if (qa.action === "new-booking") onNewBooking?.();
                                     }}
                                     className="flex items-center gap-3 p-3 rounded-xl border border-defaultborder hover:bg-light transition-colors text-left w-full"
                                 >

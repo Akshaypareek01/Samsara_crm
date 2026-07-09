@@ -105,6 +105,17 @@ export const MenuItems: any = [
   },
 
   {
+    icon: <i className="bx bx-receipt side-menu__icon"></i>,
+    title: "Booking Transactions",
+    type: "link",
+    active: false,
+    selected: false,
+    dirchange: false,
+    path: "/apps/crm/booking-transactions",
+    permission: "bookingManagement",
+  },
+
+  {
     icon: <i className="bx bx-wallet side-menu__icon"></i>,
     title: "Account Details",
     type: "link",

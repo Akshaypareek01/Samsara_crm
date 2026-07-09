@@ -3,6 +3,7 @@
 import React from "react";
 import type { EapDurationHours } from "@/services/eapTrainingService";
 import { formatEapDurationLabel } from "@/shared/utils/eapTrainingUtils";
+import { ALLOWED_IMAGE_ACCEPT } from "@/shared/utils/imageCropUtils";
 import type { EapTrainingFormState } from "@/hooks/useEapTrainingForm";
 
 type EapTrainingFormFieldsProps = {
@@ -47,7 +48,7 @@ const EapTrainingFormFields: React.FC<EapTrainingFormFieldsProps> = ({
         ref={fileRef}
         id="eap-cover-file"
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/*"
+        accept={ALLOWED_IMAGE_ACCEPT}
         className="eap-training-drawer-file-input"
         onChange={onCoverFileChange}
         aria-label="Upload cover image file"

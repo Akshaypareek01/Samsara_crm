@@ -4,6 +4,8 @@ import ProfilePhotoCropModal from '@/shared/components/trainer/ProfilePhotoCropM
 import {
   COMPANY_LOGO_OUTPUT_SIZE,
   validateImageUploadFile,
+  ALLOWED_IMAGE_ACCEPT,
+  ALLOWED_IMAGE_FORMATS_LABEL,
 } from '@/shared/utils/imageCropUtils';
 import '@/shared/styles/trainer-form.css';
 
@@ -103,7 +105,7 @@ const CompanyLogoUpload: React.FC<CompanyLogoUploadProps> = ({
       <input
         type="file"
         ref={setLogoInputRef}
-        accept="image/*"
+        accept={ALLOWED_IMAGE_ACCEPT}
         onChange={handleLogoSelect}
         className="hidden"
         aria-hidden="true"
@@ -145,7 +147,7 @@ const CompanyLogoUpload: React.FC<CompanyLogoUploadProps> = ({
           <strong>Upload your company logo</strong>
           <p>
             Click to choose a logo, crop it to a square, then upload. Use a clear logo on a light
-            background. JPG or PNG, max 5MB recommended.
+            background. {ALLOWED_IMAGE_FORMATS_LABEL} only, max 5MB recommended.
           </p>
           {logoUrl && (
             <button

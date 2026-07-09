@@ -15,6 +15,7 @@ import {
   getSyllabusEntryDescription,
   normalizeEapDurationHours,
 } from "@/shared/utils/eapTrainingUtils";
+import { validateImageUploadFile } from "@/shared/utils/imageCropUtils";
 
 export type EapTrainingFormState = {
   title: string;
@@ -115,12 +116,9 @@ export function useEapTrainingForm({ training, onSaved }: UseEapTrainingFormOpti
    * @param file - Selected image file.
    */
   const uploadCover = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      void Swal.fire({ icon: "error", title: "Invalid file", text: "Please select an image file." });
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      void Swal.fire({ icon: "error", title: "File too large", text: "Image must be under 5MB." });
+    const validationError = validateImageUploadFile(file);
+    if (validationError) {
+      void Swal.fire({ icon: "error", title: "Invalid file", text: validationError });
       return;
     }
 
