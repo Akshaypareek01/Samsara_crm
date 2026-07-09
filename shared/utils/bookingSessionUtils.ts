@@ -1,4 +1,4 @@
-import type { Booking } from '@/services/bookingService';
+import type { Booking, BookingSession, EapTrainingRef } from '@/services/bookingService';
 import type { Trainer } from '@/services/trainerService';
 import { getTrainerIdFromRef } from '@/shared/utils/bookingTrainerUtils';
 
@@ -17,6 +17,37 @@ export interface BookingSessionView {
 }
 
 /**
+ * Resolve EAP training id from string or populated ref.
+ *
+ * @param eapTraining - EAP training reference from a booking session.
+ */
+function normalizeEapTrainingId(
+    eapTraining?: string | EapTrainingRef | null
+): string | undefined {
+    if (!eapTraining) return undefined;
+    if (typeof eapTraining === 'string') return eapTraining;
+    return eapTraining._id || eapTraining.id;
+}
+
+/**
+ * Map a raw booking session to the normalized view shape.
+ *
+ * @param session - Booking session from API payload.
+ */
+function toBookingSessionView(session: BookingSession): BookingSessionView {
+    return {
+        trainer: session.trainer,
+        startTime: session.startTime,
+        duration: session.duration,
+        typeOfTraining: session.typeOfTraining || [],
+        eapTraining: normalizeEapTrainingId(session.eapTraining),
+        trainerStatus: session.trainerStatus,
+        trainerNotes: session.trainerNotes,
+        approvedAt: session.approvedAt,
+    };
+}
+
+/**
  * Normalize legacy or multi-session booking into sessions array.
  *
  * @param booking - Booking record.
@@ -24,7 +55,7 @@ export interface BookingSessionView {
  */
 export function getBookingSessions(booking: Booking): BookingSessionView[] {
     if (Array.isArray(booking.sessions) && booking.sessions.length > 0) {
-        return booking.sessions;
+        return booking.sessions.map(toBookingSessionView);
     }
 
     if (booking.trainer && booking.startTime && booking.duration) {
@@ -38,18 +69,15 @@ export function getBookingSessions(booking: Booking): BookingSessionView[] {
                   : 'pending';
 
         return [
-            {
+            toBookingSessionView({
                 trainer: booking.trainer,
                 startTime: booking.startTime,
                 duration: booking.duration,
                 typeOfTraining: booking.typeOfTraining || [],
-                eapTraining:
-                    typeof booking.eapTraining === 'string'
-                        ? booking.eapTraining
-                        : booking.eapTraining?._id || booking.eapTraining?.id,
+                eapTraining: booking.eapTraining,
                 trainerStatus,
                 trainerNotes: booking.trainerNotes,
-            },
+            }),
         ];
     }
 
