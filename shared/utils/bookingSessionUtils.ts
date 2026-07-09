@@ -144,7 +144,7 @@ export function getBookingTrainerNames(booking: Booking): string[] {
         }
         return 'Trainer';
     });
-    return [...new Set(names)];
+    return Array.from(new Set(names));
 }
 
 /**
