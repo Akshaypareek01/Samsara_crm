@@ -1,22 +1,27 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import CompanyBookingsList from "../components/CompanyBookingsList";
 import CompanyBookingsMonthDashboard from "./CompanyBookingsMonthDashboard";
-import CompanyMultiSessionBookingDrawer from "../components/CompanyMultiSessionBookingDrawer";
+import { bookingNewPageUrl } from "../utils/bookingPageUrl";
 import { currentYearMonth, maxYearMonth, shiftYearMonth } from "@/shared/utils/bookingsCalendarUtils";
 import bookingService, { MyBookingsSummary } from "@/services/bookingService";
 
 type BookingsView = "calendar" | "table";
 
 const BookingsPage: React.FC = () => {
+    const router = useRouter();
     const [view, setView] = useState<BookingsView>("calendar");
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [monthKey, setMonthKey] = useState(currentYearMonth);
     const [summary, setSummary] = useState<MyBookingsSummary | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+
+    const openNewBooking = () => {
+        router.push(bookingNewPageUrl(undefined, "/company/dashboard/bookings"));
+    };
 
     const loadSummary = useCallback(async () => {
         try {
@@ -87,7 +92,7 @@ const BookingsPage: React.FC = () => {
                     <button
                         type="button"
                         className="ti-btn ti-btn-primary !m-0"
-                        onClick={() => setCreateDrawerOpen(true)}
+                        onClick={openNewBooking}
                         aria-label="Create new multi-session booking"
                     >
                         <i className="ri-add-line me-1" aria-hidden="true" />
@@ -112,7 +117,7 @@ const BookingsPage: React.FC = () => {
                     onRetrySummary={() => void loadSummary()}
                     onRefreshList={bumpList}
                     onOpenTableView={() => setView("table")}
-                    onNewBooking={() => setCreateDrawerOpen(true)}
+                    onNewBooking={openNewBooking}
                 />
             ) : (
                 <div id="company-bookings-list" className="grid grid-cols-12 gap-6">
@@ -121,12 +126,6 @@ const BookingsPage: React.FC = () => {
                     </div>
                 </div>
             )}
-
-            <CompanyMultiSessionBookingDrawer
-                isOpen={createDrawerOpen}
-                onClose={() => setCreateDrawerOpen(false)}
-                onSuccess={bumpList}
-            />
         </div>
     );
 };

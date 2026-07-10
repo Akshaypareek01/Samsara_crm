@@ -385,6 +385,7 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                 open={trainerDrawerOpen}
                 trainer={profileTrainer}
                 loading={trainerDrawerLoading}
+                returnTo="/company/dashboard/bookings"
                 onClose={closeTrainerProfile}
             />
         </div>

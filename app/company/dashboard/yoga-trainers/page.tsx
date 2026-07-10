@@ -3,9 +3,10 @@ import Pageheader from '@/shared/layout-components/page-header/pageheader';
 import Seo from '@/shared/layout-components/seo/seo';
 import React, { Fragment, useEffect, useState } from 'react';
 import TrainerService, { Trainer, SPECIALIST_OPTIONS } from '@/services/trainerService';
-import CompanyBookingDrawer from '../components/CompanyBookingDrawer';
 import CompanyTrainerProfileDrawer from '../components/CompanyTrainerProfileDrawer';
 import { useCompanyTrainerStats } from '@/hooks/useCompanyTrainerStats';
+
+const YOGA_TRAINERS_RETURN = '/company/dashboard/yoga-trainers';
 
 type FilterPeriod = 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly';
 const PERIODS: FilterPeriod[] = ['Weekly', 'Monthly', 'Quarterly', 'Yearly'];
@@ -22,8 +23,6 @@ const TrainersPage = () => {
     const [selectedTrainer, setSelectedTrainer] = useState<Trainer | null>(null);
     const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
     const [profileLoading, setProfileLoading] = useState(false);
-    const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
-    const [trainerToBook, setTrainerToBook] = useState<Trainer | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialist, setFilterSpecialist] = useState('');
 
@@ -80,18 +79,6 @@ const TrainersPage = () => {
     const handleCloseProfileDrawer = () => {
         setProfileDrawerOpen(false);
         setSelectedTrainer(null);
-    };
-
-    const handleBookSessionFromProfile = (trainer: Trainer) => {
-        setProfileDrawerOpen(false);
-        setSelectedTrainer(null);
-        setTrainerToBook(trainer);
-        setBookingDrawerOpen(true);
-    };
-
-    const handleBookingSuccess = () => {
-        setBookingDrawerOpen(false);
-        setTrainerToBook(null);
     };
 
     return (
@@ -247,13 +234,17 @@ const TrainersPage = () => {
                             />
                         </div>
                         <div>
-                            <label className="form-label">All Expertise</label>
+                            <label className="form-label" htmlFor="yoga-trainer-training-for">
+                                Training For
+                            </label>
                             <select
+                                id="yoga-trainer-training-for"
                                 className="form-control"
                                 value={filterSpecialist}
                                 onChange={(e) => setFilterSpecialist(e.target.value)}
+                                aria-label="Filter by training audience"
                             >
-                                <option value="">All Expertise</option>
+                                <option value="">All audiences</option>
                                 {SPECIALIST_OPTIONS.map((spec) => (
                                     <option key={spec} value={spec}>
                                         {spec}
@@ -347,17 +338,7 @@ const TrainersPage = () => {
                 trainer={selectedTrainer}
                 loading={profileLoading}
                 onClose={handleCloseProfileDrawer}
-                onBookSession={handleBookSessionFromProfile}
-            />
-
-            <CompanyBookingDrawer
-                trainer={trainerToBook}
-                isOpen={bookingDrawerOpen}
-                onClose={() => {
-                    setBookingDrawerOpen(false);
-                    setTrainerToBook(null);
-                }}
-                onSuccess={handleBookingSuccess}
+                returnTo={YOGA_TRAINERS_RETURN}
             />
         </Fragment>
     );

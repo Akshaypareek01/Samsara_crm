@@ -20,8 +20,12 @@ export interface SessionFormRow {
 }
 
 export interface UseBookingSessionFormOptions {
-    isOpen: boolean;
+    /** When false, skips data load. Alias: `isOpen` for drawer usage. */
+    enabled?: boolean;
+    isOpen?: boolean;
     maxSessions?: number;
+    /** Pre-select this trainer on the first session row. */
+    initialTrainerId?: string;
 }
 
 /**
@@ -29,7 +33,13 @@ export interface UseBookingSessionFormOptions {
  *
  * @param options - Hook configuration.
  */
-export function useBookingSessionForm({ isOpen, maxSessions = 10 }: UseBookingSessionFormOptions) {
+export function useBookingSessionForm({
+    enabled,
+    isOpen,
+    maxSessions = 10,
+    initialTrainerId = "",
+}: UseBookingSessionFormOptions) {
+    const active = enabled ?? isOpen ?? true;
     const [companyId, setCompanyId] = useState("");
     const [bookingDate, setBookingDate] = useState("");
     const [notes, setNotes] = useState("");
@@ -42,23 +52,29 @@ export function useBookingSessionForm({ isOpen, maxSessions = 10 }: UseBookingSe
 
     const minBookingDate = getMinBookingDate();
 
-    const createEmptySession = useCallback((): SessionFormRow => ({
-        key: `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        trainerId: "",
-        startTime: "",
-        duration: 2,
-        typeOfTraining: [],
-    }), []);
+    const createEmptySession = useCallback(
+        (trainerId = ""): SessionFormRow => ({
+            key: `session-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            trainerId,
+            startTime: "",
+            duration: 2,
+            typeOfTraining: [],
+        }),
+        []
+    );
 
-    const resetForm = useCallback(() => {
-        setBookingDate("");
-        setNotes("");
-        setSessions([createEmptySession()]);
-        setAvailability([]);
-    }, [createEmptySession]);
+    const resetForm = useCallback(
+        (presetTrainerId = "") => {
+            setBookingDate("");
+            setNotes("");
+            setSessions([createEmptySession(presetTrainerId || initialTrainerId)]);
+            setAvailability([]);
+        },
+        [createEmptySession, initialTrainerId]
+    );
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!active) return;
 
         const load = async () => {
             try {
@@ -73,7 +89,7 @@ export function useBookingSessionForm({ isOpen, maxSessions = 10 }: UseBookingSe
                 ]);
                 setCompanyId(profile._id || profile.id || "");
                 setTrainers(trainerRes.results || []);
-                resetForm();
+                resetForm(initialTrainerId);
             } catch (error) {
                 console.error("Failed to load booking form data:", error);
             } finally {
@@ -82,7 +98,7 @@ export function useBookingSessionForm({ isOpen, maxSessions = 10 }: UseBookingSe
         };
 
         void load();
-    }, [isOpen, resetForm]);
+    }, [active, initialTrainerId, resetForm]);
 
     const trainerMap = useMemo(() => {
         const map = new Map<string, Trainer>();

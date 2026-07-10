@@ -1,0 +1,52 @@
+.company-booking-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.company-booking-page__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--portal-primary, #ed662e);
+  margin-bottom: 1rem;
+  text-decoration: none;
+}
+
+.company-booking-page__back:hover {
+  text-decoration: underline;
+}
+
+.company-booking-page__header {
+  margin-bottom: 1.5rem;
+}
+
+.company-booking-page__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.company-booking-page__subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+.company-booking-page__card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+}
+
+.company-booking-page__form {
+  margin: 0;
+}
+
+.company-booking-page__preset {
+  border-style: dashed;
+}

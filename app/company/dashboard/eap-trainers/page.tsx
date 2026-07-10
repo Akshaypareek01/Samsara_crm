@@ -246,6 +246,7 @@ const EapTrainersPageInner = () => {
         open={profileDrawerOpen}
         trainer={selectedTrainer}
         loading={profileLoading}
+        returnTo="/company/dashboard/eap-trainers"
         onClose={() => {
           setProfileDrawerOpen(false);
           setSelectedTrainer(null);

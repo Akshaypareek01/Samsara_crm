@@ -59,10 +59,10 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
           id="trainer-search"
           type="search"
           className="company-trainers-filters__input"
-          placeholder="Search by name, title, or program..."
+          placeholder="Search by name, title, or specialization..."
           value={searchInput}
           onChange={(e) => onSearchChange(e.target.value)}
-          aria-label="Search trainers by name, title, or program"
+          aria-label="Search trainers by name, title, or specialization"
         />
       </div>
       <div>
@@ -85,17 +85,17 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
         </select>
       </div>
       <div>
-        <label className="company-trainers-filters__label" htmlFor="trainer-specialist">
-          Specialist
+        <label className="company-trainers-filters__label" htmlFor="trainer-training-for">
+          Training For
         </label>
         <select
-          id="trainer-specialist"
+          id="trainer-training-for"
           className="company-trainers-filters__select"
           value={filterSpecialist}
           onChange={(e) => onSpecialistChange(e.target.value)}
-          aria-label="Filter by specialist"
+          aria-label="Filter by training audience"
         >
-          <option value="">All</option>
+          <option value="">All audiences</option>
           {SPECIALIST_OPTIONS.map((spec) => (
             <option key={spec} value={spec}>
               {spec}
@@ -104,17 +104,17 @@ const CompanyTrainersFilters: React.FC<CompanyTrainersFiltersProps> = ({
         </select>
       </div>
       <div>
-        <label className="company-trainers-filters__label" htmlFor="trainer-training">
-          Program
+        <label className="company-trainers-filters__label" htmlFor="trainer-specializations">
+          Specializations
         </label>
         <select
-          id="trainer-training"
+          id="trainer-specializations"
           className="company-trainers-filters__select"
           value={filterTraining}
           onChange={(e) => onTrainingChange(e.target.value)}
-          aria-label="Filter by training program"
+          aria-label="Filter by specialization"
         >
-          <option value="">All Programs</option>
+          <option value="">All specializations</option>
           {TYPE_OF_TRAINING_OPTIONS.map((training) => (
             <option key={training} value={training}>
               {training}

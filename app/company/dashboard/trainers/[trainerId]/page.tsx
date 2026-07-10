@@ -6,7 +6,7 @@ import React, { Fragment, Suspense, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import TrainerService, { type Trainer, isTrainerAcceptingBookings } from '@/services/trainerService';
 import CompanyTrainerProfilePanel from '../../components/CompanyTrainerProfilePanel';
-import CompanyBookingDrawer from '../../components/CompanyBookingDrawer';
+import { bookingNewPageUrl } from '../../utils/bookingPageUrl';
 import { safeTrainerProfileReturnTo } from '../../utils/trainerProfilePageUrl';
 import '../../components/company-trainer-profile-drawer.css';
 import '../../components/company-trainer-profile-page.css';
@@ -23,7 +23,10 @@ const CompanyTrainerProfilePageInner = () => {
   const [trainer, setTrainer] = useState<Trainer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false);
+
+  const bookHref = trainerId
+    ? bookingNewPageUrl(trainerId, returnTo)
+    : bookingNewPageUrl();
 
   useEffect(() => {
     if (!trainerId) {
@@ -92,25 +95,18 @@ const CompanyTrainerProfilePageInner = () => {
                 This trainer is not accepting new bookings right now.
               </p>
             )}
-            <button
-              type="button"
-              className="company-trainer-profile-page__book-btn"
-              disabled={!canBook}
-              onClick={() => setBookingDrawerOpen(true)}
+            <Link
+              href={bookHref}
+              className={`company-trainer-profile-page__book-btn${!canBook ? ' pointer-events-none opacity-50' : ''}`}
+              aria-disabled={!canBook}
+              tabIndex={canBook ? 0 : -1}
             >
               <i className="ri-calendar-check-line text-base" aria-hidden="true" />
               Book Session
-            </button>
+            </Link>
           </div>
         )}
       </div>
-
-      <CompanyBookingDrawer
-        trainer={trainer}
-        isOpen={bookingDrawerOpen}
-        onClose={() => setBookingDrawerOpen(false)}
-        onSuccess={() => setBookingDrawerOpen(false)}
-      />
     </Fragment>
   );
 };

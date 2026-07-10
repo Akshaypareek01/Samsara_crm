@@ -276,6 +276,7 @@ const CompanyLatestBookings: React.FC<Props> = ({ refreshTrigger = 0, onViewAll,
                 open={trainerDrawerOpen}
                 trainer={profileTrainer}
                 loading={trainerDrawerLoading}
+                returnTo="/company/dashboard/bookings"
                 onClose={closeTrainerProfile}
             />
         </div>

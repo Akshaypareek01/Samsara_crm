@@ -539,6 +539,7 @@ const CompanyBookingsMonthDashboard: React.FC<Props> = ({
                 open={trainerDrawerOpen}
                 trainer={profileTrainer}
                 loading={trainerDrawerLoading}
+                returnTo="/company/dashboard/bookings"
                 onClose={closeTrainerProfile}
             />
         </div>
