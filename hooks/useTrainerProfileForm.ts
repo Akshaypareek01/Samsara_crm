@@ -20,7 +20,8 @@ import { broadcastTrainerProfileUpdated } from '@/utils/trainerProfileSync';
 import type { WeeklyAvailabilityDay } from '@/shared/utils/trainerAvailabilityUtils';
 import { normalizeWeeklyAvailability } from '@/shared/utils/trainerAvailabilityUtils';
 import { normalizeTrainerCities } from '@/shared/utils/trainerCityUtils';
-import { normalizeTrainerCategories } from '@/shared/utils/trainerCategoryUtils';
+import { normalizeTrainerCategories, resolveTrainerCategoriesForForm } from '@/shared/utils/trainerCategoryUtils';
+import { validateTrainerProfileUpdate } from '@/shared/utils/trainerRegistrationValidation';
 import { validateImageUploadFile } from '@/shared/utils/imageCropUtils';
 import { MAX_TRAINER_GALLERY_IMAGES } from '@/shared/components/trainer/TrainerPhotosFields';
 
@@ -76,7 +77,7 @@ export function useTrainerProfileForm() {
         name: profile.name || '',
         title: profile.title || '',
         bio: profile.bio || '',
-        category: normalizeTrainerCategories(profile.category),
+        category: resolveTrainerCategoriesForForm(profile.category),
         specialistIn: Array.isArray(profile.specialistIn)
           ? profile.specialistIn
           : profile.specialistIn
@@ -199,6 +200,12 @@ export function useTrainerProfileForm() {
       setSaving(true);
       setError('');
 
+      const validation = validateTrainerProfileUpdate(formData);
+      if (!validation.isValid) {
+        Swal.fire('Error!', validation.firstError || 'Please fill in all required fields', 'error');
+        return false;
+      }
+
       const specialistInArray: string[] = Array.isArray(formData.specialistIn)
         ? formData.specialistIn.filter((item): item is string => Boolean(item))
         : formData.specialistIn
@@ -210,27 +217,8 @@ export function useTrainerProfileForm() {
           ? [formData.typeOfTraining]
           : [];
 
-      const categoryArray = normalizeTrainerCategories(formData.category);
+      const categoryArray = resolveTrainerCategoriesForForm(formData.category);
 
-      if (
-        !formData.name ||
-        !formData.title ||
-        !formData.bio ||
-        categoryArray.length === 0 ||
-        specialistInArray.length === 0 ||
-        typeOfTrainingArray.length === 0
-      ) {
-        Swal.fire('Error!', 'Please fill in all required fields', 'error');
-        return false;
-      }
-      if (formData.bio.length > 2000) {
-        Swal.fire('Error!', 'Bio must be less than 2000 characters', 'error');
-        return false;
-      }
-      if (formData.pinCode && !/^[0-9]{6}$/.test(formData.pinCode)) {
-        Swal.fire('Error!', 'PIN code must be 6 digits', 'error');
-        return false;
-      }
       if (normalizeTrainerCities(formData).length === 0) {
         Swal.fire('Error!', 'Select at least one city', 'error');
         return false;
@@ -240,9 +228,9 @@ export function useTrainerProfileForm() {
       const filledCertification = filterFilledCertificationEntries(formData.certification);
 
       const updateData: UpdateTrainerRequest = {
-        name: formData.name.trim(),
-        title: formData.title.trim(),
-        bio: formData.bio.trim(),
+        name: (formData.name || '').trim(),
+        title: (formData.title || '').trim(),
+        bio: (formData.bio || '').trim(),
         category: categoryArray,
         specialistIn: specialistInArray,
         typeOfTraining: typeOfTrainingArray,

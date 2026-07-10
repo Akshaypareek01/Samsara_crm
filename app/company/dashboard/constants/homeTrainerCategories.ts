@@ -9,7 +9,7 @@ export const HOME_TRAINER_CATEGORY_LABELS: Record<
   'Zumba Trainer': 'Zumba',
   'Sound Healer': 'Sound Healers',
   Psychologist: 'Psychologist',
-  'Women Health Trainer': 'Women Health Trainers',
+  'Ayurveda Doctor': 'Ayurveda Doctors',
   'EAP Trainer': 'EAP Trainers',
 };
 

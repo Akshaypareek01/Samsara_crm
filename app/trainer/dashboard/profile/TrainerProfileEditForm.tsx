@@ -9,14 +9,13 @@ import {
   UpdateTrainerRequest,
   mergeTrainerSelectOptions,
 } from "@/services/trainerService";
-import MultiSelect from "@/shared/components/MultiSelect";
 import TrainerChipSelect from "@/shared/components/trainer/TrainerChipSelect";
 import TrainerPersonalDetailsFields from "@/shared/components/trainer/TrainerPersonalDetailsFields";
 import TrainerQualificationFields from "@/shared/components/trainer/TrainerQualificationFields";
 import TrainerFormSectionHeader from "@/shared/components/trainer/TrainerFormSectionHeader";
 import TrainerPhotosFields from "@/shared/components/trainer/TrainerPhotosFields";
 import TrainerProfileBanner from "@/shared/components/trainer/TrainerProfileBanner";
-import { normalizeTrainerCategories } from "@/shared/utils/trainerCategoryUtils";
+import { resolveTrainerCategoriesForForm } from "@/shared/utils/trainerCategoryUtils";
 
 type TrainerProfileEditFormProps = {
   trainer: Trainer | null;
@@ -64,7 +63,7 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
       title={formData.title || trainer?.title}
       email={trainer?.email}
       mobile={trainer?.mobile}
-      category={normalizeTrainerCategories(formData.category ?? trainer?.category)}
+      category={resolveTrainerCategoriesForForm(formData.category ?? trainer?.category)}
       profilePhoto={formData.profilePhoto}
     />
 
@@ -115,7 +114,7 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
             <TrainerChipSelect
               label="Category"
               options={[...TRAINER_CATEGORY_OPTIONS]}
-              value={normalizeTrainerCategories(formData.category)}
+              value={resolveTrainerCategoriesForForm(formData.category)}
               onChange={(selected) => setFormData((prev) => ({ ...prev, category: selected }))}
               required
               fieldId="profile-trainer-category"
@@ -205,25 +204,21 @@ const TrainerProfileEditForm: React.FC<TrainerProfileEditFormProps> = ({
       <section className="pt-6 border-t border-defaultborder/60">
         <TrainerFormSectionHeader number={2} title="Training Information" />
         <div className="space-y-4">
-          <MultiSelect
+          <TrainerChipSelect
             label="Training For"
+            fieldId="profile-specialist-in"
             options={mergeTrainerSelectOptions(SPECIALIST_OPTIONS, formData.specialistIn)}
             value={Array.isArray(formData.specialistIn) ? formData.specialistIn : []}
             onChange={(selected) => setFormData((prev) => ({ ...prev, specialistIn: selected }))}
-            placeholder="Select audience..."
             required
-            maxHeight="200px"
-            showTags={true}
           />
-          <MultiSelect
+          <TrainerChipSelect
             label="Specializations"
+            fieldId="profile-type-of-training"
             options={mergeTrainerSelectOptions(TYPE_OF_TRAINING_OPTIONS, formData.typeOfTraining)}
             value={Array.isArray(formData.typeOfTraining) ? formData.typeOfTraining : []}
             onChange={(selected) => setFormData((prev) => ({ ...prev, typeOfTraining: selected }))}
-            placeholder="Select specializations..."
             required
-            maxHeight="300px"
-            showTags={true}
           />
         </div>
       </section>

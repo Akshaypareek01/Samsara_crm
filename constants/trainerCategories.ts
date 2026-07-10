@@ -4,7 +4,7 @@ export const TRAINER_CATEGORY_OPTIONS = [
   'Zumba Trainer',
   'Sound Healer',
   'Psychologist',
-  'Women Health Trainer',
+  'Ayurveda Doctor',
   'EAP Trainer',
 ] as const;
 

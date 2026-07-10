@@ -5,6 +5,49 @@ import {
 import { HOME_TRAINER_CATEGORY_LABELS } from '@/app/company/dashboard/constants/homeTrainerCategories';
 import type { Trainer } from '@/services/trainerService';
 
+/** Legacy category values mapped to current enum labels. */
+export const LEGACY_TRAINER_CATEGORY_ALIASES: Record<string, TrainerCategory> = {
+  'Women Health Trainer': 'Ayurveda Doctor',
+};
+
+/**
+ * Map a single legacy trainer category to the current enum value.
+ *
+ * @param category - Raw category string from API or form.
+ */
+export function mapLegacyTrainerCategory(category: string): string {
+  const trimmed = category.trim();
+  return LEGACY_TRAINER_CATEGORY_ALIASES[trimmed] ?? trimmed;
+}
+
+/**
+ * Extract deduplicated raw category strings from API or form state.
+ *
+ * @param value - Single category or array from trainer record or form.
+ */
+function extractRawTrainerCategories(value: unknown): string[] {
+  if (value == null) return [];
+
+  const rawList = Array.isArray(value)
+    ? value.map((item) => String(item).trim()).filter(Boolean)
+    : [String(value).trim()].filter(Boolean);
+
+  return Array.from(new Set(rawList));
+}
+
+/**
+ * Resolve trainer categories for forms and display, including legacy aliases.
+ *
+ * @param value - Raw category field from trainer record or form.
+ */
+export function resolveTrainerCategoriesForForm(value: unknown): TrainerCategory[] {
+  const mapped = extractRawTrainerCategories(value).map(mapLegacyTrainerCategory);
+  const unique = Array.from(new Set(mapped));
+  return unique.filter((item): item is TrainerCategory =>
+    TRAINER_CATEGORY_OPTIONS.includes(item as TrainerCategory)
+  );
+}
+
 /**
  * Normalize trainer category from API or form state (legacy string or array).
  *
@@ -12,16 +55,7 @@ import type { Trainer } from '@/services/trainerService';
  * @returns Valid, deduplicated category enum values.
  */
 export function normalizeTrainerCategories(value: unknown): TrainerCategory[] {
-  if (value == null) return [];
-
-  const rawList = Array.isArray(value)
-    ? value.map((item) => String(item).trim()).filter(Boolean)
-    : [String(value).trim()].filter(Boolean);
-
-  const unique = Array.from(new Set(rawList));
-  return unique.filter((item): item is TrainerCategory =>
-    TRAINER_CATEGORY_OPTIONS.includes(item as TrainerCategory)
-  );
+  return resolveTrainerCategoriesForForm(value);
 }
 
 /**
@@ -35,7 +69,7 @@ export function trainerHasCategory(
   category: TrainerCategory | string
 ): boolean {
   if (!trainer) return false;
-  return normalizeTrainerCategories(trainer.category).includes(category as TrainerCategory);
+  return resolveTrainerCategoriesForForm(trainer.category).includes(category as TrainerCategory);
 }
 
 /**
@@ -44,7 +78,7 @@ export function trainerHasCategory(
  * @param categories - Raw category value(s) from API or form.
  */
 export function formatTrainerCategoryLabels(categories: unknown): string[] {
-  return normalizeTrainerCategories(categories).map(
+  return resolveTrainerCategoriesForForm(categories).map(
     (cat) => HOME_TRAINER_CATEGORY_LABELS[cat] || cat
   );
 }

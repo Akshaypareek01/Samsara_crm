@@ -175,6 +175,7 @@ export const SPECIALIST_OPTIONS = [
 /** Wellness disciplines the trainer offers (UI label: "Specializations") */
 export const TYPE_OF_TRAINING_OPTIONS = [
   'Yoga',
+  'Zumba',
   'Desktop Yoga',
   'Laughter Yoga',
   'Meditation',

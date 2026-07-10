@@ -4,6 +4,8 @@ import {
   SPECIALIST_OPTIONS,
   TRAINER_CITY_OPTIONS,
   TYPE_OF_TRAINING_OPTIONS,
+  type UpdateTrainerRequest,
+  mergeTrainerSelectOptions,
 } from '@/services/trainerService';
 import { validateTrainerDateOfBirth } from '@/shared/utils/trainerDateUtils';
 import { validatePersonName } from '@/shared/utils/nameValidation';
@@ -209,4 +211,132 @@ export function mapBackendErrorToField(message: string): TrainerRegistrationFiel
   if (lower.includes('specialist') || lower.includes('training for')) return 'specialistIn';
   if (lower.includes('type of training') || lower.includes('specialization')) return 'typeOfTraining';
   return undefined;
+}
+
+/** Profile edit fields validated before save. */
+export type TrainerProfileField =
+  | 'category'
+  | 'name'
+  | 'title'
+  | 'dateOfBirth'
+  | 'city'
+  | 'pinCode'
+  | 'experience'
+  | 'bio'
+  | 'specialistIn'
+  | 'typeOfTraining';
+
+const PROFILE_FIELD_ORDER: TrainerProfileField[] = [
+  'category',
+  'name',
+  'title',
+  'dateOfBirth',
+  'city',
+  'pinCode',
+  'experience',
+  'bio',
+  'specialistIn',
+  'typeOfTraining',
+];
+
+export interface TrainerProfileValidationResult {
+  isValid: boolean;
+  errors: Partial<Record<TrainerProfileField, string>>;
+  firstError?: string;
+}
+
+/**
+ * Validate trainer profile edit form values before save.
+ *
+ * @param data - Current profile form state.
+ */
+export function validateTrainerProfileUpdate(
+  data: UpdateTrainerRequest
+): TrainerProfileValidationResult {
+  const errors: Partial<Record<TrainerProfileField, string>> = {};
+
+  const categories = normalizeTrainerCategories(data.category);
+  if (categories.length === 0) {
+    errors.category = 'Select at least one trainer category';
+  }
+
+  const name = (data.name || '').trim();
+  if (!name) {
+    errors.name = 'Full name is required';
+  } else {
+    const nameErr = validatePersonName(name);
+    if (nameErr) errors.name = nameErr;
+  }
+
+  if (!(data.title || '').trim()) {
+    errors.title = 'Professional title is required';
+  }
+
+  if (data.dateOfBirth) {
+    const dobError = validateTrainerDateOfBirth(data.dateOfBirth);
+    if (dobError) errors.dateOfBirth = dobError;
+  }
+
+  const cities = Array.isArray(data.cities)
+    ? Array.from(new Set(data.cities.map((c) => String(c).trim()).filter(Boolean)))
+    : [];
+  if (cities.length === 0) {
+    errors.city = 'Select at least one city';
+  } else if (cities.some((item) => !TRAINER_CITY_OPTIONS.includes(item as (typeof TRAINER_CITY_OPTIONS)[number]))) {
+    errors.city = 'One or more selected cities are invalid';
+  }
+
+  const pin = (data.pinCode || '').trim();
+  if (pin && !PIN_REGEX.test(pin)) {
+    errors.pinCode = 'PIN code must be exactly 6 digits';
+  }
+
+  const experience = (data.experience || '').trim();
+  if (experience && !EXPERIENCE_OPTIONS.includes(experience)) {
+    errors.experience = 'Please select a valid experience range';
+  }
+
+  const bio = (data.bio || '').trim();
+  if (!bio) {
+    errors.bio = 'Bio is required';
+  } else if (bio.length > 2000) {
+    errors.bio = 'Bio must be 2000 characters or less';
+  }
+
+  const specialistIn = (Array.isArray(data.specialistIn)
+    ? data.specialistIn
+    : data.specialistIn
+      ? [data.specialistIn]
+      : []
+  ).filter((item): item is string => Boolean(item));
+  const allowedSpecialist = mergeTrainerSelectOptions(SPECIALIST_OPTIONS, data.specialistIn);
+  if (specialistIn.length === 0) {
+    errors.specialistIn = 'Select at least one Training For option';
+  } else if (specialistIn.some((item) => !allowedSpecialist.includes(item))) {
+    errors.specialistIn = 'One or more Training For options are invalid';
+  }
+
+  const allowedSpecializations = mergeTrainerSelectOptions(
+    TYPE_OF_TRAINING_OPTIONS,
+    data.typeOfTraining
+  );
+  const typeOfTraining = (Array.isArray(data.typeOfTraining)
+    ? data.typeOfTraining
+    : data.typeOfTraining
+      ? [data.typeOfTraining]
+      : []
+  ).filter((item): item is string => Boolean(item));
+  if (typeOfTraining.length === 0) {
+    errors.typeOfTraining = 'Select at least one specialization';
+  } else if (typeOfTraining.some((item) => !allowedSpecializations.includes(item))) {
+    errors.typeOfTraining = 'One or more specializations are invalid';
+  }
+
+  const firstField = PROFILE_FIELD_ORDER.find((field) => errors[field]);
+
+  return {
+    isValid: !firstField,
+    errors,
+    firstError: firstField ? errors[firstField] : undefined,
+  };
 }

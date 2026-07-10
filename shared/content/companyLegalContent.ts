@@ -29,7 +29,7 @@ export const COMPANY_TERMS_SECTIONS: CompanyLegalSection[] = [
     paragraphs: [],
     bullets: [
       'Intermediary Marketplace: This CRM is a proprietary enterprise software operated by Samsaraa WellTek Pvt Ltd under the brand Samsara Wellness. The Company acts strictly as a third-party service provider and digital facilitator.',
-      'No Employment Relationship: The wellness professionals (including Yoga Trainers, Sound Healers, Psychologists, Women Health Trainers, and Employee Assistance Program [EAP] Trainers, collectively referred to as "Trainers") visible on this CRM are independent, third-party service providers. They are not employees, agents, or joint-venture partners of Samsara Wellness.',
+      'No Employment Relationship: The wellness professionals (including Yoga Trainers, Sound Healers, Psychologists, Ayurveda Doctors, and Employee Assistance Program [EAP] Trainers, collectively referred to as "Trainers") visible on this CRM are independent, third-party service providers. They are not employees, agents, or joint-venture partners of Samsara Wellness.',
       'Independent Contracting: Any booking generated through this CRM establishes a direct service arrangement between You (the Client) and the independent Trainer. Samsara Wellness is not a party to the actual execution, quality, safety, or physical delivery of that offline service.',
     ],
   },
