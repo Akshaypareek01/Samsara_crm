@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import type { Booking } from "@/services/bookingService";
 import StatusBadge from "@/shared/components/StatusBadge";
 import {
@@ -26,6 +26,7 @@ import {
     getTrainerSessionInBooking,
 } from "@/shared/utils/bookingSessionUtils";
 import { useCompanyRating } from "../context/CompanyRatingContext";
+import CompanyBookingFeedbackShareDialog from "./CompanyBookingFeedbackShareDialog";
 
 export type CompanyBookingDetailsDrawerProps = {
     open: boolean;
@@ -48,6 +49,7 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     onViewTrainer,
 }) => {
     const { openRatingDrawer, pendingBookingIds } = useCompanyRating();
+    const [feedbackShareOpen, setFeedbackShareOpen] = useState(false);
     const trainer = booking ? getBookingTrainer(booking) : null;
     const trainerName = booking ? getBookingTrainerName(booking) : "Trainer";
     const photoUrl = getTrainerProfilePhotoUrl(trainer);
@@ -75,6 +77,17 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                         {isUnrated ? "Rate this session" : "View rating"}
                     </button>
                 )}
+                {isCompleted && bookingId && (
+                    <button
+                        type="button"
+                        className="ti-btn ti-btn-success !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold min-h-[2.5rem] rounded-lg shadow-none"
+                        onClick={() => setFeedbackShareOpen(true)}
+                        aria-label="Share employee feedback form for this session"
+                    >
+                        <i className="ri-share-forward-line me-1" aria-hidden="true" />
+                        Share feedback form
+                    </button>
+                )}
                 {canCompanyCancelBooking(booking.status) && onCancel && bookingId && (
                     <button
                         type="button"
@@ -95,6 +108,7 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
         ) : undefined;
 
     return (
+        <>
         <CompanyRightDrawer
             open={open}
             title="Booking details"
@@ -339,6 +353,14 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                 </div>
             )}
         </CompanyRightDrawer>
+
+        <CompanyBookingFeedbackShareDialog
+            open={feedbackShareOpen}
+            bookingId={bookingId}
+            bookingLabel={booking ? formatBookingDate(booking.bookingDate) : undefined}
+            onClose={() => setFeedbackShareOpen(false)}
+        />
+        </>
     );
 };
 
