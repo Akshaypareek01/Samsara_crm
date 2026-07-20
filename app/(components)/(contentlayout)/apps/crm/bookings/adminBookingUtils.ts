@@ -41,15 +41,7 @@ export { getBookingCompany, getBookingCompanyName, getBookingTrainer, getBooking
  *
  * @param booking - Booking record.
  */
-export function isBookingPaid(booking: Booking): boolean {
-    const ps = booking.paymentStatus as unknown;
-    if (!ps) return false;
-    if (typeof ps === "string") return ps === "confirmed";
-    if (typeof ps === "object" && ps !== null && "isPaid" in ps) {
-        return Boolean((ps as { isPaid?: boolean }).isPaid);
-    }
-    return false;
-}
+export { isBookingPaid } from "@/shared/utils/bookingSessionUtils";
 
 /**
  * Whether a session has recorded company payment.

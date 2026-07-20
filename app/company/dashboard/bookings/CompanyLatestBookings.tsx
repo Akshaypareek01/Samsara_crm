@@ -9,6 +9,7 @@ import {
     formatBookingTime,
 } from "@/shared/utils/bookingUtils";
 import { getBookingTrainerName } from "@/shared/utils/bookingTrainerUtils";
+import { isBookingPaid } from "@/shared/utils/bookingSessionUtils";
 import CompanyBookingDetailsDrawer from "../components/CompanyBookingDetailsDrawer";
 import CompanyTrainerProfileDrawer from "../components/CompanyTrainerProfileDrawer";
 import BookingCancellationReasonNote from "@/shared/components/booking/BookingCancellationReasonNote";
@@ -217,7 +218,7 @@ const CompanyLatestBookings: React.FC<Props> = ({ refreshTrigger = 0, onViewAll,
                                             />
                                         </td>
                                         <td>
-                                            {booking.paymentStatus?.isPaid ? (
+                                            {isBookingPaid(booking) ? (
                                                 <span className="badge bg-success/10 text-success">Paid</span>
                                             ) : (
                                                 <span className="badge bg-warning/10 text-warning">Pending</span>

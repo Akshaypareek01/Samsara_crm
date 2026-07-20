@@ -21,6 +21,7 @@ import {
     canTrainerActOnSession,
     getBookingSessions,
     getTrainerSessionInBooking,
+    isBookingPaid,
 } from "@/shared/utils/bookingSessionUtils";
 
 export type TrainerBookingDetailsDrawerProps = {
@@ -170,7 +171,7 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                     </div>
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Payment</span>
-                                        {booking.paymentStatus?.isPaid ? (
+                                        {isBookingPaid(booking) ? (
                                             <span className="badge bg-success/10 text-success">Paid</span>
                                         ) : (
                                             <span className="badge bg-warning/10 text-warning">Pending</span>

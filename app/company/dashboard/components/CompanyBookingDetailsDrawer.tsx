@@ -24,6 +24,8 @@ import {
     getBookingTrainersLabel,
     canTrainerActOnSession,
     getTrainerSessionInBooking,
+    isBookingPaid,
+    getBookingPaymentDetails,
 } from "@/shared/utils/bookingSessionUtils";
 import CompanyBookingFeedbackShareDialog from "./CompanyBookingFeedbackShareDialog";
 
@@ -57,6 +59,7 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     const isMultiSession = sessions.length > 1;
     const sessionSummary = booking ? getBookingSessionSummary(booking) : null;
     const approvalProgress = booking ? getTrainerApprovalProgress(booking) : null;
+    const paymentDetails = booking ? getBookingPaymentDetails(booking) : null;
 
     const isCompleted = booking?.status === "completed";
 
@@ -206,7 +209,7 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                             <>
                             <div>
                                 <span className="text-muted text-xs block mb-0.5">Payment</span>
-                                {booking.paymentStatus?.isPaid ? (
+                                {isBookingPaid(booking) ? (
                                     <span className="badge bg-success/10 text-success">Paid</span>
                                 ) : (
                                     <span className="badge bg-warning/10 text-warning">Pending</span>
@@ -301,41 +304,41 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                         </section>
                     )}
 
-                    {booking.paymentStatus?.isPaid && (
+                    {isBookingPaid(booking) && paymentDetails && (
                         <section className="rounded-xl border border-defaultborder p-4">
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
                                 Payment information
                             </p>
                             <div className="grid grid-cols-2 gap-3 text-sm">
-                                {booking.paymentStatus.paymentMode && (
+                                {paymentDetails.paymentMode && (
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Mode</span>
                                         <span className="font-medium text-defaulttextcolor capitalize">
-                                            {booking.paymentStatus.paymentMode.replace("_", " ")}
+                                            {paymentDetails.paymentMode.replace("_", " ")}
                                         </span>
                                     </div>
                                 )}
-                                {booking.paymentStatus.paymentType && (
+                                {paymentDetails.paymentType && (
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Type</span>
                                         <span className="font-medium text-defaulttextcolor capitalize">
-                                            {booking.paymentStatus.paymentType}
+                                            {paymentDetails.paymentType}
                                         </span>
                                     </div>
                                 )}
-                                {booking.paymentStatus.paymentAmount != null && (
+                                {paymentDetails.paymentAmount != null && (
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Amount</span>
                                         <span className="font-medium text-defaulttextcolor">
-                                            ₹{booking.paymentStatus.paymentAmount}
+                                            ₹{paymentDetails.paymentAmount}
                                         </span>
                                     </div>
                                 )}
-                                {booking.paymentStatus.transactionId && (
+                                {paymentDetails.transactionId && (
                                     <div className="col-span-2">
                                         <span className="text-muted text-xs block mb-0.5">Transaction ID</span>
                                         <span className="font-medium text-defaulttextcolor break-all">
-                                            {booking.paymentStatus.transactionId}
+                                            {paymentDetails.transactionId}
                                         </span>
                                     </div>
                                 )}

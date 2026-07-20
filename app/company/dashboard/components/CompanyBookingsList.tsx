@@ -8,6 +8,7 @@ import { canCompanyCancelBooking } from "@/shared/utils/bookingUtils";
 import {
     getBookingSessionSummary,
     getBookingTrainersLabel,
+    isBookingPaid,
 } from "@/shared/utils/bookingSessionUtils";
 import CompanyBookingDetailsDrawer from "./CompanyBookingDetailsDrawer";
 import CompanyTrainerProfileDrawer from "./CompanyTrainerProfileDrawer";
@@ -304,7 +305,7 @@ const CompanyBookingsList: React.FC<CompanyBookingsListProps> = ({
                                                 />
                                             </td>
                                             <td>
-                                                {booking.paymentStatus?.isPaid ? (
+                                                {isBookingPaid(booking) ? (
                                                     <span className="badge bg-success/10 text-success">Paid</span>
                                                 ) : (
                                                     <span className="badge bg-warning/10 text-warning">Pending</span>

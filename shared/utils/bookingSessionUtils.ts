@@ -95,7 +95,7 @@ export function getBookingSessions(booking: Booking): BookingSessionView[] {
                 paymentStatus:
                     typeof booking.paymentStatus === "string"
                         ? booking.paymentStatus
-                        : booking.paymentStatus?.isPaid
+                        : isBookingPaid(booking)
                           ? "confirmed"
                           : "pending",
                 paymentMode: booking.paymentMode,
@@ -108,6 +108,66 @@ export function getBookingSessions(booking: Booking): BookingSessionView[] {
     }
 
     return [];
+}
+
+/**
+ * Whether payment is recorded on a booking (handles string or object paymentStatus).
+ *
+ * @param booking - Booking record.
+ */
+export function isBookingPaid(booking: Pick<Booking, 'paymentStatus'>): boolean {
+    const ps = booking.paymentStatus;
+    if (!ps) return false;
+    if (typeof ps === 'string') return ps === 'confirmed';
+    if (typeof ps === 'object' && ps !== null && 'isPaid' in ps) {
+        return Boolean(ps.isPaid);
+    }
+    return false;
+}
+
+/** Normalized payment fields from a booking payload. */
+export type BookingPaymentDetails = {
+    paymentMode?: string;
+    transactionId?: string;
+    paymentType?: string;
+    paymentAmount?: number;
+    paymentDate?: string;
+};
+
+/**
+ * Resolves payment details from object paymentStatus or top-level booking fields.
+ *
+ * @param booking - Booking record.
+ */
+export function getBookingPaymentDetails(booking: Booking): BookingPaymentDetails | null {
+    const ps = booking.paymentStatus;
+
+    if (typeof ps === 'object' && ps !== null && 'isPaid' in ps) {
+        return {
+            paymentMode: ps.paymentMode ?? booking.paymentMode,
+            transactionId: ps.transactionId ?? booking.transactionId,
+            paymentType: ps.paymentType ?? booking.paymentType,
+            paymentAmount: ps.paymentAmount ?? booking.paymentAmount,
+            paymentDate: ps.paymentDate,
+        };
+    }
+
+    if (
+        isBookingPaid(booking) ||
+        booking.paymentMode ||
+        booking.transactionId ||
+        booking.paymentType ||
+        booking.paymentAmount != null
+    ) {
+        return {
+            paymentMode: booking.paymentMode,
+            transactionId: booking.transactionId,
+            paymentType: booking.paymentType,
+            paymentAmount: booking.paymentAmount,
+        };
+    }
+
+    return null;
 }
 
 /**
