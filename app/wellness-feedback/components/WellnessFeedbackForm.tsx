@@ -11,6 +11,7 @@ import {
     WELLNESS_SATISFACTION_OPTIONS,
     WELLNESS_STRESS_RELIEF_OPTIONS,
     WELLNESS_WANT_MORE_OPTIONS,
+    TRAINER_RATING_CRITERIA,
 } from "@/constants/wellnessFeedbackFormOptions";
 import SessionAttendedDropdown from "./SessionAttendedDropdown";
 import TrainerEvaluationBlock, {
@@ -31,7 +32,7 @@ const WellnessFeedbackForm: React.FC<WellnessFeedbackFormProps> = ({ token, cont
     const [submitError, setSubmitError] = useState("");
 
     const [employeeName, setEmployeeName] = useState("");
-    const [city, setCity] = useState("");
+    const [city, setCity] = useState(context.city || "");
     const [companyName, setCompanyName] = useState(context.companyName || "");
     const [sessionDate, setSessionDate] = useState(context.sessionDate || "");
     const [sessionsAttended, setSessionsAttended] = useState<string[]>(
@@ -80,6 +81,15 @@ const WellnessFeedbackForm: React.FC<WellnessFeedbackFormProps> = ({ token, cont
 
         if (!overallSatisfaction || !stressRelief || !wantMoreSessions) {
             setSubmitError("Please complete all required satisfaction questions.");
+            return;
+        }
+
+        const missingTrainerRatings = context.trainers.some((trainer) => {
+            const ratings = trainerStates[trainer.trainerId]?.ratings || {};
+            return TRAINER_RATING_CRITERIA.some((criterion) => !ratings[criterion.key]);
+        });
+        if (missingTrainerRatings) {
+            setSubmitError("Please rate the trainer on all criteria before submitting.");
             return;
         }
 

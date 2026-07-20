@@ -13,7 +13,6 @@ import { ThemeChanger } from "@/shared/redux/action";
 import Switcher from "@/shared/layout-components/switcher/switcher";
 import store from "@/shared/redux/store";
 import CompanyDashboardAuthGate from "./components/CompanyDashboardAuthGate";
-import { CompanyRatingProvider } from "./context/CompanyRatingContext";
 import { applyLightModeToDocument } from "@/shared/utils/forceLightMode";
 
 const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
@@ -40,24 +39,22 @@ const CompanyLayout = ({ children, local_varaiable, ThemeChanger }: any) => {
 
     return (
         <Fragment>
-            <CompanyRatingProvider>
-                <Switcher />
-                <div className="page company-dashboard-shell">
-                    <CompanyDashboardHeader />
-                    <CompanySidebar />
-                    <div className="content">
-                        <div className="main-content" onClick={Bodyclickk}>
-                            <div className="container-fluid">
-                                <CompanyDashboardAuthGate>
-                                    {children}
-                                </CompanyDashboardAuthGate>
-                            </div>
+            <Switcher />
+            <div className="page company-dashboard-shell">
+                <CompanyDashboardHeader />
+                <CompanySidebar />
+                <div className="content">
+                    <div className="main-content" onClick={Bodyclickk}>
+                        <div className="container-fluid">
+                            <CompanyDashboardAuthGate>
+                                {children}
+                            </CompanyDashboardAuthGate>
                         </div>
                     </div>
-                    <Footer />
                 </div>
-                <Backtotop />
-            </CompanyRatingProvider>
+                <Footer />
+            </div>
+            <Backtotop />
         </Fragment>
     )
 }

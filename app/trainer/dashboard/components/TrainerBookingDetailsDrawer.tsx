@@ -194,6 +194,12 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                         <span className="text-muted text-xs block mb-0.5">Duration</span>
                                         <span className="font-medium text-defaulttextcolor">{booking.duration} hrs</span>
                                     </div>
+                                    {booking.employeeCount != null && booking.employeeCount > 0 && (
+                                    <div>
+                                        <span className="text-muted text-xs block mb-0.5">Employees attending</span>
+                                        <span className="font-medium text-defaulttextcolor">{booking.employeeCount}</span>
+                                    </div>
+                                    )}
                                     </>
                                     )}
                                     {isMultiSession && mySession && (
@@ -208,6 +214,12 @@ const TrainerBookingDetailsDrawer: React.FC<TrainerBookingDetailsDrawerProps> = 
                                         <span className="text-muted text-xs block mb-0.5">Your duration</span>
                                         <span className="font-medium text-defaulttextcolor">{mySession.duration} hrs</span>
                                     </div>
+                                    {mySession.employeeCount != null && mySession.employeeCount > 0 && (
+                                    <div>
+                                        <span className="text-muted text-xs block mb-0.5">Employees attending</span>
+                                        <span className="font-medium text-defaulttextcolor">{mySession.employeeCount}</span>
+                                    </div>
+                                    )}
                                     </>
                                     )}
                                 </div>

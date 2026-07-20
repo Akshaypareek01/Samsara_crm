@@ -181,6 +181,38 @@ const BookingSessionRow: React.FC<BookingSessionRowProps> = ({
                         required
                     />
                 </div>
+
+                <div>
+                    <label
+                        className="form-label text-sm font-medium"
+                        htmlFor={`session-employees-${row.key}`}
+                    >
+                        Employees attending <span className="text-danger">*</span>
+                    </label>
+                    <input
+                        id={`session-employees-${row.key}`}
+                        type="number"
+                        className="form-control"
+                        min={1}
+                        step={1}
+                        value={row.employeeCount || ""}
+                        onChange={(e) =>
+                            onUpdate(row.key, {
+                                employeeCount: parseInt(e.target.value, 10) || 0,
+                            })
+                        }
+                        disabled={!row.trainerId}
+                        placeholder="e.g. 25"
+                        required
+                        aria-describedby={`session-employees-hint-${row.key}`}
+                    />
+                    <p
+                        id={`session-employees-hint-${row.key}`}
+                        className="text-xs text-muted mt-1 mb-0"
+                    >
+                        How many employees will join this session?
+                    </p>
+                </div>
             </div>
 
             {row.trainerId && (

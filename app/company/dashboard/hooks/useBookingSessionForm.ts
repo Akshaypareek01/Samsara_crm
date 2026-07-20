@@ -16,6 +16,7 @@ export interface SessionFormRow {
     trainerId: string;
     startTime: string;
     duration: number;
+    employeeCount: number;
     typeOfTraining: string[];
 }
 
@@ -58,6 +59,7 @@ export function useBookingSessionForm({
             trainerId,
             startTime: "",
             duration: 2,
+            employeeCount: 0,
             typeOfTraining: [],
         }),
         []
@@ -219,6 +221,9 @@ export function useBookingSessionForm({
             if (!validateDuration(row.duration)) {
                 return `${label}: duration must be between 0.5 and 24 hours`;
             }
+            if (!Number.isInteger(row.employeeCount) || row.employeeCount < 1) {
+                return `${label}: enter how many employees will attend (minimum 1)`;
+            }
             if (row.typeOfTraining.length === 0) {
                 return `${label}: select at least one training type`;
             }
@@ -262,6 +267,7 @@ export function useBookingSessionForm({
             trainer: s.trainerId,
             startTime: s.startTime,
             duration: s.duration,
+            employeeCount: s.employeeCount,
             typeOfTraining: s.typeOfTraining,
         })),
     }), [bookingDate, companyId, notes, sessions]);

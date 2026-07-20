@@ -38,6 +38,15 @@ export interface BookingInvoice {
         paymentAmount?: number;
         adminNotes?: string;
     };
+    sessionPayments?: Array<{
+        sessionIndex?: number;
+        startTime?: string;
+        duration?: number;
+        paymentMode?: string;
+        transactionId?: string;
+        paymentType?: string;
+        paymentAmount?: number;
+    }>;
     trainerLines: BookingInvoiceTrainerLine[];
     totals: {
         baseFee: number;

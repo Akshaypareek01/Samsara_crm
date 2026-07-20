@@ -46,6 +46,15 @@ export const MenuItems: any = [
         title: "Bookings",
     },
     {
+        path: "/company/dashboard/feedback-analytics",
+        icon: <i className="bx bx-bar-chart-alt-2 side-menu__icon"></i>,
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Analytics",
+    },
+    {
         path: "/company/dashboard/account-details",
         icon: <i className="bx bx-wallet side-menu__icon"></i>,
         type: "link",

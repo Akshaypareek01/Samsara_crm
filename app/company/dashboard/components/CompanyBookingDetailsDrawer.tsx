@@ -25,7 +25,6 @@ import {
     canTrainerActOnSession,
     getTrainerSessionInBooking,
 } from "@/shared/utils/bookingSessionUtils";
-import { useCompanyRating } from "../context/CompanyRatingContext";
 import CompanyBookingFeedbackShareDialog from "./CompanyBookingFeedbackShareDialog";
 
 export type CompanyBookingDetailsDrawerProps = {
@@ -48,7 +47,6 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     onCancel,
     onViewTrainer,
 }) => {
-    const { openRatingDrawer, pendingBookingIds } = useCompanyRating();
     const [feedbackShareOpen, setFeedbackShareOpen] = useState(false);
     const trainer = booking ? getBookingTrainer(booking) : null;
     const trainerName = booking ? getBookingTrainerName(booking) : "Trainer";
@@ -61,22 +59,10 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
     const approvalProgress = booking ? getTrainerApprovalProgress(booking) : null;
 
     const isCompleted = booking?.status === "completed";
-    const isUnrated = bookingId ? pendingBookingIds.has(bookingId) : false;
 
     const footer =
         booking && !loading ? (
             <div className="flex flex-col gap-2" role="group" aria-label="Booking actions">
-                {isCompleted && bookingId && (
-                    <button
-                        type="button"
-                        className="ti-btn ti-btn-primary !m-0 !float-none w-full inline-flex items-center justify-center !px-4 !py-2.5 text-sm font-semibold min-h-[2.5rem] rounded-lg shadow-none"
-                        onClick={() => openRatingDrawer(bookingId)}
-                        aria-label={isUnrated ? "Rate this session" : "View or update session rating"}
-                    >
-                        <i className="ri-star-line me-1" aria-hidden="true" />
-                        {isUnrated ? "Rate this session" : "View rating"}
-                    </button>
-                )}
                 {isCompleted && bookingId && (
                     <button
                         type="button"
@@ -242,6 +228,12 @@ const CompanyBookingDetailsDrawer: React.FC<CompanyBookingDetailsDrawerProps> = 
                                 <span className="text-muted text-xs block mb-0.5">Duration</span>
                                 <span className="font-medium text-defaulttextcolor">{booking.duration} hrs</span>
                             </div>
+                            {booking.employeeCount != null && booking.employeeCount > 0 && (
+                            <div>
+                                <span className="text-muted text-xs block mb-0.5">Employees attending</span>
+                                <span className="font-medium text-defaulttextcolor">{booking.employeeCount}</span>
+                            </div>
+                            )}
                             </>
                             )}
                             {isMultiSession && (

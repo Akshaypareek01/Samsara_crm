@@ -17,6 +17,7 @@ import {
 import {
     getBookingCompanyName,
     getBookingTrainerName,
+    getBookingSessionPaymentTotal,
     isBookingPaid,
 } from "./adminBookingUtils";
 
@@ -55,6 +56,10 @@ const AdminBookingDetailsDrawer: React.FC<AdminBookingDetailsDrawerProps> = ({
     const ps = booking?.paymentStatus;
     const paymentObj =
         ps && typeof ps === "object" && !Array.isArray(ps) ? (ps as Record<string, unknown>) : null;
+    const bookingPaymentAmount = booking ? getBookingSessionPaymentTotal(booking) : 0;
+    const bookingPaymentMode = booking?.paymentMode || (paymentObj?.paymentMode as string | undefined);
+    const bookingTransactionId =
+        booking?.transactionId || (paymentObj?.transactionId as string | undefined);
     const sessions = booking ? getBookingSessions(booking) : [];
     const isMultiSession = sessions.length > 1;
     const approvalProgress = booking ? getTrainerApprovalProgress(booking) : null;
@@ -227,6 +232,12 @@ const AdminBookingDetailsDrawer: React.FC<AdminBookingDetailsDrawerProps> = ({
                                 <span className="text-muted text-xs block mb-0.5">Duration</span>
                                 <span className="font-medium">{booking.duration} hrs</span>
                             </div>
+                            {booking.employeeCount != null && booking.employeeCount > 0 && (
+                            <div>
+                                <span className="text-muted text-xs block mb-0.5">Employees attending</span>
+                                <span className="font-medium">{booking.employeeCount}</span>
+                            </div>
+                            )}
                         </div>
                         )}
                         {isMultiSession && (
@@ -234,10 +245,12 @@ const AdminBookingDetailsDrawer: React.FC<AdminBookingDetailsDrawerProps> = ({
                                 <p className="text-sm font-medium mb-2">
                                     {formatBookingDate(booking.bookingDate)}
                                 </p>
-                                <BookingSessionsTable booking={booking} />
-                                <p className="text-xs text-muted mt-2 mb-0">
-                                    One payment applies to all sessions in this booking.
-                                </p>
+                                <BookingSessionsTable booking={booking} showPaymentStatus={isBookingPaid(booking)} />
+                                {isBookingPaid(booking) && (
+                                    <p className="text-xs text-muted mt-2 mb-0">
+                                        Total company payment: {formatInr(getBookingSessionPaymentTotal(booking))}
+                                    </p>
+                                )}
                             </>
                         )}
                     </section>
@@ -295,33 +308,69 @@ const AdminBookingDetailsDrawer: React.FC<AdminBookingDetailsDrawerProps> = ({
                         </section>
                     )}
 
-                    {isBookingPaid(booking) && paymentObj && (
+                    {isBookingPaid(booking) && (
                         <section className="rounded-xl border border-defaultborder p-4">
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
                                 Payment information
                             </p>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                {Boolean(paymentObj.paymentMode) && (
+                            <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                                {bookingPaymentMode && (
                                     <div>
                                         <span className="text-muted text-xs block mb-0.5">Mode</span>
                                         <span className="font-medium capitalize">
-                                            {String(paymentObj.paymentMode).replace("_", " ")}
+                                            {bookingPaymentMode.replace(/_/g, " ")}
                                         </span>
                                     </div>
                                 )}
-                                {paymentObj.paymentAmount != null && (
+                                {bookingPaymentAmount > 0 && (
                                     <div>
-                                        <span className="text-muted text-xs block mb-0.5">Amount</span>
-                                        <span className="font-medium">₹{String(paymentObj.paymentAmount)}</span>
+                                        <span className="text-muted text-xs block mb-0.5">Total amount</span>
+                                        <span className="font-medium">{formatInr(bookingPaymentAmount)}</span>
                                     </div>
                                 )}
-                                {Boolean(paymentObj.transactionId) && (
+                                {bookingTransactionId && !isMultiSession && (
                                     <div className="col-span-2">
                                         <span className="text-muted text-xs block mb-0.5">Transaction ID</span>
-                                        <span className="font-medium break-all">{String(paymentObj.transactionId)}</span>
+                                        <span className="font-medium break-all">{bookingTransactionId}</span>
                                     </div>
                                 )}
                             </div>
+                            {(invoice?.sessionPayments?.length || 0) > 0 ? (
+                                <div className="space-y-2 text-sm">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">
+                                        Session payments
+                                    </p>
+                                    {invoice?.sessionPayments?.map((payment, idx) => (
+                                        <div
+                                            key={`session-payment-${payment.sessionIndex ?? idx}`}
+                                            className="rounded-lg border border-defaultborder/70 p-3"
+                                        >
+                                            <p className="text-xs text-muted mb-1">
+                                                Session {idx + 1} · {payment.startTime || "—"} (
+                                                {payment.duration || 0}h)
+                                            </p>
+                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                                                <span>{formatInr(payment.paymentAmount ?? 0)}</span>
+                                                <span className="capitalize">
+                                                    {(payment.paymentMode || "—").replace(/_/g, " ")}
+                                                </span>
+                                                <span className="capitalize">{payment.paymentType || "—"}</span>
+                                            </div>
+                                            {payment.transactionId && (
+                                                <p className="text-xs text-muted mb-0 mt-1 break-all">
+                                                    Txn: {payment.transactionId}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : isMultiSession ? (
+                                <BookingSessionsTable
+                                    booking={booking}
+                                    showApprovalStatus={false}
+                                    showPaymentStatus
+                                />
+                            ) : null}
                         </section>
                     )}
 

@@ -2,7 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import type { Booking } from "@/services/bookingService";
-import bookingService, { type ApproveBookingRequest } from "@/services/bookingService";
+import bookingService, {
+    type ApproveBookingRequest,
+    type SessionPaymentInput,
+} from "@/services/bookingService";
 import bookingInvoiceService from "@/services/bookingInvoiceService";
 import Swal from "sweetalert2";
 import {
@@ -17,6 +20,7 @@ import {
     getBookingTrainerName,
 } from "./adminBookingUtils";
 import TrainerFeeLineEditor from "./TrainerFeeLineEditor";
+import SessionPaymentLineEditor from "./SessionPaymentLineEditor";
 
 export type AdminBookingApprovalModalProps = {
     open: boolean;
@@ -25,13 +29,28 @@ export type AdminBookingApprovalModalProps = {
     onSuccess: () => void;
 };
 
-const defaultPayment: Omit<ApproveBookingRequest, "trainerFeeLines"> = {
+const defaultSessionPayment = (): Omit<SessionPaymentInput, "sessionIndex"> => ({
     paymentMode: "cash",
     transactionId: "",
     paymentType: "full",
     paymentAmount: 0,
-    adminNotes: "",
-};
+});
+
+/**
+ * Build default session payment rows from trainer fee line defaults.
+ *
+ * @param lines - Default trainer fee lines for the booking.
+ */
+function buildDefaultSessionPayments(lines: TrainerFeeLineInput[]): SessionPaymentInput[] {
+    return lines.map((line, index) => ({
+        sessionIndex: line.sessionIndex ?? index,
+        startTime: line.startTime,
+        duration: line.duration,
+        typeOfTraining: line.typeOfTraining,
+        trainerName: line.trainerName,
+        ...defaultSessionPayment(),
+    }));
+}
 
 /**
  * Admin modal to confirm booking payment and set per-trainer fee lines.
@@ -42,7 +61,8 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
     onClose,
     onSuccess,
 }) => {
-    const [payment, setPayment] = useState(defaultPayment);
+    const [adminNotes, setAdminNotes] = useState("");
+    const [sessionPayments, setSessionPayments] = useState<SessionPaymentInput[]>([]);
     const [trainerLines, setTrainerLines] = useState<TrainerFeeLineInput[]>([]);
     const [loadingDefaults, setLoadingDefaults] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -53,12 +73,15 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
         const bookingId = booking._id || booking.id;
         if (!bookingId) return;
 
-        setPayment(defaultPayment);
+        setAdminNotes("");
         setLoadingDefaults(true);
 
         bookingInvoiceService
             .getDefaultTrainerFeeLines(bookingId)
-            .then((lines) => setTrainerLines(lines))
+            .then((lines) => {
+                setTrainerLines(lines);
+                setSessionPayments(buildDefaultSessionPayments(lines));
+            })
             .catch((err: Error) => {
                 void Swal.fire("Error", err.message || "Failed to load trainer fee defaults", "error");
                 onClose();
@@ -73,8 +96,17 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
 
     const totals = useMemo(() => aggregateTrainerFeeTotals(calculatedLines), [calculatedLines]);
 
+    const totalCompanyPayment = useMemo(
+        () => sessionPayments.reduce((sum, payment) => sum + (payment.paymentAmount || 0), 0),
+        [sessionPayments]
+    );
+
     const handleLineChange = (index: number, line: TrainerFeeLineInput) => {
         setTrainerLines((prev) => prev.map((l, i) => (i === index ? line : l)));
+    };
+
+    const handleSessionPaymentChange = (index: number, line: SessionPaymentInput) => {
+        setSessionPayments((prev) => prev.map((payment, i) => (i === index ? line : payment)));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -87,8 +119,13 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
             return;
         }
 
-        if (!payment.transactionId.trim()) {
-            void Swal.fire("Error", "Transaction ID is required", "warning");
+        if (sessionPayments.some((payment) => !payment.transactionId.trim())) {
+            void Swal.fire("Error", "Each session requires a transaction ID", "warning");
+            return;
+        }
+
+        if (sessionPayments.some((payment) => (payment.paymentAmount ?? 0) <= 0)) {
+            void Swal.fire("Error", "Each session must have a payment amount greater than 0", "warning");
             return;
         }
 
@@ -98,7 +135,14 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
         }
 
         const payload: ApproveBookingRequest = {
-            ...payment,
+            adminNotes: adminNotes.trim() || undefined,
+            sessionPayments: sessionPayments.map((payment) => ({
+                sessionIndex: payment.sessionIndex,
+                paymentMode: payment.paymentMode,
+                transactionId: payment.transactionId.trim(),
+                paymentType: payment.paymentType,
+                paymentAmount: payment.paymentAmount,
+            })),
             trainerFeeLines: trainerLines.map((line) => ({
                 trainer: line.trainer,
                 sessionIndex: line.sessionIndex,
@@ -181,100 +225,36 @@ const AdminBookingApprovalModal: React.FC<AdminBookingApprovalModalProps> = ({
                             <div className="spinner-border text-primary" role="status">
                                 <span className="visually-hidden">Loading fee lines…</span>
                             </div>
-                            <p className="text-sm text-muted mb-0">Loading trainer fee lines…</p>
+                            <p className="text-sm text-muted mb-0">Loading session payment &amp; trainer fee lines…</p>
                         </div>
                     ) : (
                         <form id="admin-approval-form" onSubmit={handleSubmit} className="space-y-6">
                             <section>
-                                <h4 className="text-sm font-semibold mb-3">Company payment</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="form-label">
-                                            Payment mode <span className="text-danger">*</span>
-                                        </label>
-                                        <select
-                                            className="form-control"
-                                            value={payment.paymentMode}
-                                            onChange={(e) =>
-                                                setPayment({
-                                                    ...payment,
-                                                    paymentMode: e.target.value as ApproveBookingRequest["paymentMode"],
-                                                })
-                                            }
-                                            required
-                                        >
-                                            <option value="cash">Cash</option>
-                                            <option value="card">Card</option>
-                                            <option value="upi">UPI</option>
-                                            <option value="bank_transfer">Bank Transfer</option>
-                                            <option value="cheque">Cheque</option>
-                                            <option value="online">Online</option>
-                                            <option value="other">Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="form-label">
-                                            Transaction ID <span className="text-danger">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            value={payment.transactionId}
-                                            onChange={(e) =>
-                                                setPayment({ ...payment, transactionId: e.target.value })
-                                            }
-                                            required
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold mb-0">Company payment (per session)</h4>
+                                    <span className="text-xs text-muted">
+                                        Total received:{" "}
+                                        <strong className="text-success">{formatInr(totalCompanyPayment)}</strong>
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    {sessionPayments.map((payment, index) => (
+                                        <SessionPaymentLineEditor
+                                            key={`session-payment-${payment.sessionIndex}-${index}`}
+                                            line={payment}
+                                            index={index}
+                                            trainerName={payment.trainerName}
+                                            onChange={handleSessionPaymentChange}
                                         />
-                                    </div>
-                                    <div>
-                                        <label className="form-label">
-                                            Payment type <span className="text-danger">*</span>
-                                        </label>
-                                        <select
-                                            className="form-control"
-                                            value={payment.paymentType}
-                                            onChange={(e) =>
-                                                setPayment({
-                                                    ...payment,
-                                                    paymentType: e.target.value as ApproveBookingRequest["paymentType"],
-                                                })
-                                            }
-                                            required
-                                        >
-                                            <option value="full">Full payment</option>
-                                            <option value="partial">Partial payment</option>
-                                            <option value="advance">Advance payment</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="form-label">
-                                            Payment amount (₹) <span className="text-danger">*</span>
-                                        </label>
-                                        <input
-                                            type="number"
-                                            className="form-control"
-                                            value={payment.paymentAmount || ""}
-                                            onChange={(e) =>
-                                                setPayment({
-                                                    ...payment,
-                                                    paymentAmount: parseFloat(e.target.value) || 0,
-                                                })
-                                            }
-                                            min={0}
-                                            step="0.01"
-                                            required
-                                        />
-                                    </div>
+                                    ))}
                                 </div>
                                 <div className="mt-4">
                                     <label className="form-label">Admin notes (optional)</label>
                                     <textarea
                                         className="form-control"
                                         rows={2}
-                                        value={payment.adminNotes}
-                                        onChange={(e) =>
-                                            setPayment({ ...payment, adminNotes: e.target.value })
-                                        }
+                                        value={adminNotes}
+                                        onChange={(e) => setAdminNotes(e.target.value)}
                                         placeholder="Notes about this confirmation…"
                                     />
                                 </div>

@@ -1,6 +1,7 @@
 import type { Booking } from "@/services/bookingService";
 import { getBookingCompany, getBookingCompanyName } from "@/shared/utils/companyDisplayUtils";
 import { getBookingTrainer, getBookingTrainerName } from "@/shared/utils/bookingTrainerUtils";
+import { getBookingSessions } from "@/shared/utils/bookingSessionUtils";
 
 /**
  * Resolves a MongoDB id from a populated or string ref.
@@ -48,4 +49,23 @@ export function isBookingPaid(booking: Booking): boolean {
         return Boolean((ps as { isPaid?: boolean }).isPaid);
     }
     return false;
+}
+
+/**
+ * Whether a session has recorded company payment.
+ *
+ * @param session - Session row from a booking.
+ */
+export { isSessionPaid } from "@/shared/utils/bookingSessionUtils";
+
+/**
+ * Sum of confirmed session payment amounts on a booking.
+ *
+ * @param booking - Booking record.
+ */
+export function getBookingSessionPaymentTotal(booking: Booking): number {
+    const sessions = getBookingSessions(booking);
+    const sessionTotal = sessions.reduce((sum, session) => sum + (session.paymentAmount || 0), 0);
+    if (sessionTotal > 0) return sessionTotal;
+    return typeof booking.paymentAmount === "number" ? booking.paymentAmount : 0;
 }

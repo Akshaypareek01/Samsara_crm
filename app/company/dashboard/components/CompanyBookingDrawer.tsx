@@ -41,6 +41,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
         bookingDate: "",
         startTime: "",
         duration: 2,
+        employeeCount: 0,
         typeOfTraining: [],
         notes: "",
     });
@@ -78,6 +79,7 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                     bookingDate: "",
                     startTime: "",
                     duration: 2,
+                    employeeCount: 0,
                     typeOfTraining: [],
                     notes: "",
                 });
@@ -122,6 +124,14 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                 icon: "warning",
                 title: "Validation Error",
                 text: "Duration must be between 0.5 and 24 hours",
+            });
+            return false;
+        }
+        if (!Number.isInteger(formData.employeeCount) || formData.employeeCount < 1) {
+            void Swal.fire({
+                icon: "warning",
+                title: "Validation Error",
+                text: "Enter how many employees will attend (minimum 1)",
             });
             return false;
         }
@@ -330,6 +340,33 @@ const CompanyBookingDrawer: React.FC<CompanyBookingDrawerProps> = ({
                             />
                             <p id="booking-duration-hint" className="company-booking-drawer__hint">
                                 Between 0.5 and 24 hours
+                            </p>
+                        </div>
+
+                        <div className="company-booking-drawer__field">
+                            <label className="company-booking-drawer__label" htmlFor="booking-employees">
+                                Employees attending <span className="company-booking-drawer__required">*</span>
+                            </label>
+                            <input
+                                id="booking-employees"
+                                type="number"
+                                className="company-booking-drawer__input"
+                                value={formData.employeeCount || ""}
+                                min={1}
+                                step={1}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        employeeCount: parseInt(e.target.value, 10) || 0,
+                                    }))
+                                }
+                                disabled={!canAcceptNewBookings}
+                                placeholder="e.g. 25"
+                                required
+                                aria-describedby="booking-employees-hint"
+                            />
+                            <p id="booking-employees-hint" className="company-booking-drawer__hint">
+                                How many employees will join this session?
                             </p>
                         </div>
 

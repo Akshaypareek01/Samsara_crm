@@ -10,14 +10,17 @@ import {
 import {
     getBookingSessions,
     getTrainerApprovalProgress,
+    isSessionPaid,
 } from "@/shared/utils/bookingSessionUtils";
 import { getTrainerIdFromRef } from "@/shared/utils/bookingTrainerUtils";
+import { formatInr } from "@/shared/utils/invoiceCalculationUtils";
 
 export type BookingSessionsTableProps = {
     booking: Booking;
     /** Highlight the row for this trainer id (trainer portal). */
     highlightTrainerId?: string;
     showApprovalStatus?: boolean;
+    showPaymentStatus?: boolean;
 };
 
 /**
@@ -27,6 +30,7 @@ const BookingSessionsTable: React.FC<BookingSessionsTableProps> = ({
     booking,
     highlightTrainerId,
     showApprovalStatus = true,
+    showPaymentStatus = false,
 }) => {
     const sessions = getBookingSessions(booking);
     const progress = getTrainerApprovalProgress(booking);
@@ -47,9 +51,13 @@ const BookingSessionsTable: React.FC<BookingSessionsTableProps> = ({
                             <th scope="col">Trainer</th>
                             <th scope="col">Time</th>
                             <th scope="col">Duration</th>
+                            <th scope="col">Employees</th>
                             <th scope="col">Training</th>
                             {showApprovalStatus && sessions.length > 1 && (
                                 <th scope="col">Trainer status</th>
+                            )}
+                            {showPaymentStatus && (
+                                <th scope="col">Payment</th>
                             )}
                         </tr>
                     </thead>
@@ -80,6 +88,7 @@ const BookingSessionsTable: React.FC<BookingSessionsTableProps> = ({
                                     </td>
                                     <td>{formatBookingTime(session.startTime)}</td>
                                     <td>{formatDuration(session.duration)}</td>
+                                    <td>{session.employeeCount ?? "—"}</td>
                                     <td>{(session.typeOfTraining || []).join(", ") || "—"}</td>
                                     {showApprovalStatus && sessions.length > 1 && (
                                         <td>
@@ -92,6 +101,17 @@ const BookingSessionsTable: React.FC<BookingSessionsTableProps> = ({
                                                           : "pending_approval"
                                                 )}
                                             </span>
+                                        </td>
+                                    )}
+                                    {showPaymentStatus && (
+                                        <td>
+                                            {isSessionPaid(session) ? (
+                                                <span className="text-xs font-medium text-success">
+                                                    Paid {formatInr(session.paymentAmount || 0)}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs font-medium text-warning">Pending</span>
+                                            )}
                                         </td>
                                     )}
                                 </tr>

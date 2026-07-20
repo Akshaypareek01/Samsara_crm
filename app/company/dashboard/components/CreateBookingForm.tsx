@@ -15,6 +15,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
         bookingDate: '',
         startTime: '',
         duration: 2,
+        employeeCount: 0,
         typeOfTraining: [],
         notes: '',
     });
@@ -109,6 +110,10 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
             Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Duration must be between 0.5 and 24 hours' });
             return false;
         }
+        if (!Number.isInteger(formData.employeeCount) || formData.employeeCount < 1) {
+            Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Enter how many employees will attend (minimum 1)' });
+            return false;
+        }
         if (formData.typeOfTraining.length === 0) {
             Swal.fire({ icon: 'warning', title: 'Validation Error', text: 'Please select at least one training type' });
             return false;
@@ -167,6 +172,7 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                 bookingDate: '',
                 startTime: '',
                 duration: 2,
+                employeeCount: 0,
                 typeOfTraining: [],
                 notes: '',
             }));
@@ -260,6 +266,33 @@ const CreateBookingForm: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
                             required
                         />
                         <small className="text-muted">Enter duration between 0.5 and 24 hours</small>
+                    </div>
+
+                    {/* Employees attending */}
+                    <div className="mb-4">
+                        <label className="form-label" htmlFor="create-booking-employees">
+                            Employees attending <span className="text-danger">*</span>
+                        </label>
+                        <input
+                            id="create-booking-employees"
+                            type="number"
+                            className="form-control"
+                            value={formData.employeeCount || ""}
+                            min={1}
+                            step={1}
+                            onChange={(e) =>
+                                setFormData(prev => ({
+                                    ...prev,
+                                    employeeCount: parseInt(e.target.value, 10) || 0,
+                                }))
+                            }
+                            placeholder="e.g. 25"
+                            required
+                            aria-describedby="create-booking-employees-hint"
+                        />
+                        <small id="create-booking-employees-hint" className="text-muted">
+                            How many employees will join this session?
+                        </small>
                     </div>
 
                     {/* Training Types */}

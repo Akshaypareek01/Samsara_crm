@@ -20,11 +20,18 @@ export interface BookingSession {
     trainer: string | any;
     startTime: string;
     duration: number;
+    employeeCount?: number;
     typeOfTraining: string[];
     eapTraining?: string | EapTrainingRef | null;
     trainerStatus?: TrainerSessionStatus;
     trainerNotes?: string;
     approvedAt?: string;
+    paymentStatus?: 'pending' | 'confirmed' | 'failed' | 'refunded';
+    paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
+    transactionId?: string;
+    paymentType?: 'full' | 'partial' | 'advance';
+    paymentAmount?: number;
+    paidAt?: string;
 }
 
 export interface Booking {
@@ -36,6 +43,7 @@ export interface Booking {
     bookingDate: string;
     startTime: string;
     duration: number;
+    employeeCount?: number;
     typeOfTraining: string[];
     sessions?: BookingSession[];
     notes?: string;
@@ -43,14 +51,23 @@ export interface Booking {
     adminNotes?: string;
     cancellationReason?: string;
     status: BookingStatus;
-    paymentStatus?: {
-        isPaid: boolean;
-        paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
-        transactionId?: string;
-        paymentType?: 'full' | 'partial' | 'advance';
-        paymentAmount?: number;
-        paymentDate?: string;
-    };
+    paymentStatus?:
+        | 'pending'
+        | 'confirmed'
+        | 'failed'
+        | 'refunded'
+        | {
+              isPaid: boolean;
+              paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
+              transactionId?: string;
+              paymentType?: 'full' | 'partial' | 'advance';
+              paymentAmount?: number;
+              paymentDate?: string;
+          };
+    paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
+    transactionId?: string;
+    paymentType?: 'full' | 'partial' | 'advance';
+    paymentAmount?: number;
     approvedBy?: string | any; // Admin who approved
     approvedAt?: string;
     createdAt?: string;
@@ -73,6 +90,7 @@ export interface CreateBookingRequest {
     bookingDate: string;
     startTime: string;
     duration: number;
+    employeeCount: number;
     typeOfTraining: string[];
     eapTraining?: string;
     notes?: string;
@@ -86,6 +104,7 @@ export interface CreateMultiSessionBookingRequest {
         trainer: string;
         startTime: string;
         duration: number;
+        employeeCount: number;
         typeOfTraining: string[];
         eapTraining?: string;
     }>;
@@ -117,12 +136,25 @@ export interface ApproveBookingResult {
     invoice?: BookingInvoice;
 }
 
-export interface ApproveBookingRequest {
+export interface SessionPaymentInput {
+    sessionIndex: number;
+    startTime?: string;
+    duration?: number;
+    typeOfTraining?: string[];
+    trainerName?: string;
     paymentMode: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
     transactionId: string;
     paymentType: 'full' | 'partial' | 'advance';
     paymentAmount: number;
+}
+
+export interface ApproveBookingRequest {
+    paymentMode?: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque' | 'online' | 'other';
+    transactionId?: string;
+    paymentType?: 'full' | 'partial' | 'advance';
+    paymentAmount?: number;
     adminNotes?: string;
+    sessionPayments: SessionPaymentInput[];
     trainerFeeLines: Array<{
         trainer: string;
         sessionIndex?: number;

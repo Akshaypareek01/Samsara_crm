@@ -10,6 +10,7 @@ export type WellnessFeedbackContext = {
   bookingId: string;
   companyId: string;
   companyName: string;
+  city?: string;
   sessionDate: string;
   sessionAttendedOptions: string[];
   sessionAttendedPrefill: string[];
@@ -55,6 +56,61 @@ export type WellnessFeedbackShareLink = {
   expiresAt: string;
 };
 
+export type FeedbackBreakdownItem = {
+  label: string;
+  count: number;
+  percentage: number;
+};
+
+export type FeedbackAnalyticsSummary = {
+  totalResponses: number;
+  completedSessions: number;
+  sessionsWithFeedback: number;
+  expectedParticipants: number;
+  responseRate: number;
+  avgSatisfactionScore: number | null;
+  employeeEngagementPct: number;
+  wellnessImpactPct: number;
+  costPerParticipant: number | null;
+  totalSessionSpend: number | null;
+  spendSessionsTracked: number;
+};
+
+export type FeedbackSessionSummary = {
+  bookingId: string;
+  sessionDate: string;
+  responseCount: number;
+  expectedParticipants: number;
+  responseRate: number;
+  avgSatisfaction: number | null;
+  wellnessImpactPct: number;
+  paymentAmount: number | null;
+  costPerResponse: number | null;
+};
+
+export type FeedbackRecentResponse = {
+  id: string;
+  employeeName: string;
+  sessionDate?: string;
+  overallSatisfaction: string;
+  stressRelief: string;
+  wantMoreSessions: string;
+  submittedAt: string;
+};
+
+export type CompanyFeedbackAnalytics = {
+  summary: FeedbackAnalyticsSummary;
+  overallSatisfaction: FeedbackBreakdownItem[];
+  stressRelief: FeedbackBreakdownItem[];
+  wantMoreSessions: FeedbackBreakdownItem[];
+  enjoyedActivities: FeedbackBreakdownItem[];
+  preferredTopics: FeedbackBreakdownItem[];
+  sessionsAttended: FeedbackBreakdownItem[];
+  avgTrainerRatings: Record<string, number | null>;
+  sessionSummaries: FeedbackSessionSummary[];
+  recentResponses: FeedbackRecentResponse[];
+};
+
 /**
  * API client for booking-scoped wellness feedback.
  */
@@ -90,6 +146,14 @@ class WellnessFeedbackService {
   async submitFeedback(payload: WellnessFeedbackSubmitPayload): Promise<{ id: string }> {
     const response = await ApiService.post('/wellness-feedback', payload);
     return response.data as { id: string };
+  }
+
+  /**
+   * Fetches aggregated wellness feedback analytics for the logged-in company.
+   */
+  async getCompanyAnalytics(): Promise<CompanyFeedbackAnalytics> {
+    const response = await ApiService.get('/wellness-feedback/analytics');
+    return response.data as CompanyFeedbackAnalytics;
   }
 }
 

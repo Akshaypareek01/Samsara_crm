@@ -50,6 +50,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
     bookingDate: "",
     startTime: "",
     duration: 2,
+    employeeCount: 0,
     typeOfTraining: [],
     notes: "",
   });
@@ -59,6 +60,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
   const [fieldErrors, setFieldErrors] = useState<{
     bookingDate?: string;
     startTime?: string;
+    employeeCount?: string;
   }>({});
 
   useEffect(() => {
@@ -80,6 +82,7 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
           bookingDate: "",
           startTime: "",
           duration: defaultDuration,
+          employeeCount: 0,
           typeOfTraining: [training.title],
           eapTraining: training._id || training.id,
           notes: "",
@@ -97,12 +100,16 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
    * Validate booking form before submit.
    */
   const validateForm = (): boolean => {
-    const nextFieldErrors: { bookingDate?: string; startTime?: string } = {};
+    const nextFieldErrors: { bookingDate?: string; startTime?: string; employeeCount?: string } = {};
     let valid = true;
 
     if (!selectedDuration) {
       void Swal.fire({ icon: "warning", title: "Select a duration" });
       return false;
+    }
+    if (!Number.isInteger(formData.employeeCount) || formData.employeeCount < 1) {
+      nextFieldErrors.employeeCount = "Enter how many employees will attend (minimum 1)";
+      valid = false;
     }
     if (!formData.bookingDate) {
       nextFieldErrors.bookingDate = "Please select a date";
@@ -356,6 +363,41 @@ const CompanyEapBookingDrawer: React.FC<CompanyEapBookingDrawerProps> = ({
                 error={fieldErrors.startTime}
               />
             </div>
+          </div>
+        </section>
+
+        <section className="company-eap-booking-section" aria-labelledby="eap-booking-employees">
+          <div className="company-eap-booking-field">
+            <label htmlFor="eap-employees">Employees attending</label>
+            <input
+              id="eap-employees"
+              type="number"
+              className={`form-control ${fieldErrors.employeeCount ? "is-invalid" : ""}`}
+              min={1}
+              step={1}
+              value={formData.employeeCount || ""}
+              onChange={(e) => {
+                setFieldErrors((prev) => ({ ...prev, employeeCount: undefined }));
+                setFormData((prev) => ({
+                  ...prev,
+                  employeeCount: parseInt(e.target.value, 10) || 0,
+                }));
+              }}
+              placeholder="e.g. 25"
+              required
+              aria-invalid={!!fieldErrors.employeeCount}
+              aria-describedby={
+                fieldErrors.employeeCount ? "eap-employees-error eap-employees-hint" : "eap-employees-hint"
+              }
+            />
+            <p id="eap-employees-hint" className="company-eap-booking-field-hint mb-0">
+              How many employees will join this session?
+            </p>
+            {fieldErrors.employeeCount && (
+              <p id="eap-employees-error" className="company-eap-booking-field-error" role="alert">
+                {fieldErrors.employeeCount}
+              </p>
+            )}
           </div>
         </section>
 

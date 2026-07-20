@@ -9,11 +9,18 @@ export interface BookingSessionView {
     trainer: string | Trainer;
     startTime: string;
     duration: number;
+    employeeCount?: number;
     typeOfTraining: string[];
     eapTraining?: string;
     trainerStatus?: TrainerSessionStatus;
     trainerNotes?: string;
     approvedAt?: string;
+    paymentStatus?: 'pending' | 'confirmed' | 'failed' | 'refunded';
+    paymentMode?: string;
+    transactionId?: string;
+    paymentType?: string;
+    paymentAmount?: number;
+    paidAt?: string;
 }
 
 /**
@@ -39,11 +46,18 @@ function toBookingSessionView(session: BookingSession): BookingSessionView {
         trainer: session.trainer,
         startTime: session.startTime,
         duration: session.duration,
+        employeeCount: session.employeeCount,
         typeOfTraining: session.typeOfTraining || [],
         eapTraining: normalizeEapTrainingId(session.eapTraining),
         trainerStatus: session.trainerStatus,
         trainerNotes: session.trainerNotes,
         approvedAt: session.approvedAt,
+        paymentStatus: session.paymentStatus,
+        paymentMode: session.paymentMode,
+        transactionId: session.transactionId,
+        paymentType: session.paymentType,
+        paymentAmount: session.paymentAmount,
+        paidAt: session.paidAt,
     };
 }
 
@@ -73,15 +87,40 @@ export function getBookingSessions(booking: Booking): BookingSessionView[] {
                 trainer: booking.trainer,
                 startTime: booking.startTime,
                 duration: booking.duration,
+                employeeCount: booking.employeeCount,
                 typeOfTraining: booking.typeOfTraining || [],
                 eapTraining: booking.eapTraining,
                 trainerStatus,
                 trainerNotes: booking.trainerNotes,
+                paymentStatus:
+                    typeof booking.paymentStatus === "string"
+                        ? booking.paymentStatus
+                        : booking.paymentStatus?.isPaid
+                          ? "confirmed"
+                          : "pending",
+                paymentMode: booking.paymentMode,
+                transactionId: booking.transactionId,
+                paymentType: booking.paymentType,
+                paymentAmount: booking.paymentAmount,
+                paidAt: booking.approvedAt,
             }),
         ];
     }
 
     return [];
+}
+
+/**
+ * Whether a session has recorded company payment.
+ *
+ * @param session - Session row from a booking.
+ */
+export function isSessionPaid(session: {
+    paymentStatus?: string;
+    paymentAmount?: number;
+}): boolean {
+    if (session.paymentStatus === "confirmed") return true;
+    return typeof session.paymentAmount === "number" && session.paymentAmount > 0;
 }
 
 /**
