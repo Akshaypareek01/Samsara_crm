@@ -6,6 +6,8 @@ import CompanyService, { Company, CreateCompanyRequest, ContactPerson } from '@/
 import { formatCompanyAddress, getCompanyContactName, getCompanyLogoUrl } from '@/shared/utils/companyDisplayUtils';
 import { hasPermission } from '@/shared/utils/permissionUtils';
 import Swal from 'sweetalert2';
+import CompanyAppMembershipCells from './CompanyAppMembershipCells';
+import membershipPlanService, { MembershipPlan } from '@/services/membershipPlanService';
 import {
   CrmPageHeader,
   CrmCard,
@@ -61,20 +63,31 @@ const Companies = () => {
       designation: '',
     },
     status: true,
+    appMembershipEnabled: false,
+    appMembershipPlanId: null,
   });
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [companyIdFilter, setCompanyIdFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<boolean | undefined>(undefined);
+  const [membershipPlans, setMembershipPlans] = useState<MembershipPlan[]>([]);
 
   useEffect(() => {
     const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     if (userStr) setAdminUser(JSON.parse(userStr));
   }, []);
+
+  useEffect(() => {
+    membershipPlanService
+      .getMembershipPlans({ isActive: true, limit: 100, page: 1, sortBy: 'name:asc' })
+      .then((response) => setMembershipPlans(response.data.filter((plan) => plan.name !== 'Trial Plan')))
+      .catch((err) => console.error('Failed to load membership plans:', err));
+  }, []);
   useEffect(() => {
     fetchCompanies();
-  }, [page, searchTerm, statusFilter]);
+  }, [page, searchTerm, companyIdFilter, statusFilter]);
 
   const fetchCompanies = async () => {
     try {
@@ -87,6 +100,10 @@ const Companies = () => {
       
       if (searchTerm) {
         params.companyName = searchTerm;
+      }
+
+      if (companyIdFilter) {
+        params.companyId = companyIdFilter.trim();
       }
       
       if (statusFilter !== undefined) {
@@ -124,6 +141,10 @@ const Companies = () => {
     }
     if (!formData.contactPerson1?.name?.trim()) {
       Swal.fire('Error!', 'Primary contact name is required', 'error');
+      return;
+    }
+    if (formData.appMembershipEnabled && !formData.appMembershipPlanId) {
+      Swal.fire('Error!', 'Select a membership plan when app membership is enabled', 'error');
       return;
     }
     try {
@@ -180,6 +201,8 @@ const Companies = () => {
         designation: '',
       },
       status: company.status !== undefined ? company.status : true,
+      appMembershipEnabled: company.appMembershipEnabled === true,
+      appMembershipPlanId: company.appMembershipPlanId || null,
     });
     setShowModal(true);
   };
@@ -232,6 +255,8 @@ const Companies = () => {
         designation: '',
       },
       status: true,
+      appMembershipEnabled: false,
+      appMembershipPlanId: null,
     });
   };
 
@@ -285,7 +310,7 @@ const Companies = () => {
 
         <CrmCard>
           <div className="p-[10px]">
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <input
                 type="text"
                 className={crmInputClass}
@@ -295,6 +320,18 @@ const Companies = () => {
                   setSearchTerm(e.target.value);
                   setPage(1);
                 }}
+                aria-label="Search companies by name"
+              />
+              <input
+                type="text"
+                className={crmInputClass}
+                placeholder="Search by company ID..."
+                value={companyIdFilter}
+                onChange={(e) => {
+                  setCompanyIdFilter(e.target.value.toUpperCase());
+                  setPage(1);
+                }}
+                aria-label="Search companies by company ID"
               />
               <select
                 className={crmSelectClass}
@@ -322,10 +359,14 @@ const Companies = () => {
                   <thead>
                     <tr className={crmTheadTrClass}>
                       <th className={crmThClass}>Company Name</th>
+                      <th className={crmThClass}>Company ID</th>
                       <th className={crmThClass}>Contact Person</th>
                       <th className={crmThClass}>Email</th>
                       <th className={crmThClass}>Domain</th>
                       <th className={crmThClass}>Employees</th>
+                      <th className={crmThClass}>App Membership</th>
+                      <th className={crmThClass}>Plan</th>
+                      <th className={crmThClass}>Seats</th>
                       <th className={crmThClass}>Status</th>
                       <th className={crmThActionsClass}>Actions</th>
                     </tr>
@@ -333,7 +374,7 @@ const Companies = () => {
                   <tbody>
                     {companies.length === 0 ? (
                       <tr className={crmTbodyTrClass}>
-                        <td colSpan={7} className={`${crmTdClass} text-center text-[12px] font-medium text-gray-400 py-8`}>
+                        <td colSpan={11} className={`${crmTdClass} text-center text-[12px] font-medium text-gray-400 py-8`}>
                           No companies found
                         </td>
                       </tr>
@@ -354,10 +395,18 @@ const Companies = () => {
                                 <span className="font-semibold text-gray-900 text-[12px]">{company.companyName || '-'}</span>
                               </div>
                             </td>
+                            <td className={`${crmTdClass} text-gray-600 font-mono text-[11px] font-semibold tracking-wide`}>
+                              {company.companyId || '-'}
+                            </td>
                             <td className={`${crmTdClass} text-gray-600`}>{getCompanyContactName(company)}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.email || '-'}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.domain || '-'}</td>
                             <td className={`${crmTdClass} text-gray-600`}>{company.numberOfEmployees ?? '-'}</td>
+                            <CompanyAppMembershipCells
+                              company={company}
+                              canEdit={hasPermission(adminUser, 'companyManagement', 'update')}
+                              onUpdated={fetchCompanies}
+                            />
                             <td className={crmTdClass}>
                               <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-bold rounded ${company.status !== false ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
                                 {company.status !== false ? 'Active' : 'Inactive'}
@@ -580,6 +629,45 @@ const Companies = () => {
                     <option value="false">Inactive</option>
                   </select>
                 </div>
+                <div>
+                  <label className="form-label">App membership for registrants</label>
+                  <select
+                    className="form-control"
+                    value={formData.appMembershipEnabled ? 'true' : 'false'}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        appMembershipEnabled: e.target.value === 'true',
+                      })
+                    }
+                  >
+                    <option value="false">Disabled</option>
+                    <option value="true">Enabled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Membership plan</label>
+                  <select
+                    className="form-control"
+                    value={formData.appMembershipPlanId || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        appMembershipPlanId: e.target.value || null,
+                      })
+                    }
+                  >
+                    <option value="">Select plan</option>
+                    {membershipPlans.map((plan) => {
+                      const planId = plan._id || plan.id || '';
+                      return (
+                        <option key={planId} value={planId}>
+                          {plan.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
               </div>
 
               <div className="mt-6">
@@ -757,6 +845,26 @@ const Companies = () => {
                   </label>
                   <p className="text-defaulttextcolor">
                     {viewingCompany.numberOfEmployees || '-'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-muted">App membership</label>
+                  <p className="text-defaulttextcolor">
+                    {viewingCompany.appMembershipEnabled ? 'Enabled' : 'Disabled'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-muted">Membership plan</label>
+                  <p className="text-defaulttextcolor">
+                    {viewingCompany.appMembershipPlanName || 'Not set'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-muted">Membership seats</label>
+                  <p className="text-defaulttextcolor">
+                    {viewingCompany.appMembershipEnabled
+                      ? `${viewingCompany.membershipSlotsUsed ?? 0} / ${viewingCompany.numberOfEmployees ?? 0} used (${viewingCompany.membershipSlotsRemaining ?? 0} left)`
+                      : '—'}
                   </p>
                 </div>
                 <div>

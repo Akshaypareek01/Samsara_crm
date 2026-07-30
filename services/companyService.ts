@@ -25,6 +25,11 @@ export interface Company {
   contactPerson1?: ContactPerson;
   contactPerson2?: ContactPerson;
   status?: boolean;
+  appMembershipEnabled?: boolean;
+  appMembershipPlanId?: string | null;
+  appMembershipPlanName?: string | null;
+  membershipSlotsUsed?: number;
+  membershipSlotsRemaining?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -44,6 +49,8 @@ export interface CreateCompanyRequest {
   contactPerson1?: ContactPerson;
   contactPerson2?: ContactPerson;
   status?: boolean;
+  appMembershipEnabled?: boolean;
+  appMembershipPlanId?: string | null;
 }
 
 export interface UpdateCompanyRequest {
@@ -61,6 +68,8 @@ export interface UpdateCompanyRequest {
   contactPerson1?: ContactPerson;
   contactPerson2?: ContactPerson;
   status?: boolean;
+  appMembershipEnabled?: boolean;
+  appMembershipPlanId?: string | null;
 }
 
 export interface GetCompaniesParams {
@@ -173,6 +182,25 @@ class CompanyService {
       return response;
     } catch (error) {
       console.error('❌ Create company error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin: update company app membership toggle + plan.
+   */
+  async updateCompanyAppMembership(
+    companyId: string,
+    data: Pick<UpdateCompanyRequest, 'appMembershipEnabled' | 'appMembershipPlanId'>
+  ): Promise<Company> {
+    try {
+      const response = await ApiService.patch(`/companies/${companyId}/app-membership`, data);
+      if (response.id && !response._id) {
+        return { ...response, _id: response.id };
+      }
+      return response;
+    } catch (error) {
+      console.error('❌ Update company app membership error:', error);
       throw error;
     }
   }
