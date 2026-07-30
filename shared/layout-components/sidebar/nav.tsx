@@ -6,6 +6,8 @@ const UserManagementIcon = <i className="bx bx-user side-menu__icon"></i>;
 
 const ClassManagementIcon = <i className="bx bx-book side-menu__icon"></i>;
 
+const DigitalMarketingIcon = <i className="bx bx-bullhorn side-menu__icon"></i>;
+
 const MembershipIcon = <i className="bx bx-crown side-menu__icon"></i>;
 
 const CompanyIcon = <i className="bx bx-building side-menu__icon"></i>;
@@ -182,6 +184,44 @@ export const MenuItems: any = [
     dirchange: false,
     path: "/apps/crm/classes",
     permission: "classManagement",
+  },
+
+  {
+    icon: DigitalMarketingIcon,
+    title: "Digital Marketing",
+    type: "sub",
+    active: false,
+    selected: false,
+    permission: "digitalMarketing",
+    children: [
+      {
+        path: "/apps/crm/digital-marketing/contacts",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Contacts",
+        permission: "digitalMarketing.contacts",
+      },
+      {
+        path: "/apps/crm/digital-marketing/email",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "Email Marketing",
+        permission: "digitalMarketing.email",
+      },
+      {
+        path: "/apps/crm/digital-marketing/whatsapp",
+        type: "link",
+        active: false,
+        selected: false,
+        dirchange: false,
+        title: "WhatsApp Marketing",
+        permission: "digitalMarketing.whatsapp",
+      },
+    ],
   },
 
   {

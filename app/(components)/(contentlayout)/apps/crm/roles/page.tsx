@@ -124,6 +124,13 @@ const Roles = () => {
         { key: 'bookingManagement', label: 'Booking Management', actions: ['create', 'read', 'update', 'delete'] },
         { key: 'membershipManagement', label: 'Membership Management', actions: ['create', 'read', 'update', 'delete'] },
         { key: 'classManagement', label: 'Class Management', actions: ['create', 'read', 'update', 'delete'] },
+        {
+            key: 'digitalMarketing', label: 'Digital Marketing', subModules: [
+                { key: 'contacts', label: 'Contacts' },
+                { key: 'email', label: 'Email Marketing' },
+                { key: 'whatsapp', label: 'WhatsApp Marketing' },
+            ], actions: ['create', 'read', 'update', 'delete']
+        },
         { key: 'eventManagement', label: 'Event Management', actions: ['create', 'read', 'update', 'delete'] },
         { key: 'support', label: 'Support', actions: ['create', 'read', 'update', 'delete'] },
         { key: 'roleManagement', label: 'Role Management', actions: ['create', 'read', 'update', 'delete'] },

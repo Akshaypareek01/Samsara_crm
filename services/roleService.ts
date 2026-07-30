@@ -15,6 +15,11 @@ export interface Role {
         bookingManagement: { create: boolean; read: boolean; update: boolean; delete: boolean };
         membershipManagement: { create: boolean; read: boolean; update: boolean; delete: boolean };
         classManagement: { create: boolean; read: boolean; update: boolean; delete: boolean };
+        digitalMarketing: {
+            contacts: { create: boolean; read: boolean; update: boolean; delete: boolean };
+            email: { create: boolean; read: boolean; update: boolean; delete: boolean };
+            whatsapp: { create: boolean; read: boolean; update: boolean; delete: boolean };
+        };
         eventManagement: { create: boolean; read: boolean; update: boolean; delete: boolean };
         support: { create: boolean; read: boolean; update: boolean; delete: boolean };
         roleManagement: { create: boolean; read: boolean; update: boolean; delete: boolean };
@@ -57,6 +62,11 @@ class RoleService {
             bookingManagement: { create: false, read: false, update: false, delete: false },
             membershipManagement: { create: false, read: false, update: false, delete: false },
             classManagement: { create: false, read: false, update: false, delete: false },
+            digitalMarketing: {
+                contacts: { create: false, read: false, update: false, delete: false },
+                email: { create: false, read: false, update: false, delete: false },
+                whatsapp: { create: false, read: false, update: false, delete: false },
+            },
             eventManagement: { create: false, read: false, update: false, delete: false },
             support: { create: false, read: false, update: false, delete: false },
             roleManagement: { create: false, read: false, update: false, delete: false },

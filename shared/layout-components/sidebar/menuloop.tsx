@@ -14,7 +14,9 @@ function Menuloop({ local_varaiable ,MenuItems, toggleSidemenu, level , HoverTog
   return (
     <Fragment>
       <Link href="#!" scroll={false} className={`side-menu__item ${MenuItems?.selected ? "active" : ""}`}
-        onClick={(event) => { event.preventDefault(); toggleSidemenu(event, MenuItems); }} onMouseEnter={ (event) =>HoverToggleInnerMenuFn(event, MenuItems)}>
+        onClick={(event) => { event.preventDefault(); toggleSidemenu(event, MenuItems); }} onMouseEnter={ (event) =>HoverToggleInnerMenuFn(event, MenuItems)}
+        aria-expanded={MenuItems?.active ? "true" : "false"}
+      >
 
           <span className={`hs-tooltip inline-block [--placement:right] leading-none ${local_varaiable?.dataVerticalStyle == 'doublemenu' ? '' : 'hidden'}`}>
               <button type="button" className="hs-tooltip-toggle  inline-flex justify-center items-center">
@@ -26,12 +28,12 @@ function Menuloop({ local_varaiable ,MenuItems, toggleSidemenu, level , HoverTog
          </span>
          {local_varaiable?.dataVerticalStyle != "doublemenu" ? MenuItems.icon :""}
             
-          <span className={`${level == 1 ? "side-menu__label" : ""}`}> {MenuItems.title} {MenuItems.badgetxt ? (<span className={MenuItems.class}> {MenuItems.badgetxt} </span>
+          <span className={`${level == 1 ? "side-menu__label" : ""} flex-1 min-w-0`}> {MenuItems.title} {MenuItems.badgetxt ? (<span className={MenuItems.class}> {MenuItems.badgetxt} </span>
         ) : (
           ""
         )}
         </span>
-        <i className="fe fe-chevron-right side-menu__angle"></i>
+        <i className="bx bx-chevron-down side-menu__angle" aria-hidden="true"></i>
       </Link>
       <ul className={`slide-menu child${level}  ${MenuItems.active ? 'double-menu-active' : ''} ${MenuItems?.dirchange ? "force-left" : ""} `} style={MenuItems.active ? { display: "block" } : { display: "none" }}>
         {level <= 1 ? <li className="slide side-menu__label1">
