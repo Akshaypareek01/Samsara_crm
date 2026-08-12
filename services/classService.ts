@@ -1,6 +1,8 @@
 import ApiService from './ApiService';
+import { Base_url } from '../Config/BaseUrl';
 
 export interface Schedule {
+  date?: string;
   days: string[];
   startTime: string;
   endTime: string;
@@ -21,6 +23,9 @@ export interface Class {
   description?: string;
   password?: string;
   meeting_number?: string;
+  zoomAccountUsed?: string;
+  zoomJoinUrl?: string;
+  zoomStartUrl?: string;
   teacher?: string | Teacher; // Can be ID string or populated Teacher object
   status?: boolean;
   schedule?: string;
@@ -36,9 +41,19 @@ export interface Class {
   perfectFor?: string[];
   skipIf?: string[];
   whatYoullGain?: string[];
+  latitude?: number;
+  longitude?: number;
   students?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+/**
+ * Returns true when the class has a live Zoom meeting id.
+ * @param classItem - Class record to inspect
+ */
+export function hasActiveMeeting(classItem: Pick<Class, 'meeting_number'>): boolean {
+  return Boolean(classItem.meeting_number && String(classItem.meeting_number).trim() !== '');
 }
 
 export interface CreateClassRequest {
@@ -61,6 +76,8 @@ export interface CreateClassRequest {
   perfectFor?: string[];
   skipIf?: string[];
   whatYoullGain?: string[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface UpdateClassRequest extends Partial<CreateClassRequest> {}
@@ -142,7 +159,8 @@ class ClassService {
   }
 
   /**
-   * Delete a class
+   * Delete a class (backend ends Zoom first when a live meeting exists).
+   * @param classId - Class document id
    */
   async deleteClass(classId: string): Promise<void> {
     try {
@@ -154,11 +172,12 @@ class ClassService {
   }
 
   /**
-   * Start a class meeting
+   * Start a Zoom meeting for a class.
+   * @param classId - Class document id
    */
   async startClass(classId: string): Promise<any> {
     try {
-      const response = await ApiService.post(`/classes/start-class/${classId}`);
+      const response = await ApiService.post(`/classes/start-meeting/${classId}`);
       return response;
     } catch (error: any) {
       console.error('Error starting class:', error);
@@ -167,7 +186,9 @@ class ClassService {
   }
 
   /**
-   * End a class meeting
+   * End a Zoom meeting for a class.
+   * @param classId - Class document id
+   * @param data - Optional legacy payload (ignored by backend)
    */
   async endClass(classId: string, data?: { token?: string; meetingId?: string }): Promise<any> {
     try {
@@ -175,6 +196,78 @@ class ClassService {
       return response;
     } catch (error: any) {
       console.error('Error ending class:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build the legacy Meeting SDK join page URL (mobile/web embeds).
+   * Prefer getBrowserJoinUrl for CRM admin joins.
+   * @param classId - Class document id
+   * @param userName - Display name in Zoom
+   * @param role - Zoom SDK role (1 = host, 0 = attendee)
+   */
+  getJoinMeetingUrl(classId: string, userName = 'Admin', role = 0): string {
+    const params = new URLSearchParams({
+      classId,
+      userName,
+      role: String(role),
+    });
+    return `${Base_url}/zoom/join-meeting?${params.toString()}`;
+  }
+
+  /**
+   * CRM admin/trainer join as Zoom host via Meeting SDK (desktop browser tab).
+   * Always uses role=1 + forceHost — does not fall back to attendee WC.
+   * @param classId - Class document id
+   * @param asHost - When true, request host SDK join (default true for CRM)
+   * @param userName - Display name in meeting
+   */
+  async getBrowserJoinUrl(classId: string, asHost = true, userName = 'Admin'): Promise<string> {
+    try {
+      const response = await ApiService.get('/zoom/getMeetingDetails', {
+        classId,
+        asHost: asHost ? '1' : '0',
+      });
+      const data = response?.data || response;
+
+      if (asHost) {
+        const sdkParams = new URLSearchParams({
+          role: '1',
+          forceHost: '1',
+          userName,
+        });
+        sdkParams.set('classId', classId);
+        if (data?.meetingNumber) sdkParams.set('meetingNumber', String(data.meetingNumber));
+        if (data?.password) sdkParams.set('password', String(data.password));
+        if (data?.accountId) sdkParams.set('accountId', String(data.accountId));
+        // Zoom SDK leaveUrl — back to CRM classes, not consumer Amplify
+        const crmOrigin =
+          typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+        sdkParams.set('leaveUrl', `${crmOrigin}/apps/crm/classes/`);
+
+        // Prefer server sdk path if present, but always force host flags for CRM
+        return `${Base_url}/zoom/join-meeting?${sdkParams.toString()}`;
+      }
+
+      const joinUrl = data?.joinUrl as string | undefined;
+      if (joinUrl) {
+        const match = joinUrl.match(/^(https?:\/\/[^/]+)\/j\/(\d+)(\?[\s\S]*)?$/i);
+        if (match) {
+          return `${match[1]}/wc/join/${match[2]}${match[3] || ''}`;
+        }
+        if (/\/wc\/join\//i.test(joinUrl)) {
+          return joinUrl;
+        }
+        return joinUrl;
+      }
+      if (data?.meetingNumber) {
+        const pwd = data.password ? `?pwd=${encodeURIComponent(data.password)}` : '';
+        return `https://zoom.us/wc/join/${data.meetingNumber}${pwd}`;
+      }
+      throw new Error('No meeting join URL available for this class');
+    } catch (error: any) {
+      console.error('Error fetching browser join URL:', error);
       throw error;
     }
   }
